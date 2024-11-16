@@ -1,0 +1,17 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} \.php$
+RewriteRule ^ - [L,F]
+
+RewriteCond %{REQUEST_URI} ^api
+RewriteRule ^ - [L]
+
+RewriteCond %{QUERY_STRING} path=
+RewriteRule ^ - [L,R=400]
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond $1 ^(public|student|tutor|owner)$
+RewriteRule ^(.*)/(.*)$ $1/index.php?path=$2 [END,QSA]
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L,F]
