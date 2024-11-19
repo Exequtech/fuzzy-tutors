@@ -1,0 +1,27 @@
+{
+    "type": "object",
+    "properties": {
+        "password": {
+            "type": "string"
+        }
+    },
+    "oneOf": [
+        {
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            },
+            "required": ["email"]
+        },
+        {
+            "properties": {
+                "username": {
+                    "type": "string"
+                }
+            },
+            "required": ["username"]
+        }
+    ],
+    "required": ["password"]
+}
