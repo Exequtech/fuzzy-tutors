@@ -77,7 +77,8 @@ foreach($table_commands as $key => $value)
             $result->free();
         echo "Added `$key` successfully\n";
     }
-    $result->free();
+    if(gettype($result) !== gettype(true))
+        $result->free();
 }
 echo "All tables checked\n";
 
