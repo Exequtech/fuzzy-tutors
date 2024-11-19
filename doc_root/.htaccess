@@ -13,5 +13,8 @@ RewriteCond %{REQUEST_FILENAME} -f
 RewriteCond $1 ^(public|student|tutor|owner)$
 RewriteRule ^([a-zA-z0-9]*)/(.*)$ $1/index.php?path=$2 [END,QSA]
 
+RewriteCond %{DOC_ROOT}/public/$1 -f
+RewriteRule ^(.*)$ public/index.php?path=$1 [END,QSA]
+
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L,F]

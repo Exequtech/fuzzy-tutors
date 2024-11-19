@@ -1,0 +1,19 @@
+{
+    "type": "object",
+    "properties": {
+        "username": {
+            "type": "string"
+        },
+        "email": {
+            "type": "string"
+        },
+        "userType": {
+            "type": "string",
+            "enum": ["student", "owner", "tutor"]
+        },
+        "password": {
+            "type": "string"
+        }
+    },
+    "required": ["username", "email", "userType", "password"]
+}

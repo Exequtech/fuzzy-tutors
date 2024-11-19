@@ -2,6 +2,15 @@
 require_once "db.php";
 require_once "functions.php";
 
+function UserTypeInt($str)
+{
+    return match($str)
+    {
+        'owner' => 42,
+        'student' => 13,
+        'tutor' => 23,
+    };
+}
 function InternalError($error)
 {
     error_log($error);
@@ -78,6 +87,49 @@ $endpoints = [
                 MessageResponse(HTTP_UNAUTHORIZED, "Invalid credentials");
             }
         }
+    ],
+    '/^auth\/signup$/' => [
+        'POST' => function($request){
+            global $conn;
+            // Uniqueness checks
+            
+            // Check for existing username
+            $stmt = $conn->prepare("SELECT * FROM `User` WHERE Username = ?;");
+            $stmt->bind_param('s', $request->username);
+            if(!$stmt->execute())
+                InternalError($stmt->error);
+            if($stmt->get_result()->fetch_assoc() !== null)
+                MessageResponse(HTTP_CONFLICT, "Username already exists.");
+
+            // Check for existing email
+            $stmt = $conn->prepare("SELECT * FROM `User` WHERE Email = ?");
+            $stmt->bind_param('s', $request->email);
+            if(!$stmt->execute())
+                InternalError($stmt->error);
+            if($stmt->get_result()->fetch_assoc() !== null)
+                MessageResponse(HTTP_CONFLICT, "Email already exists.");
+
+            // Add user if business rules weren't violated
+            $stmt = $conn->prepare("INSERT INTO `User`(`Username`, `Email`, `Password`, `UserType`, `Authorized`, `RecordDate`) VALUES (?, ?, ?, ?, 0, NOW());");
+            $password_hash = password_hash($request->password, PASSWORD_BCRYPT);
+            $userType = UserTypeInt($request->userType);
+            $stmt->bind_param('sssi', $request->username, $request->email, $password_hash, $userType);
+            if(!$stmt->execute())
+                InternalError($stmt->error);
+            
+            // Get user data for session init
+            $stmt = $conn->prepare("SELECT * FROM `User` WHERE Username = ?");
+            $stmt->bind_param('s', $request->username);
+            if(!$stmt->execute())
+                InternalError($stmt->error);
+            $user = $stmt->get_result()->fetch_assoc() ?? InternalError("User disappeared during signup");
+            
+            session_start();
+            session_regenerate_id(true);
+            $_SESSION['UserID'] = $user['UserID'];
+            $_SESSION['LoginIP'] = $_SERVER['REMOTE_ADDR'];
+            MessageResponse(HTTP_OK);
+        }
     ]
 ];
 
@@ -93,7 +145,7 @@ foreach($endpoints as $key => $value)
     $valid = Validate($schema, $data);
     if($valid === true)
     {
-        $value[$_SERVER['REQUEST_METHOD']]($data, $conn);
+        $value[$_SERVER['REQUEST_METHOD']]($data);
     }
     else
     {

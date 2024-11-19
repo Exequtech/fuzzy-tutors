@@ -97,14 +97,14 @@ document.getElementById('registerBtn').addEventListener('click', async (e) => {
     let email = document.getElementById('email');
     let password = document.getElementById('password');
 
-    if (isValidRegisterCredentials()) {
+    if (isValidRegistrationCredentials()) {
         let body = {
             username: username.value,
             userType: userType.value,
             email: email.value,
             password: password.value
         }
-        let response = await fetch("/api/auth/register",
+        let response = await fetch("/api/auth/signup",
             {
                 method: "POST",
                 headers: {
