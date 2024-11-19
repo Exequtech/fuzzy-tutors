@@ -1,7 +1,4 @@
 <?php
-require_once "vendor/autoload.php";
-
-use JsonSchema\Validator;
 
 const 
     HTTP_OK = 200, 
@@ -69,14 +66,4 @@ function GetStatusMessage($code)
         // If the endpoint is clearly planned but not implemented
         HTTP_NOT_IMPLEMENTED => "Not Implemented",
     };
-}
-
-function Validate($schema, $data)
-{
-    $validator = new Validator();
-    $validator->validate($data, $schema);
-    if($validator->isValid())
-        return true;
-    else
-        return $validator->getErrors();
 }
