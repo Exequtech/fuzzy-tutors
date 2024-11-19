@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="profile-section">
+                <div class="profile-photo">
+                    <img src="/images/269714960_591019902189283_7179468050134654946_n.jpg" alt="">
+                </div>
+                <span class="username">Jeremia Fourie</span>
+            </div>
+
+            <div class="nav-items">
+                <div class="nav-item" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span class="nav-label">Dashboard</span>
+                </div>
+
+                <div class="nav-item" data-page="calendar">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span class="nav-label">Calendar</span>
+                </div>
+
+                <div class="nav-item" data-page="classes">
+                    <i class="fa-solid fa-users"></i>
+                    <span class="nav-label">Classes</span>
+                </div>
+
+                <div class="nav-item" data-page="students">
+                    <i class="fa-solid fa-user"></i>
+                    <span class="nav-label">Students</span>
+                </div>
+
+                <div class="nav-item" data-page="grading">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span class="nav-label">Grading</span>
+                </div>
+
+                <div class="nav-item option" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span class="nav-label">Settings</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <!-- Content will be loaded here -->
+        </div>
+
+        <button class="toggle-btn">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

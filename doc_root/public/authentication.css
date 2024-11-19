@@ -1,0 +1,121 @@
+:root {
+    --primary-color: #ffffff;
+    --primary-color-with-opacity: #ffffff8b;
+    --secondary-color: #bcbcbc;
+    --success-color: #57cc02;
+    --danger-color: #ff3b3b;
+    --background-color: #235391;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(45deg, var(--success-color), var(--background-color));
+    height: 100vh;
+    display: flex;
+}
+
+h1 {
+    text-align: center;
+    color: var(--success-color);
+    font-size: 4rem;
+    padding-bottom: 10px;
+}
+
+h2 {
+    text-align: center;
+    color: var(--background-color);
+}
+
+p {
+    margin: 10px;
+    text-align: center;
+}
+
+hr {
+    border: 1px solid var(--success-color);
+}
+
+label {
+    color: var(--background-color);
+    width: 100%;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border-color: var(--background-color);
+    border-radius: 5px;
+    background-color: var(--primary-color-with-opacity);
+    margin-bottom: 20px;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    border-color: var(--background-color);
+    border-radius: 5px;
+    background-color: var(--primary-color-with-opacity);
+    margin-bottom: 20px;
+}
+
+form {
+    padding: 10px 60px 0 60px;
+}
+
+button {
+    padding: 10px;
+    background-color: var(--background-color);
+    border-color: var(--success-color);
+    border-radius: 5px;
+    color: var(--primary-color);
+    width: 100%;
+}
+
+button:hover {
+    background-color: var(--success-color);
+    border-color: var(--background-color);
+}
+
+.container {
+    width: 600px;
+    background-color: var(--primary-color-with-opacity);
+    margin: auto;
+    border-radius: 20px;
+    padding: 20px 20px 0 20px;
+    border: 2px solid var(--success-color);
+}
+
+#registerLoginToggle {
+    color: var(--background-color);
+    cursor: pointer;
+}
+
+.authurDescription {
+    background-color: var(--success-color);
+    padding: 5px 30px;
+    width: fit-content;
+    margin: 0 auto;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.input-container {
+    display: flex;
+    width: 100%;
+}
+
+.input-container input {
+    width: 100%;
+    flex-grow: 1;
+}
+
+.userTypeLabel {
+    width: 220px;
+    margin-left: 10px;
+}
