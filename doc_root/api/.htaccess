@@ -22,15 +22,5 @@ RewriteCond %{REQUEST_METHOD} ^POST$
 RewriteCond $1 ^auth/(login|signup)$
 RewriteRule ^(.*) index.php?path=$1 [END,QSA]
 
-# Test denylist
-RewriteCond %{REQUEST_METHOD} !^GET$
-RewriteCond $1 ^test/print-get$
-RewriteRule ^(.*)$ - [END,R=405]
-
-# Test allowlist
-RewriteCond %{REQUEST_METHOD} ^GET$
-RewriteCond $1 ^test/print-get$
-RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
-
 # If no prior rules matched, the endpoint doesn't exist (404)
 RewriteRule ^ - [END,R=404]
