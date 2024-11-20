@@ -14,6 +14,7 @@ $etag = md5($file_contents);
 header("Cache-Control: no-cache");
 header("ETag: \"$etag\"");
 header("Content-Type: " . GetMimeType($path));
+header("X-Custom-Response: true");
 
 if(isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag)
 {

@@ -5,7 +5,7 @@ const
     ROLE_STUDENT = 13,
     ROLE_TUTOR = 23;
 
-function StrToUserTypeInt($str)
+function StrToUserTypeInt(string $str): int
 {
     return match($str)
     {

@@ -1,8 +1,17 @@
+RewriteEngine On
+
+RewriteOptions Inherit
+# No accesses to composer-relevant things
 RedirectMatch 403 (composer.json|composer.lock|/vendor/)
 
+# If request is made for a schema, let it happen normally.
 RewriteCond $1 ^schema
 RewriteRule ^(.*)$ - [L]
 
+# RewriteRules for api endpoints
+# Deny-allow pattern throughout.
+# Allow-list for security (meaning validation for every detail should happen before successful rewrite)
+# Deny-list is just descriptive (for example, 405 for wrong method)
 # Auth denylist
 RewriteCond %{REQUEST_METHOD} !^POST$
 RewriteCond $1 ^auth/(login|signup)$
@@ -13,4 +22,15 @@ RewriteCond %{REQUEST_METHOD} ^POST$
 RewriteCond $1 ^auth/(login|signup)$
 RewriteRule ^(.*) index.php?path=$1 [END,QSA]
 
+# Test denylist
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^test/print-get$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Test allowlist
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^test/print-get$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# If no prior rules matched, the endpoint doesn't exist (404)
 RewriteRule ^ - [END,R=404]

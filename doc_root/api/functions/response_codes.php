@@ -18,7 +18,7 @@ const
     HTTP_INTERNAL_ERROR = 500,
     HTTP_NOT_IMPLEMENTED = 501;
 
-function GetStatusMessage($code)
+function GetStatusMessage(int $code): string
 {
     return match($code)
     {

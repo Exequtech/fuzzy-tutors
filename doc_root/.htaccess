@@ -1,20 +1,54 @@
 RewriteEngine On
 
+# Stop processing API requests. If api/.htaccess isn't handling itself, something is wrong.
+RewriteCond $1 ^api
+RewriteRule ^(.*)$ - [L,F]
+
+# Redirect to https
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Unknown requests redirect to /public if they exist there
+RewriteCond %{REQUEST_URI} !^/(api|public|student|tutor|owner)/?(.*)$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -d
+RewriteRule ^(.*)$ /public/%{REQUEST_URI}
+
+# Rewrite / to index.html in static directories, if exists
+RewriteCond %{REQUEST_URI} ^/(public|student|tutor|owner)/?$
+RewriteCond %{DOCUMENT_ROOT}/%1/index.html -f
+RewriteRule ^(public|student|tutor|owner)/?$ /$1/index.html
+
+# No direct php requests
 RewriteCond %{REQUEST_FILENAME} \.php$
 RewriteRule ^ - [L,F]
 
-RewriteCond %{REQUEST_URI} ^api
-RewriteRule ^ - [L]
-
+# path= is often used as an internal rewrite. This stops user-provided paths from being sent
 RewriteCond %{QUERY_STRING} path=
 RewriteRule ^ - [L,R=400]
 
+# ini security overrides
+# Hide cookie from JS, and ensure it's only sent with https
+php_flag session.cookie_secure On
+php_flag session.cookie_httponly On
+
+# Extra CSRF mitigation (only attach it to requests to the same origin)
+php_value session.cookie_samesite "Strict"
+
+# Only accept server-generated cookies, and never expose them as anything but cookies
+php_flag session.use_strict_mode On
+php_flag session.use_trans_sid Off
+
+# Increase cookie entropy (makes brute-forcing sess-id harder)
+php_value session.sid_length 64
+php_value session.sid_bits_per_character 6
+
+# If request is made to a static file, redirect to the corresponding index for serving.
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteCond $1 ^(public|student|tutor|owner)$
-RewriteRule ^([a-zA-z0-9]*)/(.*)$ $1/index.php?path=$2 [END,QSA]
+RewriteRule ^(public|student|tutor|owner)/(.*)$ /$1/index.php?path=$2 [END,QSA]
 
-RewriteCond %{DOC_ROOT}/public/$1 -f
-RewriteRule ^(.*)$ public/index.php?path=$1 [END,QSA]
-
+# If somehow matched against an existing file that wasn't covered in a rule above, do not serve the request.
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L,F]

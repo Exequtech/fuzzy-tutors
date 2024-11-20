@@ -2,13 +2,13 @@
 
 require_once __DIR__ . "/response_codes.php";
 
-function InternalError($error)
+function InternalError($error): never
 {
     error_log($error);
     MessageResponse(HTTP_INTERNAL_ERROR);
     exit;
 }
-function MessageResponse($code, $detail = null, $msg = null)
+function MessageResponse($code, $detail = null, $msg = null): never
 {
     $body = [
         'status' => $code,
@@ -20,7 +20,7 @@ function MessageResponse($code, $detail = null, $msg = null)
     exit;
 }
 
-function DetailedResponse($code, $body)
+function DetailedResponse($code, $body): never
 {
     header("Content-Type: application/json", true, $code);
     echo json_encode($body);

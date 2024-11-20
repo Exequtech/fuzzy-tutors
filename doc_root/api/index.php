@@ -19,7 +19,19 @@ foreach($endpoints as $key => $value)
         MessageResponse(HTTP_NOT_IMPLEMENTED);
     $endpoint = $value['methods'][$_SERVER['REQUEST_METHOD']];
     $schema = json_decode(file_get_contents( 'schema/' . $endpoint['schema-path']) , false);
-    $data = json_decode(file_get_contents('php://input'), false);
+    $data = null;
+    if($_SERVER['REQUEST_METHOD'] !== 'GET')
+        $data = json_decode(file_get_contents('php://input'), false);
+    else
+    {
+        $data = new stdClass();
+        foreach($_GET as $key => $value)
+        {
+            if($key == 'path')
+                continue;
+            $data->$key = $value;
+        }
+    }
 
     if($data === null)
         MessageResponse(HTTP_BAD_REQUEST, "Malformed JSON");
