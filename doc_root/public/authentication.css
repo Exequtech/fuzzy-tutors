@@ -83,7 +83,7 @@ button:hover {
 }
 
 .container {
-    width: 600px;
+    width: 500px;
     background-color: var(--primary-color-with-opacity);
     margin: auto;
     border-radius: 20px;

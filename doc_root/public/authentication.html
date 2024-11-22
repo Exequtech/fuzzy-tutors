@@ -12,12 +12,12 @@
         <hr>
         <form action="" id="loginForm">
             <h2>Login Form</h2>
-            <label for="username">Username/Email:
-                <input type="text" id="loginUsername">
+            <label for="loginUsernameTxt">Username/Email:
+                <input type="text" id="loginUsernameTxt">
             </label>
     
-            <label for="password">Password:
-                <input type="password" id="loginPassword">
+            <label for="loginPasswordTxt">Password:
+                <input type="password" id="loginPasswordTxt">
             </label>
 
             <button type="button" id="loginBtn">Login</button>
@@ -28,29 +28,30 @@
             <h2>Registration Form</h2>
 
             <div class="input-container">
-                <label for="username">Username:
-                    <input type="text" id="username">
+                <label for="usernameTxt"><span>Username:</span>
+                    <input type="text" id="usernameTxt">
                 </label>
     
                 <label for="userType" class="userTypeLabel">User Type
-                    <select name="userType" id="userType">
+                    <select name="userType" id="userTypeSlt">
                         <option value="">Select User Type</option>
                         <option value="student">Student</option>
                         <option value="tutor">Tutor</option>
+                        <option value="owner">Owner</option>
                     </select>
                 </label>
             </div>
 
-            <label for="email">Email:
-                <input type="email" id="email">
+            <label for="emailTxt"><span>Email:</span>
+                <input type="email" id="emailTxt">
             </label>
     
-            <label for="password">Password:
-                <input type="password" id="password">
+            <label for="passwordTxt">Password:
+                <input type="password" id="passwordTxt">
             </label>
 
-            <label for="confirmPassword">Confirm Password:
-                <input type="password" id="confirmPassword">
+            <label for="passwordConfirmationTxt">Confirm Password:
+                <input type="password" id="passwordConfirmationTxt">
             </label>
 
             <button type="button" id="registerBtn">Register</button>
@@ -61,6 +62,8 @@
         <div class="authurDescription">Developed by Exequtech</div>
     </div>
 
+    <script src="FormValidator.js"></script>
+    <script src="dataHandler.js"></script>
     <script src="authentication.js"></script>
 </body>
 </html>
