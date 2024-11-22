@@ -1,5 +1,9 @@
 <?php
 
+if(!defined('STARTED_SESSION'))
+    session_start();
+const STARTED_SESSION = true;
+
 function SessionLog(string $msg, string $sess_id = null): void
 {
     if($sess_id == null)
@@ -15,6 +19,7 @@ function InitializeSession(): bool
     $sess_id = session_id();
     if(!$init)
     {
+        $_SESSION['InitTime'] = time();
         $_SESSION['Salt'] = bin2hex(random_bytes(3));
         $_SESSION['DeviceHash'] = hash('sha256', $_SESSION['Salt'] . $_SERVER['HTTP_USER_AGENT']);
     }
@@ -26,4 +31,25 @@ function InitializeSession(): bool
         return true;
     }
     return $init;
+}
+
+// This removes all session relevant data, and removes the session cookie
+function DestroySession()
+{
+    session_unset();
+    session_destroy();
+    UnsetSessCookie();
+}
+function UnsetSessCookie()
+{
+    $params = session_get_cookie_params();
+    setcookie(
+        session_name(),
+        '',
+        time() - 3600,
+        $params['path'],
+        $params['domain'],
+        $params['secure'],
+        $params['httponly']
+    );
 }

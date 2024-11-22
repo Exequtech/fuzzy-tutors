@@ -8,7 +8,7 @@ require_once API_ROOT . "/functions/authentication.php";
 $endpoints['/^auth\/login$/'] = [
     'methods' => [
         'POST' => [
-            'callback' => function($request, $conn, $regex)
+            'callback' => function($request, $conn, $regex): never
             {
                 // Resolve user reference
                 $user = null;

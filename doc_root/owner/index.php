@@ -12,10 +12,11 @@ if(gettype($file_contents) !== 'string')
 
 $etag = md5($file_contents);
 header("Cache-Control: no-cache");
-header("ETag: \"$etag\"");
+header("ETag: $etag");
 header("Content-Type: " . GetMimeType($path));
 
-if(isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag)
+$headers = apache_request_headers();
+if(isset($headers['If-None-Match']) && $headers['If-None-Match'] == $etag)
 {
     http_response_code(304);
     exit;
