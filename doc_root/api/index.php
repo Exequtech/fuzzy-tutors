@@ -15,13 +15,26 @@ foreach($endpoints as $key => $value)
     $matches;
     if(!preg_match($key, $_GET['path'], $matches))
         continue;
+
     if(!isset($value['methods'][$_SERVER['REQUEST_METHOD']]))
         MessageResponse(HTTP_NOT_IMPLEMENTED);
+
     $endpoint = $value['methods'][$_SERVER['REQUEST_METHOD']];
+    if(!isset($endpoint['schema-path']) || !file_exists('schema/' . $endpoint['schema-path']))
+        InternalError("API validation: Failed to resolve $key (method " . $_SERVER['REQUEST_METHOD'] . ") schema file (schema-path non-existent or undefined)");
+
     $schema = json_decode(file_get_contents( 'schema/' . $endpoint['schema-path']) , false);
     $data = null;
     if($_SERVER['REQUEST_METHOD'] !== 'GET')
-        $data = json_decode(file_get_contents('php://input'), false);
+    {
+        $request_body = file_get_contents('php://input');
+        if($request_body !== "")
+        {
+            $data = json_decode(file_get_contents('php://input'), false);
+            if($data === null)
+                MessageResponse(HTTP_BAD_REQUEST, "Malformed JSON");
+        }
+    }
     else
     {
         $data = new stdClass();
@@ -32,9 +45,6 @@ foreach($endpoints as $key => $value)
             $data->$key = $value;
         }
     }
-
-    if($data === null)
-        MessageResponse(HTTP_BAD_REQUEST, "Malformed JSON");
 
     $valid = Validate($schema, $data);
     if($valid === true)
