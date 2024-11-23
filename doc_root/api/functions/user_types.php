@@ -14,3 +14,12 @@ function StrToUserTypeInt(string $str): int
         'tutor' => ROLE_TUTOR,
     };
 }
+function UserTypeIntToStr(int $code) : string
+{
+    return match($code)
+    {
+        ROLE_OWNER => 'owner',
+        ROLE_STUDENT => 'student',
+        ROLE_TUTOR => 'tutor',
+    };
+}

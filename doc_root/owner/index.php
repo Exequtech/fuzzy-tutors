@@ -1,5 +1,19 @@
 <?php
 require_once "../functions/mime.php";
+require_once "../api/functions/authentication.php";
+require_once "../api/functions/user_types.php";
+
+$authenticated = FullAuthenticate(false);
+if(!$authenticated)
+{
+    http_response_code(401);
+    exit;
+}
+if(!in_array(GetUser()['UserType'], [ROLE_OWNER]))
+{
+    http_response_code(403);
+    exit;
+}
 
 $path = $_GET['path'];
 $file_contents = file_get_contents($path);
