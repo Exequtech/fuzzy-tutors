@@ -26,21 +26,18 @@
 
         <form action="" id="registrationFom">
             <h2>Registration Form</h2>
+            <label for="userType" class="userTypeLabel">User Type:
+                <select name="userType" id="userTypeSlt">
+                    <option value="">Select User Type</option>
+                    <option value="student">Student</option>
+                    <option value="tutor">Tutor</option>
+                    <option value="owner">Owner</option>
+                </select>
+            </label>
 
-            <div class="input-container">
-                <label for="usernameTxt"><span>Username:</span>
-                    <input type="text" id="usernameTxt">
-                </label>
-    
-                <label for="userType" class="userTypeLabel">User Type
-                    <select name="userType" id="userTypeSlt">
-                        <option value="">Select User Type</option>
-                        <option value="student">Student</option>
-                        <option value="tutor">Tutor</option>
-                        <option value="owner">Owner</option>
-                    </select>
-                </label>
-            </div>
+            <label for="usernameTxt"><span>Username:</span>
+                <input type="text" id="usernameTxt">
+            </label>
 
             <label for="emailTxt"><span>Email:</span>
                 <input type="email" id="emailTxt">
@@ -62,8 +59,7 @@
         <div class="authurDescription">Developed by Exequtech</div>
     </div>
 
-    <script src="FormValidator.js"></script>
-    <script src="dataHandler.js"></script>
-    <script src="authentication.js"></script>
+    <script src="InputValidation.js"></script>
+    <script type="module" src="authentication.js"></script>
 </body>
 </html>

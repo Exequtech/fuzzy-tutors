@@ -16,8 +16,8 @@
 body {
     min-height: 100vh;
     background: linear-gradient(45deg, var(--success-color), var(--background-color));
-    height: 100vh;
     display: flex;
+    padding: 20px;
 }
 
 h1 {

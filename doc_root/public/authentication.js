@@ -1,3 +1,5 @@
+import { registerUser, loginUser, SessionManager } from './DataHandler.js';
+
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Get references to the forms and toggle elements
@@ -51,8 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
+/* ===================================== User Login =============================================== */
 loginBtn.addEventListener('click', async (e)=>{
+    e.preventDefault();
+
     let formValidation = FormValidator.validateLoginCredentials(loginUsernameTxt.value, loginPasswordTxt.value);
     if (formValidation.isValid) {
         if (formValidation.isEmail) {
@@ -67,8 +71,12 @@ loginBtn.addEventListener('click', async (e)=>{
     }
 });
 
+
+/* ===================================== User Registration =============================================== */
 registerBtn.addEventListener('click', async (e) => {
-    let formValidation = FormValidator.validateRegistrationCredentials(usernameTxt.value, emailTxt.value, passwordTxt.value, passwordConfirmationTxt.value);
+    e.preventDefault();
+
+    let formValidation = FormValidator.validateRegistrationCredentials(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value, passwordConfirmationTxt.value);
     if (formValidation.isValid) {
         let registrationResult = await registerUser(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value);
         alert(registrationResult.message);
@@ -77,8 +85,7 @@ registerBtn.addEventListener('click', async (e) => {
     }
 });
 
-
-/* ================================== Input Validation ================================== */
+/* ------------------------------------- Input Validation -------------------------------------------------*/
 usernameTxt.addEventListener('focusout', (e) => {
     displayValidationIndication(usernameTxt, FormValidator.validateUsername(usernameTxt.value));
 });

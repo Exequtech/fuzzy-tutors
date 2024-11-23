@@ -1,6 +1,6 @@
 // Constants
 const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 80;
+const PASSWORD_MAX_LENGTH = 50;
 const USERNAME_MIN_LENGTH = 2;
 const USERNAME_MAX_LENGTH = 30;
 const USER_TYPES = ['tutor', 'student', 'owner'];
