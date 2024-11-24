@@ -1,4 +1,5 @@
 import { registerUser, loginUser, SessionManager } from './DataHandler.js';
+import { FormValidator, displayValidationIndication } from './InputValidation.js';
 
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -59,11 +60,6 @@ loginBtn.addEventListener('click', async (e)=>{
 
     let formValidation = FormValidator.validateLoginCredentials(loginUsernameTxt.value, loginPasswordTxt.value);
     if (formValidation.isValid) {
-        if (formValidation.isEmail) {
-            alert("you have email")
-        } else if (!formValidation.isEmail) {
-            alert("you have username")
-        }
         let loginResult = await loginUser(loginUsernameTxt.value, formValidation.isEmail, loginPasswordTxt.value);
         alert(loginResult.message);
     } else {

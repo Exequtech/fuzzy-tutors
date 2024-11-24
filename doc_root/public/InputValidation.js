@@ -129,3 +129,8 @@ function displayValidationIndication(inputElement, validationResult) {
         inputElement.classList.remove('invalid');
     }
 }
+
+export {
+    FormValidator,
+    displayValidationIndication
+}
