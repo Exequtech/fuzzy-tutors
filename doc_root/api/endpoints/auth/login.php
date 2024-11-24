@@ -32,7 +32,11 @@ $endpoints['/^auth\/login$/'] = [
                 if(password_verify($request->password, $user['Password']))
                 {
                     LoginSession($user);
-                    MessageResponse(HTTP_OK);
+                    DetailedResponse(HTTP_OK, [
+                        'status' => HTTP_OK,
+                        'message' => GetStatusMessage(HTTP_OK),
+                        'authorized' => $user['Authorized'] ? true : false,
+                    ]);
                 }
                 else
                     MessageResponse(HTTP_UNAUTHORIZED, "Invalid credentials");
