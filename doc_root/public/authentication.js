@@ -101,7 +101,7 @@ passwordTxt.addEventListener('focusout', (e) => {
 
 passwordConfirmationTxt.addEventListener('focusout', (e) => {
     if(passwordConfirmationTxt.value != passwordTxt.value) {
-        DisplayLibrary.displayValidationIndication(passwordConfirmationTxt, new ValidationResult(false, "Passwords does not match"));
+        DisplayLibrary.indicateInputValidation(passwordConfirmationTxt, new ValidationResult(false, "Passwords does not match"));
     }
 });
 

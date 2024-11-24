@@ -9,11 +9,11 @@ class ApiResponse {
 
 // Configuration object for API endpoints
 const API_CONFIG = {
-    baseUrl: '/api/auth',
+    baseUrl: '/api',
     endpoints: {
-        signup: '/signup',
-        login: '/login',
-        token: '/ot-token'
+        signup: '/auth/signup',
+        login: '/auth/login',
+        token: '/auth/ot-token'
     }
 };
 
