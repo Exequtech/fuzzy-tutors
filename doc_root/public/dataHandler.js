@@ -12,26 +12,73 @@ const API_CONFIG = {
     baseUrl: '/api/auth',
     endpoints: {
         signup: '/signup',
-        login: '/login'
+        login: '/login',
+        token: '/ot-token'
     }
 };
 
-// Utility function to handle API calls
+// Enhanced SessionManager with token handling
+const SessionManager = {
+    TOKEN_KEY: 'authToken',
+    
+    async getNewToken() {
+        try {
+            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.token}`);
+            const data = await response.json();
+            
+            if (response.ok && data.token) {
+                this.setToken(data.token);
+                return data.token;
+            }
+            throw new Error('Failed to obtain token');
+        } catch (error) {
+            console.error('Token acquisition failed:', error);
+            throw error;
+        }
+    },
+
+    setToken(token) {
+        localStorage.setItem(this.TOKEN_KEY, token);
+    },
+
+    getToken() {
+        return localStorage.getItem(this.TOKEN_KEY);
+    },
+
+    clearToken() {
+        localStorage.removeItem(this.TOKEN_KEY);
+    },
+
+    isLoggedIn() {
+        return !!this.getToken();
+    },
+
+    redirectToHome() {
+        window.location.href = '/index.html';
+    }
+};
+
+// Utility function to handle API calls with token
 async function makeApiCall(endpoint, method, body) {
     try {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Add token if available
+        const token = SessionManager.getToken();
+        if (token) {
+            headers['X-OT-Token'] = token;
+        }
+
         const response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                // Add any authentication headers if needed
-                // 'Authorization': `Bearer ${getToken()}`
-            },
+            method,
+            headers,
             body: JSON.stringify(body)
         });
 
         const data = await response.json();
 
-        // Check if the response status is in the successful range (200-299)
         if (response.ok) {
             return new ApiResponse(true, data.detail || 'Operation successful', data);
         } else {
@@ -50,10 +97,8 @@ async function withRetry(fn, maxRetries = 3, delay = 1000) {
             const result = await fn();
             if (result.isSuccessful) return result;
             
-            // If it's the last attempt, return the failed result
             if (attempt === maxRetries) return result;
             
-            // Wait before retrying
             await new Promise(resolve => setTimeout(resolve, delay * attempt));
         } catch (error) {
             if (attempt === maxRetries) throw error;
@@ -78,9 +123,15 @@ async function registerUser(username, userType, email, password) {
         password
     };
 
-    return await withRetry(() => 
+    const response = await withRetry(() => 
         makeApiCall(API_CONFIG.endpoints.signup, 'POST', body)
     );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
 }
 
 /**
@@ -96,29 +147,17 @@ async function loginUser(usernameOrEmail, isEmail, password) {
         ...(isEmail ? { email: usernameOrEmail } : { username: usernameOrEmail })
     };
 
-    return await withRetry(() => 
+    const response = await withRetry(() => 
         makeApiCall(API_CONFIG.endpoints.login, 'POST', body)
     );
-}
 
-// Optional: Add session management
-const SessionManager = {
-    setToken(token) {
-        localStorage.setItem('authToken', token);
-    },
-
-    getToken() {
-        return localStorage.getItem('authToken');
-    },
-
-    clearToken() {
-        localStorage.removeItem('authToken');
-    },
-
-    isLoggedIn() {
-        return !!this.getToken();
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+        SessionManager.redirectToHome();
     }
-};
+
+    return response;
+}
 
 // Export the functions and classes
 export {

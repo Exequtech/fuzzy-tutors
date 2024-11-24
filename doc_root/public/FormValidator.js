@@ -110,22 +110,6 @@ class FormValidator {
     }
 }
 
-// Helper function to display validation errors
-function displayValidationIndication(inputElement, validationResult) {
-    // Remove any existing error messages
-    const existingError = inputElement.previousElementSibling;
-    if (existingError?.classList.contains('validation-error')) {
-        existingError.remove();
-    }
-    
-    if (!validationResult.isValid) {
-        const errorSpan = document.createElement('span');
-        errorSpan.className = 'validation-error';
-        errorSpan.style.color = 'var(--danger-color)';
-        errorSpan.textContent = validationResult.message;
-        inputElement.before(errorSpan);
-        inputElement.classList.add('invalid');
-    } else {
-        inputElement.classList.remove('invalid');
-    }
+export {
+    FormValidator
 }
