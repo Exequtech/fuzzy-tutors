@@ -112,13 +112,13 @@ function FullAuthenticate(bool $requireOT = true): bool
     return true;
 }
 
-function GetUser(): array|null
+function GetUser(bool $requireOT = true): array|null
 {
     global $AuthData;
 
     // Check for cache presence
     if(!isset($AuthData[1], $AuthData[0]))
-        FullAuthenticate();
+        FullAuthenticate($requireOT);
 
     if(!$AuthData[0])
         return null;
