@@ -2,6 +2,8 @@
 require_once __DIR__ . "/session.php";
 require_once __DIR__ . "/../db/init.php";
 require_once __DIR__ . "/../db/api_functions.php";
+require_once __DIR__ . "/api_responses.php";
+require_once __DIR__ . "/response_codes.php";
 
 function LoginSession($user): void
 {
@@ -124,4 +126,15 @@ function GetUser(bool $requireOT = true): array|null
         return null;
 
     return $AuthData[1];
+}
+
+function EnforceRole(array $potentialRoles, bool $requireOT = true)
+{
+    $user = GetUser($requireOT);
+
+    if(!$user)
+        MessageResponse(HTTP_UNAUTHORIZED);
+
+    if(!in_array($user['UserType'], $potentialRoles))
+        MessageResponse(HTTP_FORBIDDEN);
 }

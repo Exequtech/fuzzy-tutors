@@ -11,14 +11,10 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
         'GET' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
             {
-                $user = GetUser(false);
-                if(!$user)
-                    MessageResponse(HTTP_UNAUTHORIZED);
-                if(!in_array($user['UserType'], [ROLE_OWNER, ROLE_TUTOR]))
-                    MessageResponse(HTTP_FORBIDDEN, "Insufficient role.");
+                EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
                 $matches = BindedQuery($conn, "SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [(int)$regex[1], ROLE_STUDENT]);
-                if(!$matches)
+                if($matches === false)
                     InternalError("Failed to lookup user at specific student endpoint (GET)");
 
                 if(count($matches) !== 1)
@@ -39,16 +35,12 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
         'PATCH' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
             {
-                $user = GetUser();
-                if(!$user)
-                    MessageResponse(HTTP_UNAUTHORIZED);
-                if(!in_array($user['UserType'], [ROLE_OWNER, ROLE_TUTOR]))
-                    MessageResponse(HTTP_FORBIDDEN, "Insufficient role.");
+                EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $id = (int)$regex[1];
                 $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT]);
 
-                if(!$matches)
+                if($matches === false)
                     InternalError("Failed to lookup user at specific student endpoint (PATCH)");
 
                 if(count($matches) !== 1)
@@ -94,6 +86,28 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
                     MessageResponse(HTTP_OK);
             },
             'schema-path' => 'student/specific/PATCH.json'
+        ],
+        'DELETE' => [
+            'callback' => function(object|null $request, mysqli $conn, array $regex): never
+            {
+                EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
+
+                $id = (int)$regex[1];
+                $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT]);
+
+                if($matches === false)
+                    InternalError("Could not lookup student (DELETE)");
+
+                if(count($matches) !== 1)
+                    MessageResponse(HTTP_NOT_FOUND, "Student does not exist.");
+
+                $success = BindedQuery($conn, "DELETE FROM `User` WHERE `UserID` = ?;", 'i', [$id]);
+                if(!$success)
+                    InternalError("Failed to delete student $id in DB");
+
+                MessageResponse(HTTP_OK);
+            },
+            'schema-path' => 'student/specific/DELETE.json'
         ]
     ]
 ];
