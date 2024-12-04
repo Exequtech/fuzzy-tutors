@@ -27,13 +27,50 @@ async function loadContent(page) {
             }
         });
 
+        await loadPageScript(page);
+
         // Update URL without page reload
         history.pushState({page: page}, '', `?page=${page}`);
+        // Load and execute the page's specific JavaScript
     } catch (error) {
         console.error('Error loading content:', error);
         mainContent.innerHTML = '<div class="error">Error loading content</div>';
     }
-    initializeCalendar();
+}
+
+// Function to load and execute page-specific JavaScript
+async function loadPageScript(page) {
+    // Remove any previously loaded page script
+    const oldScript = document.querySelector(`script[data-page="${page}"]`);
+    if (oldScript) {
+        oldScript.remove();
+    }
+
+    // Create and append new script
+    const script = document.createElement('script');
+    script.src = `${page}.js`;
+    script.type = "module";
+    script.dataset.page = page; // Add data attribute to identify the script
+    
+    // Create a promise to handle script loading
+    const loadPromise = new Promise((resolve, reject) => {
+        script.onload = () => {
+            // Initialize the page if it has an init function
+            if (typeof window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
+                window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`]();
+            }
+            resolve();
+        };
+        script.onerror = () => reject(new Error(`Failed to load ${page}.js`));
+    });
+
+    document.body.appendChild(script);
+    
+    try {
+        await loadPromise;
+    } catch (error) {
+        console.error('Error loading page script:', error);
+    }
 }
 
 function initializeCalendar() {
@@ -149,5 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialPage = urlParams.get('page') || 'dashboard';
     loadContent(initialPage);
 });
+
 
 

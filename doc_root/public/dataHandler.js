@@ -13,7 +13,8 @@ const API_CONFIG = {
     endpoints: {
         signup: '/auth/signup',
         login: '/auth/login',
-        token: '/auth/ot-token'
+        token: '/auth/ot-token',
+        studentTopLevel: '/student'
     }
 };
 
@@ -30,7 +31,7 @@ const SessionManager = {
                 this.setToken(data.token);
                 return data.token;
             }
-            throw new Error('Failed to obtain token');
+            return null;
         } catch (error) {
             console.error('Token acquisition failed:', error);
             throw error;
@@ -71,18 +72,29 @@ async function makeApiCall(endpoint, method, body) {
             headers['X-OT-Token'] = token;
         }
 
-        const response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
-            method,
-            headers,
-            body: JSON.stringify(body)
-        });
+        let response;
+
+        if (method == "POST") {
+            response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
+                method,
+                headers,
+                body: JSON.stringify(body)
+            });
+        } else if (method == "GET") {
+            const queryString = new URLSearchParams(body).toString();
+
+            response = await fetch(`${API_CONFIG.baseUrl}${endpoint}?${queryString}`, {
+                method,
+                headers,
+            });
+        }
 
         const data = await response.json();
 
         if (response.ok) {
-            return new ApiResponse(true, data.detail || 'Operation successful', data);
+            return new ApiResponse(true, data.detail ?? 'Operation successful', data);
         } else {
-            return new ApiResponse(false, data.detail || 'Operation failed', null);
+            return new ApiResponse(false, data.detail ?? 'Operation failed', null);
         }
     } catch (error) {
         console.error('API call failed:', error);
@@ -159,10 +171,41 @@ async function loginUser(usernameOrEmail, isEmail, password) {
     return response;
 }
 
+/**
+ * Get new student(s) page
+ * @param {int} page - The page number
+ * @param {int} pageSize - The amount of student records to return (max 10)
+ * @param {string} order - The order type (desc or asc)
+ * @param {string} orderBy - Property name (id, username, email, authorized)
+ * @param {object} filter - Dictionary of properties and values for filtering
+ * @returns {object} Array of student objects
+ */
+async function getStudentPage(page = 1, pageSize=10, order="asc", orderBy="id", filter = {}) {
+    const params = {
+        page,
+        pageSize,
+        order,
+        orderBy,
+        ...filter
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.studentTopLevel, 'GET', params)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    console.log(response.results)
+    return response.data.results;
+}
+
 // Export the functions and classes
 export {
     registerUser,
     loginUser,
     SessionManager,
+    getStudentPage,
     ApiResponse
 };
