@@ -20,7 +20,7 @@
         },
         "orderBy": {
             "type": "string",
-            "enum": ["username", "email"]
+            "enum": ["username", "email", "id", "authorized"]
         },
         "order": {
             "type": "string",

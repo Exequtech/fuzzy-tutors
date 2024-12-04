@@ -85,6 +85,8 @@ $endpoints['/^student\/?$/'] = [
                     {
                         'username' => '`Username`',
                         'email' => '`Email`',
+                        'id' => '`UserID`',
+                        'authorized' => '`Authorized`',
                     };
                     if(isset($request->order))
                     {
