@@ -14,7 +14,7 @@ const API_CONFIG = {
         signup: '/auth/signup',
         login: '/auth/login',
         token: '/auth/ot-token',
-        studentTopLevel: '/student'
+        studentTopLevel: '/student',
     }
 };
 
@@ -86,6 +86,17 @@ async function makeApiCall(endpoint, method, body) {
             response = await fetch(`${API_CONFIG.baseUrl}${endpoint}?${queryString}`, {
                 method,
                 headers,
+            });
+        } else if (method == "DELETE") {
+            response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
+                method,
+                headers
+            });
+        } else if (method == "PATCH") {
+            response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
+                method,
+                headers,
+                body: JSON.stringify(body)
             });
         }
 
@@ -197,8 +208,75 @@ async function getStudentPage(page = 1, pageSize=10, order="asc", orderBy="id", 
         await SessionManager.getNewToken();
     }
 
-    console.log(response.results)
     return response.data.results;
+}
+
+/**
+ * Delete student record from user table
+ * @param {int} studentID - The ID of the student record you want to delete
+ */
+async function deleteStudentRecord(studentId) {
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.studentTopLevel}/${studentId}`, 'DELETE', null)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response.data.results;
+}
+
+/**
+ * Add New Student Record
+ * @param {string} username - The username
+ * @param {string} email - The email address
+ * @param {bool} authorized - Student access
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function addNewStudentRecord(username, email, authorized) {
+    const body = {
+        username,
+        email,
+        authorized
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.studentTopLevel, 'POST', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Update Student Record
+ * @param {string} username - The username
+ * @param {string} email - The email address
+ * @param {bool} authorized - Student access
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function updateStudentRecord(studentId, username, email, authorized) {
+    const body = {
+        username,
+        email,
+        authorized
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.studentTopLevel}/${studentId}`, 'PATCH', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
 }
 
 // Export the functions and classes
@@ -207,5 +285,8 @@ export {
     loginUser,
     SessionManager,
     getStudentPage,
-    ApiResponse
+    ApiResponse,
+    deleteStudentRecord,
+    addNewStudentRecord,
+    updateStudentRecord
 };

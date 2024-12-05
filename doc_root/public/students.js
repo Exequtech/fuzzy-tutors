@@ -1,4 +1,4 @@
-import { getStudentPage, SessionManager } from './DataHandler.js';
+import { getStudentPage, deleteStudentRecord, addNewStudentRecord, updateStudentRecord, SessionManager } from './DataHandler.js';
 // // Sample initial data
 // let students = [
 //     { id: 1, username: 'John Doe', email: 'john@example.com', status: 'Authorized' },
@@ -7,6 +7,9 @@ import { getStudentPage, SessionManager } from './DataHandler.js';
 // ];
 
 let students = await getStudentPage();
+
+window.confirmDelete = confirmDelete;
+window.editStudent = editStudent;
 
 // DOM Elements
 const studentsTable = document.getElementById('studentsList');
@@ -135,31 +138,24 @@ function closeDeleteModal() {
 }
 
 // CRUD Operations
-function handleFormSubmit() {
+async function handleFormSubmit() {
     const formData = {
         username: document.getElementById('username').value,
         email: document.getElementById('email').value,
-        authorized: document.getElementById('status').value
+        authorized: document.getElementById('status').value == "true"
     };
 
     if (currentStudentId) {
-        // Update existing student
-        const index = students.findIndex(s => s.id === currentStudentId);
-        if (index !== -1) {
-            students[index] = { ...students[index], ...formData };
-            showAlert('Student updated successfully!', 'success');
-        }
+        // Update
+        let response = await updateStudentRecord(currentStudentId, formData.username, formData.email, formData.authorized);
+        showAlert(response.message, response.isSuccessful);
     } else {
-        // Add new student
-        const newStudent = {
-            id: students.length + 1,
-            ...formData
-        };
-        students.push(newStudent);
+        // Add
+        await addNewStudentRecord(formData.username, formData.email, formData.authorized)
         showAlert('Student added successfully!', 'success');
     }
 
-    renderStudents();
+    renderStudents(await getStudentPage());
     closeModal();
 }
 
@@ -175,9 +171,9 @@ function confirmDelete(id) {
     openDeleteModal();
 }
 
-function deleteStudent(id) {
-    students = students.filter(student => student.id !== id);
-    renderStudents();
+async function deleteStudent(id) {
+    deleteStudentRecord(id);
+    renderStudents(await getStudentPage());
     showAlert('Student deleted successfully!', 'success');
 }
 
