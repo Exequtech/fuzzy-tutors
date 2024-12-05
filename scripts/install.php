@@ -55,6 +55,24 @@ $table_commands = [
             `Authorized` BIT NOT NULL,
             `RecordDate` DATETIME NOT NULL,
             PRIMARY KEY(`UserID`)
+        );",
+    'Class' =>
+        "CREATE TABLE `Class`
+        (
+            `ClassID INT NOT NULL UNIQUE AUTO_INCREMENT,
+            `ClassName` VARCHAR(30) NOT NULL UNIQUE,
+            `RecordDate` DATETIME NOT NULL,
+            PRIMARY KEY(`ClassID`)
+        );",
+    'StudentClass' =>
+        "CREATE TABLE `StudentClass`
+        (
+            `StudentID` INT NOT NULL,
+            `ClassID` INT NOT NULL,
+            `RecordDate` DATETIME NOT NULL,
+            FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`),
+            FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`),
+            PRIMARY KEY(`StudentID`, `ClassID`)
         );"
 ];
 foreach($table_commands as $key => $value)
