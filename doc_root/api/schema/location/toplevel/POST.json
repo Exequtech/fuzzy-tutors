@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 30,
+            "pattern": "[\\w\\s]+"
+        },
+        "address": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 255,
+                    "pattern": "[\\w\\s]+"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "description": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 255,
+                    "pattern": "[\\w\\s]+"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": ["name"],
+    "additionalProperties": false
+}
