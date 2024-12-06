@@ -9,7 +9,7 @@ RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Unknown requests redirect to /public if they exist there
-RewriteCond %{REQUEST_URI} !^/(api|public|student|tutor|owner)/?(.*)$
+RewriteCond %{REQUEST_URI} !^/(api|public|student|tutor|owner)(/.*)?$
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -d

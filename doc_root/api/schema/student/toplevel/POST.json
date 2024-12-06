@@ -12,17 +12,16 @@
             "maxLength": 40,
             "pattern": "^(?=[^\\.]+(\\.[^\\.]+)?@[^\\.]+(\\.[^\\.]+)+)[\\w\\.]+@[\\w\\.]+$"
         },
-        "userType": {
-            "type": "string",
-            "enum": ["student", "owner", "tutor"]
-        },
         "password": {
             "type": "string",
             "minLength": 8,
             "maxLength": 50,
             "pattern": "^(?=.*[A-Z]+)(?=.*[a-z])(?=.*[\\d])(?=.*[^\\w\\s])[\\x00-\\x7F]+$"
+        },
+        "authorized": {
+            "type": "boolean"
         }
     },
-    "required": ["username", "email", "userType", "password"],
+    "required": ["username", "email", "authorized"],
     "additionalProperties": false
 }

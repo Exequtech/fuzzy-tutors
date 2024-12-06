@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "username": {
+            "type": "string",
+            "maxLength": 15,
+            "pattern": "^[\\w-]+$"
+        },
+        "email": {
+            "type": "string",
+            "maxLength": 40
+        },
+        "authorized": {
+            "type": "string",
+            "enum": ["true", "false"]
+        },
+        "orderBy": {
+            "type": "string",
+            "enum": ["username", "email", "id", "authorized"]
+        },
+        "order": {
+            "type": "string",
+            "enum": ["asc", "desc"]
+        },
+        "page": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "pageSize": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        }
+    },
+    "additionalProperties": false
+}

@@ -37,5 +37,23 @@ RewriteCond %{REQUEST_METHOD} ^GET$
 RewriteCond $1 ^auth/ot-token$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
+# Student denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^student/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
+RewriteCond $1 ^student/[\d]+/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Student allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^student/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteCond $1 ^student/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
 # If no prior rules matched, the endpoint doesn't exist (404)
 RewriteRule ^ - [END,R=404]

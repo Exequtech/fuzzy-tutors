@@ -6,6 +6,7 @@ require_once "functions/response_codes.php";
 require_once "functions/validation.php";
 
 define('API_ROOT', __DIR__);
+const API_PAGE_SIZE = 10;
 $endpoints = [];
 
 require_once "endpoints/include.php";
@@ -23,7 +24,7 @@ foreach($endpoints as $key => $value)
     if(!isset($endpoint['schema-path']) || !file_exists('schema/' . $endpoint['schema-path']))
         InternalError("API validation: Failed to resolve $key (method " . $_SERVER['REQUEST_METHOD'] . ") schema file (schema-path non-existent or undefined)");
 
-    $schema = json_decode(file_get_contents( 'schema/' . $endpoint['schema-path']) , false);
+    $schema = json_decode(file_get_contents('schema/' . $endpoint['schema-path']) , false);
     $data = null;
     if($_SERVER['REQUEST_METHOD'] !== 'GET')
     {
@@ -47,11 +48,7 @@ foreach($endpoints as $key => $value)
     }
 
     $valid = Validate($schema, $data);
-    if($valid === true)
-    {
-        $endpoint['callback']($data, $conn, $matches);
-    }
-    else
+    if($valid !== true)
     {
         $errors = [];
         foreach($valid as $err)
@@ -60,6 +57,11 @@ foreach($endpoints as $key => $value)
         }
         MessageResponse(HTTP_BAD_REQUEST, $errors);
     }
+
+    if(isset($endpoint['db-validate']))
+        $endpoint['db-validate']($data, $conn);
+
+    $endpoint['callback']($data, $conn, $matches);
 }
 
 MessageResponse(HTTP_NOT_FOUND);

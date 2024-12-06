@@ -2,6 +2,8 @@
 require_once __DIR__ . "/session.php";
 require_once __DIR__ . "/../db/init.php";
 require_once __DIR__ . "/../db/api_functions.php";
+require_once __DIR__ . "/api_responses.php";
+require_once __DIR__ . "/response_codes.php";
 
 function LoginSession($user): void
 {
@@ -112,16 +114,27 @@ function FullAuthenticate(bool $requireOT = true): bool
     return true;
 }
 
-function GetUser(): array|null
+function GetUser(bool $requireOT = true): array|null
 {
     global $AuthData;
 
     // Check for cache presence
     if(!isset($AuthData[1], $AuthData[0]))
-        FullAuthenticate();
+        FullAuthenticate($requireOT);
 
     if(!$AuthData[0])
         return null;
 
     return $AuthData[1];
+}
+
+function EnforceRole(array $potentialRoles, bool $requireOT = true)
+{
+    $user = GetUser($requireOT);
+
+    if(!$user)
+        MessageResponse(HTTP_UNAUTHORIZED);
+
+    if(!in_array($user['UserType'], $potentialRoles))
+        MessageResponse(HTTP_FORBIDDEN);
 }

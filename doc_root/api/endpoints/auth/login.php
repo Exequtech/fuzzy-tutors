@@ -14,13 +14,13 @@ $endpoints['/^auth\/login$/'] = [
                 $user = null;
                 if(isset($request->email))
                 {
-                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE Email = ?", 's', [$request->email]);
+                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `Email` = ?;", 's', [$request->email]);
                     if(count($matches) !== 0)
                         $user = $matches[0];
                 }
                 else if(isset($request->username))
                 {
-                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE Username = ?", 's', [$request->username]);
+                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `Username` = ?;", 's', [$request->username]);
                     if(count($matches) !== 0)
                         $user = $matches[0];
                 }
