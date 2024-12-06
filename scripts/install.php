@@ -41,7 +41,7 @@ if($conn->connect_error)
     echo "Error occurred while connecting to database:  $conn->connect_error";
     exit;
 }
-echo "Connected successfully!";
+echo "Connected successfully!\n";
 
 $table_commands = [
     'User' =>
@@ -73,6 +73,16 @@ $table_commands = [
             FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`),
             FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`),
             PRIMARY KEY(`StudentID`, `ClassID`)
+        );",
+    'Location' =>
+        "CREATE TABLE `Location`
+        (
+            `LocationID` INT NOT NULL UNIQUE AUTO_INCREMENT,
+            `LocationName` VARCHAR(30) NOT NULL UNIQUE,
+            `Address` VARCHAR(255),
+            `Description` VARCHAR(255),
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`LocationID`)
         );"
 ];
 foreach($table_commands as $key => $value)
