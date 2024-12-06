@@ -73,6 +73,17 @@ $table_commands = [
             FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`),
             FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`),
             PRIMARY KEY(`StudentID`, `ClassID`)
+        );",
+    'Topic' =>
+        "CREATE TABLE `Topic`
+        (
+            `TopicID` INT NOT NULL UNIQUE AUTO_INCREMENT,
+            `SubjectID` INT,
+            `TopicName` VARCHAR(30) NOT NULL,
+            `Description` VARCHAR(255),
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            FOREIGN KEY(`SubjectID`) REFERENCES `Topic`(`TopicID`),
+            PRIMARY KEY(`TopicID`)
         );"
 ];
 foreach($table_commands as $key => $value)
