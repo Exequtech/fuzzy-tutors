@@ -4,7 +4,8 @@ require_once __DIR__ . "/../functions/api_responses.php";
 function BindedQuery(mysqli $conn, string $query, string $types, array $values, bool $exitOnfailure=true): array|bool
 {
     $stmt = $conn->prepare($query);
-    $stmt->bind_param($types, ...$values);
+    if(!empty($values))
+        $stmt->bind_param($types, ...$values);
 
     if(!$stmt->execute())
     {

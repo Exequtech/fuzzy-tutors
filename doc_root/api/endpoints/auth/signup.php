@@ -12,6 +12,7 @@ $endpoints['/^auth\/signup$/'] = [
         'POST' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
             {
+                DBValidateNewUser($request, $conn);
                 // Create user
                 $userType = StrToUserTypeInt($request->userType);
                 $user = CreateUser($conn, $request->username, $request->email, $userType, false, $request->password);
@@ -23,7 +24,6 @@ $endpoints['/^auth\/signup$/'] = [
                 MessageResponse(HTTP_OK);
             },
             'schema-path' => 'auth/signup/POST.json',
-            'db-validate' => 'DBValidateNewUser'
         ]
     ],
 ];

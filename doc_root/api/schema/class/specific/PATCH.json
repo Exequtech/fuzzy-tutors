@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "pattern": "^[\\x00-\\x7F]+$",
+            "minLength": 4,
+            "maxLength": 30
+        },
+        "students": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "uniqueItems": true
+        }
+    },
+    "additionalProperties": false
+}

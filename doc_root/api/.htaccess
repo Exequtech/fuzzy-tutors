@@ -55,5 +55,23 @@ RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^student/[\d]+/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
+# Class denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^class/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
+RewriteCond $1 ^class/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,R=405]
+
+# Class allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^class/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteCond $1 ^class/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
 # If no prior rules matched, the endpoint doesn't exist (404)
 RewriteRule ^ - [END,R=404]

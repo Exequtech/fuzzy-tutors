@@ -1,0 +1,30 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "name": {
+            "type": "string",
+            "maxLength": 30
+        },
+        "orderBy": {
+            "type": "string",
+            "enum": ["id", "name"]
+        },
+        "order": {
+            "type": "string",
+            "enum": ["asc", "desc"]
+        },
+        "page": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "pageSize": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        }
+    },
+    "additionalProperties": false
+}

@@ -58,9 +58,6 @@ foreach($endpoints as $key => $value)
         MessageResponse(HTTP_BAD_REQUEST, $errors);
     }
 
-    if(isset($endpoint['db-validate']))
-        $endpoint['db-validate']($data, $conn);
-
     $endpoint['callback']($data, $conn, $matches);
 }
 
