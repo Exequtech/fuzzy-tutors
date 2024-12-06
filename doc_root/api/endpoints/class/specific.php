@@ -13,16 +13,14 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
                 $classID = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT `ClassName`, `RecordDate` FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], false);
-                if($matches === false)
-                    InternalError("Failed to lookup class in specific endpoint (GET)");
+                $matches = BindedQuery($conn, "SELECT `ClassName`, `RecordDate` FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], true,
+                    "Failed to fetch class (specific class GET)");
                 
                 if(empty($matches))
                     MessageResponse(HTTP_NOT_FOUND);
 
-                $students = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ? ORDER BY `StudentID`;", 'i', [$classID], false);
-                if($students === false)
-                    InternalError("Failed to lookup students in specific class endpoint (GET)");
+                $students = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ? ORDER BY `StudentID`;", 'i', [$classID], true,
+                    "Failed to fetch students (specific class GET)");
 
                 $ret = [];
                 $ret['id'] = $classID;
@@ -40,14 +38,13 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $classID = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT 1 FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], false);
-                if($matches === false)
-                    InternalError("Failed to lookup class in specific class endpoint (DELETE)");
+                $matches = BindedQuery($conn, "SELECT 1 FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], true,
+                    "Failed to fetch class (specific class DELETE)");
 
                 if(empty($matches))
                     MessageResponse(HTTP_NOT_FOUND);
 
-                $conn->begin_transaction();
+                $conn->begin_transaction() || InternalError("Failed to start class delete transaction (specific class DELETE)");
                 
                 $success = BindedQuery($conn, "DELETE FROM `StudentClass` WHERE `ClassID` = ?;", 'i', [$classID], false);
                 if(!$success)
@@ -63,8 +60,7 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                     InternalError("Failed to delete class in specific class endpoint (DELETE)");
                 }
 
-                if(!$conn->commit())
-                    InternalError("Failed to commit in specific class endpoint (DELETE)");
+                $conn->commit() || InternalError("Failed to commit class deletion (specific class DELETE)");
                 
                 MessageResponse(HTTP_OK);
             },
@@ -76,15 +72,13 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $classID = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT 1 FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], false);
-                if($matches === false)
-                    InternalError("Failed to check for class existence in specific class endpoint (PATCH)");
+                $matches = BindedQuery($conn, "SELECT 1 FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], true,
+                    "Failed to check for class existence (specific class PATCH)");
 
                 if(empty($matches))
                     MessageResponse(HTTP_NOT_FOUND);
 
-                if(!$conn->begin_transaction())
-                    InternalError("Failed to begin transaction in specific class endpoint (PATCH)");
+                $conn->begin_transaction() || InternalError("Failed to begin class edit transaction (specific class PATCH)");
 
                 if(isset($request->name))
                 {
@@ -97,14 +91,12 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 }
                 if(!isset($request->students))
                 {
-                    if(!$conn->commit())
-                        InternalError("Failed to commit name change on specific class endpoint (PATCH)");
+                    $conn->commit() || InternalError("Failed to commit name change transaction (specific class PATCH)");
                     MessageResponse(HTTP_OK);
                 }
 
-                $matches = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ?;", 'i', [$classID], false);
-                if($matches === false)
-                    InternalError("Failed to fetch related students in specific class endpoint (PATCH)");
+                $matches = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ?;", 'i', [$classID], false,
+                    "Failed to fetch StudentClass relations (specific class PATCH)");
 
                 $linkedIDs = array_map(function($record){return $record['StudentID'];}, $matches);
 
@@ -115,10 +107,13 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 {
                     $query = 'INSERT INTO `StudentClass`(`ClassID`, `StudentID`) VALUES ' 
                         .implode(',', array_map(function($id)use($classID){return "($classID,$id)";},$createDiffs)) . ';';
-                    $success = BindedQuery($conn, $query, '', [], false);
+                    BindedQuery($conn, $query, '', [], false);
 
                     if(!$success)
-                        InternalError("Failed to attach students in specific class endpoint (PATCH)");
+                    {
+                        $conn->rollback();
+                        InternalError("Failed to add StudentClass records (specific class PATCH)");
+                    }
                 }
                 if(!empty($deleteDiffs))
                 {
@@ -126,10 +121,12 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                     $success = BindedQuery($conn, $query, '', [], false);
 
                     if(!$success)
-                        InternalError("Failed to detach students in specific class endpoint (PATCH)");
+                    {
+                        $conn->rollback();
+                        InternalError("Failed to remove StudentClass records (specific class PATCH)");
+                    }
                 }
-                if(!$conn->commit())
-                    InternalError("Failed to commit class changes in specific class endpoint (PATCH)");
+                $conn->commit() || InternalError("Failed to commit class changes (specific class PATCH)");
                 MessageResponse(HTTP_OK);
             },
             'schema-path' => 'class/specific/PATCH.json'

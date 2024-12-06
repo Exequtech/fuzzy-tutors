@@ -67,9 +67,7 @@ $endpoints['/^class\/?$/'] = [
                         . $order . " LIMIT $offset, $pageSize";
                 $fullQuery = "SELECT `c`.`ClassID`, `c`.`ClassName`, `sc`.`StudentID`, `c`.`RecordDate` FROM ($classQuery) `c`"
                         .' LEFT JOIN (SELECT `StudentID`, `ClassID` FROM `StudentClass` ORDER BY `StudentID`) `sc` ON `c`.`ClassID` = `sc`.`ClassID`;';
-                $results = BindedQuery($conn, $fullQuery, implode($types), $values);
-                if($results === false)
-                    InternalError("Failed to query for classes (GET)");
+                $results = BindedQuery($conn, $fullQuery, implode($types), $values, true, "Failed to fetch class records (toplevel class GET)");
 
                 $classes = [];
                 foreach($results as $record)
@@ -98,18 +96,17 @@ $endpoints['/^class\/?$/'] = [
             {
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
-                $matches = BindedQuery($conn, "SELECT * FROM `Class` WHERE `ClassName` = ?;", 's', [$request->name], false);
-                if($matches === false)
-                    InternalError("Failed to check if classname already exists in class creation (POST)");
+                $matches = BindedQuery($conn, "SELECT * FROM `Class` WHERE `ClassName` = ?;", 's', [$request->name], true,
+                    "Failed to check for existing classname (toplevel class POST)");
+
                 if(!empty($matches))
                     MessageResponse(HTTP_CONFLICT, "Class name already exists");
 
                 if(!empty($request->students))
                 {
                     $matches = BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `UserType` = ? AND `UserID` IN (" . implode(',',$request->students) . ");",
-                            'i', [ROLE_STUDENT], false);
-                    if($matches === false)
-                        InternalError("Failed to db-validate students to add in class creation (POST)");
+                            'i', [ROLE_STUDENT], true,
+                        "Failed to fetch student records (toplevel class POST)");
 
                     $existing = array_map(function($user) {
                         return $user['UserID'];
@@ -117,15 +114,15 @@ $endpoints['/^class\/?$/'] = [
                     $diff = array_diff($request->students, $existing);
 
                     if(!empty($diff))
-                        MessageResponse(HTTP_CONFLICT, "Some student ids don't exist.", ['invalid_ids' => $diff]);
+                        MessageResponse(HTTP_CONFLICT, "Some provided student ids don't exist.", ['invalid_ids' => $diff]);
                 }
-                $conn->begin_transaction();
+                $conn->begin_transaction() || InternalError("Failed to begin class creation transaction (toplevel class POST)");
 
-                $success = BindedQuery($conn, "INSERT INTO `Class`(`ClassName`, `RecordDate`) VALUES (?, NOW());", 's', [$request->name]);
+                $success = BindedQuery($conn, "INSERT INTO `Class`(`ClassName`, `RecordDate`) VALUES (?, NOW());", 's', [$request->name], false);
                 if(!$success)
                 {
                     $conn->rollback();
-                    InternalError("Failed to insert class (POST)");
+                    InternalError("Failed to insert class (toplevel class POST)");
                 }
                 $classID = $conn->insert_id;
 
@@ -139,13 +136,11 @@ $endpoints['/^class\/?$/'] = [
                     if(!$success)
                     {
                         $conn->rollback();
-                        InternalError("Failed to attach students (POST)");
+                        InternalError("Failed to attach students (toplevel class POST)");
                     }
                 }
-                if(!$conn->commit())
-                {
-                    InternalError("Failed to commit class creation (POST)");
-                }
+                $conn->commit() || InternalError("Failed to commit class creation (toplevel class POST)");
+
                 MessageResponse(HTTP_CREATED);
             },
             'schema-path' => 'class/toplevel/POST.json'

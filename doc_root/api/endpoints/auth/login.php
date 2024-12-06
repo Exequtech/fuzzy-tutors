@@ -14,13 +14,15 @@ $endpoints['/^auth\/login$/'] = [
                 $user = null;
                 if(isset($request->email))
                 {
-                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `Email` = ?;", 's', [$request->email]);
+                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `Email` = ?;", 's', [$request->email], true,
+                        "Failed to fetch users (auth login POST)");
                     if(count($matches) !== 0)
                         $user = $matches[0];
                 }
                 else if(isset($request->username))
                 {
-                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `Username` = ?;", 's', [$request->username]);
+                    $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `Username` = ?;", 's', [$request->username], true,
+                        "Failed to fetch users (auth login POST)");
                     if(count($matches) !== 0)
                         $user = $matches[0];
                 }
@@ -32,11 +34,7 @@ $endpoints['/^auth\/login$/'] = [
                 if(password_verify($request->password, $user['Password']))
                 {
                     LoginSession($user);
-                    DetailedResponse(HTTP_OK, [
-                        'status' => HTTP_OK,
-                        'message' => GetStatusMessage(HTTP_OK),
-                        'authorized' => $user['Authorized'] ? true : false,
-                    ]);
+                    MessageResponse(HTTP_OK, null, ['authorized' => $user['Authorized'] ? true : false]);
                 }
                 else
                     MessageResponse(HTTP_UNAUTHORIZED, "Invalid credentials");

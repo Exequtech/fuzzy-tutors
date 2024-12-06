@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../functions/api_responses.php";
 
-function BindedQuery(mysqli $conn, string $query, string $types, array $values, bool $exitOnfailure=true): array|bool
+function BindedQuery(mysqli $conn, string $query, string $types, array $values, bool $exitOnfailure=true, string $failContext = null): array|bool
 {
     $stmt = $conn->prepare($query);
     if(!empty($values))
@@ -9,7 +9,7 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
 
     if(!$stmt->execute())
     {
-        InternalError($stmt->error, $exitOnfailure);
+        InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
         return false;
     }
 
@@ -17,15 +17,11 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
     if($result == false)
     {
         if($stmt->errno !== 0)
-            InternalError($stmt->error, $exitOnfailure);
+            InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
         return $stmt->errno == 0;
     }
 
-    $rows = [];
-    while(($row = $result->fetch_assoc()) !== null)
-    {
-        $rows[] = $row;
-    }
+    $rows = $result->fetch_all(MYSQLI_ASSOC);
 
     $result->free();
     return $rows;

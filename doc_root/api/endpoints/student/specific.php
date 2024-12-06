@@ -13,9 +13,8 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
             {
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
-                $matches = BindedQuery($conn, "SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [(int)$regex[1], ROLE_STUDENT]);
-                if($matches === false)
-                    InternalError("Failed to lookup user at specific student endpoint (GET)");
+                $matches = BindedQuery($conn, "SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [(int)$regex[1], ROLE_STUDENT], true,
+                    "Failed to fetch user (specific student GET)");
 
                 if(count($matches) !== 1)
                     MessageResponse(HTTP_NOT_FOUND);
@@ -38,10 +37,8 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $id = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT]);
-
-                if($matches === false)
-                    InternalError("Failed to lookup user at specific student endpoint (PATCH)");
+                $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT], true,
+                    "Failed to fetch student (specific student PATCH)");
 
                 if(count($matches) !== 1)
                     MessageResponse(HTTP_NOT_FOUND);
@@ -79,11 +76,10 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
                     MessageResponse(HTTP_OK);
 
                 $query = "UPDATE `User` SET" . implode(',', $sets) . " WHERE `UserID` = ?;";
-                $success = BindedQuery($conn, $query, implode('', $types) . 'i', [...$values, $id]);
-                if(!$success)
-                    InternalError("Student updated failed in specific student endpoint (PATCH)");
-                else
-                    MessageResponse(HTTP_OK);
+                BindedQuery($conn, $query, implode('', $types) . 'i', [...$values, $id], true,
+                    "Failed to update student (specific student PATCH)");
+
+                MessageResponse(HTTP_OK);
             },
             'schema-path' => 'student/specific/PATCH.json'
         ],
@@ -93,17 +89,14 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $id = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT]);
-
-                if($matches === false)
-                    InternalError("Could not lookup student (DELETE)");
+                $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT], true,
+                    "Failed to fetch student (specific student delete)");
 
                 if(count($matches) !== 1)
                     MessageResponse(HTTP_NOT_FOUND, "Student does not exist.");
 
-                $success = BindedQuery($conn, "DELETE FROM `User` WHERE `UserID` = ?;", 'i', [$id]);
-                if(!$success)
-                    InternalError("Failed to delete student $id in DB");
+                BindedQuery($conn, "DELETE FROM `User` WHERE `UserID` = ?;", 'i', [$id], true,
+                    "Failed to delete student (specific student delete)");
 
                 MessageResponse(HTTP_OK);
             },

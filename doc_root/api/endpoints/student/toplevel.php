@@ -91,9 +91,9 @@ $endpoints['/^student\/?$/'] = [
                 }
 
                 $query = 'SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` FROM `User` WHERE ' . implode(' AND ', $conditions) . $order . " LIMIT $offset, $pagesize;";
-                $matches = BindedQuery($conn, $query, implode('', $types), $values);
-                if($matches === false)
-                    InternalError("Failed to fetch students (GET)");
+                $matches = BindedQuery($conn, $query, implode('', $types), $values, true,
+                    "Failed to fetch students (toplevel student GET)");
+
                 MessageResponse(HTTP_OK, null, [
                     'results' => array_map(function($user)
                     {
