@@ -59,7 +59,7 @@ $table_commands = [
     'Class' =>
         "CREATE TABLE `Class`
         (
-            `ClassID INT NOT NULL UNIQUE AUTO_INCREMENT,
+            `ClassID` INT NOT NULL UNIQUE AUTO_INCREMENT,
             `ClassName` VARCHAR(30) NOT NULL UNIQUE,
             `RecordDate` DATETIME NOT NULL,
             PRIMARY KEY(`ClassID`)

@@ -15,6 +15,7 @@ const API_CONFIG = {
         login: '/auth/login',
         token: '/auth/ot-token',
         studentTopLevel: '/student',
+        classTopLevel: '/class'
     }
 };
 
@@ -279,6 +280,35 @@ async function updateStudentRecord(studentId, username, email, authorized) {
     return response;
 }
 
+/**
+ * Get Classes page
+ * @param {int} page - The page number
+ * @param {int} pageSize - The amount of class records to return (max 10)
+ * @param {string} order - The order type (desc or asc)
+ * @param {string} orderBy - Property name (id, name)
+ * @param {object} filter - Dictionary of properties and values for filtering
+ * @returns {object} Array of class objects
+ */
+async function getClassPage(page = 1, pageSize=10, order="asc", orderBy="id", filter = {}) {
+    const params = {
+        page,
+        pageSize,
+        order,
+        orderBy,
+        ...filter
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.classTopLevel, 'GET', params)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response.data.results;
+}
+
 // Export the functions and classes
 export {
     registerUser,
@@ -288,5 +318,6 @@ export {
     ApiResponse,
     deleteStudentRecord,
     addNewStudentRecord,
-    updateStudentRecord
+    updateStudentRecord,
+    getClassPage
 };

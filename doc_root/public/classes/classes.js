@@ -1,5 +1,5 @@
 // classes.js
-import { getStudentPage, SessionManager } from '../DataHandler.js';
+import { getStudentPage, getClassPage, SessionManager } from '../DataHandler.js';
 
 // Simulated class data storage (replace with actual API calls)
 let classes = [];
@@ -20,7 +20,7 @@ let currentClassId = null;
 
 // Initialize
 async function init() {
-    students = await getStudentPage(); // Get up to 100 students
+    students = await getStudentPage();
     renderClasses();
 }
 
@@ -31,7 +31,7 @@ addClassBtn.addEventListener('click', () => openModal());
 searchInput.addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase();
     const filteredClasses = classes.filter(cls => 
-        cls.name.toLowerCase().includes(searchTerm)
+        cls.name.toLowerCase().includes(searchTerm) 
     );
     renderClasses(filteredClasses);
 });
