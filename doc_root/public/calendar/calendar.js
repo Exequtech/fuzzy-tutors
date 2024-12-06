@@ -1,25 +1,4 @@
-    <div id="calendar-wrapper" class="calendar-wrapper">
-      <div class="calendar-header">
-        <button id="prevMonth" class="nav-btn">◀</button>
-        <h2 id="monthDisplay"></h2>
-        <button id="nextMonth" class="nav-btn">▶</button>
-      </div>
-      <div class="weekdays">
-        <div>Sun</div>
-        <div>Mon</div>
-        <div>Tue</div>
-        <div>Wed</div>
-        <div>Thu</div>
-        <div>Fri</div>
-        <div>Sat</div>
-      </div>
-      <div id="calendar" class="calendar-grid"></div>
-    </div>
-    
-    <script>
-    // Wrap the calendar functionality in a function that can be called after content load
-    function initializeCalendar() {
-        let currentDate = new Date();
+let currentDate = new Date();
         let currentMonth = currentDate.getMonth();
         let currentYear = currentDate.getFullYear();
     
@@ -104,11 +83,3 @@
                 calendar.innerHTML = days;
             }
         }
-    
-        // Initial render
-        renderCalendar();
-    }
-    
-    // Call initialization when the script loads
-    initializeCalendar();
-    </script>

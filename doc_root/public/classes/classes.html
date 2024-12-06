@@ -1,0 +1,72 @@
+<!-- classes.html -->
+<div class="classes-container">
+    <div class="header-section">
+        <h1>Class Management</h1>
+        <button id="addClassBtn" class="add-button">
+            <i class="fas fa-plus"></i>
+            New Class
+        </button>
+    </div>
+
+    <div id="alertMessage" class="alert hidden"></div>
+
+    <div class="search-section">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search classes...">
+    </div>
+
+    <div class="classes-grid" id="classesGrid">
+        <!-- Classes will be dynamically inserted here -->
+    </div>
+</div>
+
+<!-- Add/Edit Class Modal -->
+<div id="classModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add New Class</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <form id="classForm">
+            <div class="form-group">
+                <label for="className">Class Name:</label>
+                <input type="text" id="className" required>
+            </div>
+            <div class="form-group">
+                <label>Students:</label>
+                <div class="student-selection">
+                    <div class="available-students">
+                        <h3>Available Students</h3>
+                        <div id="availableStudents" class="student-list"></div>
+                    </div>
+                    <div class="student-controls">
+                        <button type="button" id="addStudentBtn" class="control-button">&gt;&gt;</button>
+                        <button type="button" id="removeStudentBtn" class="control-button">&lt;&lt;</button>
+                    </div>
+                    <div class="selected-students">
+                        <h3>Selected Students</h3>
+                        <div id="selectedStudents" class="student-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="cancel-button">Cancel</button>
+                <button type="submit" class="submit-button">Add Class</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Class Modal -->
+<div id="deleteModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Deletion</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <p>Are you sure you want to delete this class?</p>
+        <div class="form-buttons">
+            <button type="button" class="cancel-button">Cancel</button>
+            <button type="button" class="delete-button">Delete</button>
+        </div>
+    </div>
+</div>

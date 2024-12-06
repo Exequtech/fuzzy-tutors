@@ -1,10 +1,4 @@
-import { getStudentPage, deleteStudentRecord, addNewStudentRecord, updateStudentRecord, SessionManager } from './DataHandler.js';
-// // Sample initial data
-// let students = [
-//     { id: 1, username: 'John Doe', email: 'john@example.com', status: 'Authorized' },
-//     { id: 2, username: 'Jane Smith', email: 'jane@example.com', status: 'Authorized' },
-//     { id: 3, username: 'Mike Johnson', email: 'mike@example.com', status: 'Pending' }
-// ];
+import { getStudentPage, deleteStudentRecord, addNewStudentRecord, updateStudentRecord, SessionManager } from '../DataHandler.js';
 
 let students = await getStudentPage();
 
@@ -21,12 +15,6 @@ const alertMessage = document.getElementById('alertMessage');
 const addStudentBtn = document.getElementById('addStudentBtn');
 
 let currentStudentId = null;
-
-// Initialize the page
-function init() {
-    renderStudents();
-    // setupEventListeners();
-}
 
 /* ============================= Setup Event Listeners ================================= */
 // Add Student Button
@@ -147,12 +135,12 @@ async function handleFormSubmit() {
 
     if (currentStudentId) {
         // Update
-        let response = await updateStudentRecord(currentStudentId, formData.username, formData.email, formData.authorized);
-        showAlert(response.message, response.isSuccessful);
+        let apiResponse = await updateStudentRecord(currentStudentId, formData.username, formData.email, formData.authorized);
+        showAlert(apiResponse.message, apiResponse.isSuccessful);
     } else {
         // Add
-        await addNewStudentRecord(formData.username, formData.email, formData.authorized)
-        showAlert('Student added successfully!', 'success');
+        let apiResponse = await addNewStudentRecord(formData.username, formData.email, formData.authorized)
+        showAlert(apiResponse.message, apiResponse.isSuccessful);
     }
 
     renderStudents(await getStudentPage());
@@ -172,21 +160,25 @@ function confirmDelete(id) {
 }
 
 async function deleteStudent(id) {
-    deleteStudentRecord(id);
+    let apiResponse = await deleteStudentRecord(id);
+    showAlert(apiResponse.message, apiResponse.isSuccessful);
     renderStudents(await getStudentPage());
-    showAlert('Student deleted successfully!', 'success');
 }
 
 // Utility Functions
-function showAlert(message, type) {
+function showAlert(message, isSuccessful) {
+    let type = 'error';
+    if (isSuccessful) {
+        type = 'success';
+    }
+
     alertMessage.textContent = message;
-    alertMessage.classusername = `alert alert-${type} show`;
+    alertMessage.className = `alert alert-${type} show`;
+
     
     setTimeout(() => {
         alertMessage.classList.remove('show');
     }, 3000);
 }
 
-// Initialize the page when DOM is loaded
-// document.addEventListener('DOMContentLoaded', init);
-init();
+renderStudents();

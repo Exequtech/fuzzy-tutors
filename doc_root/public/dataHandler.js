@@ -224,7 +224,7 @@ async function deleteStudentRecord(studentId) {
         await SessionManager.getNewToken();
     }
 
-    return response.data.results;
+    return response;
 }
 
 /**
