@@ -81,7 +81,7 @@ async function makeApiCall(endpoint, method, body) {
                 headers,
                 body: JSON.stringify(body)
             });
-        } else if (method == "GET") {
+        } else if (method == "GET" && body != null) {
             const queryString = new URLSearchParams(body).toString();
 
             response = await fetch(`${API_CONFIG.baseUrl}${endpoint}?${queryString}`, {
@@ -98,6 +98,13 @@ async function makeApiCall(endpoint, method, body) {
                 method,
                 headers,
                 body: JSON.stringify(body)
+            });
+        } else if (method == "GET" && body == null) {
+            const queryString = new URLSearchParams(body).toString();
+
+            response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
+                method,
+                headers,
             });
         }
 
@@ -388,7 +395,7 @@ async function getClassDetails(classId) {
         await SessionManager.getNewToken();
     }
 
-    return response;
+    return response.data.result;
 }
 
 // Export the functions and classes

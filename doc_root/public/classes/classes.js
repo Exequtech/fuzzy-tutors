@@ -10,7 +10,7 @@ const searchInput = document.getElementById('searchInput');
 const alertMessage = document.getElementById('alertMessage');
 const addClassBtn = document.getElementById('addClassBtn');
 const availableStudentsList = document.getElementById('availableStudents');
-const selectedStudentsList = document.getElementById('selectedStudents');
+const classMembersList = document.getElementById('classMembers');
 
 let currentClassId = null;
 let classes = [];
@@ -77,12 +77,91 @@ deleteModal.querySelector('.delete-button').addEventListener('click', async () =
 
 // Student Transfer Buttons
 document.getElementById('addStudentBtn').addEventListener('click', () => {
-    transferSelectedStudents(availableStudentsList, selectedStudentsList);
+    transferclassMembers(availableStudentsList, classMembersList);
 });
 
 document.getElementById('removeStudentBtn').addEventListener('click', () => {
-    transferSelectedStudents(selectedStudentsList, availableStudentsList);
+    transferclassMembers(classMembersList, availableStudentsList);
 });
+
+async function renderStudentLists(selectedStudentIds = []) {
+    try {
+        // Get all students from the API
+        const allStudents = await getStudentPage();
+        
+        // Create sets for faster lookup
+        const selectedIdsSet = new Set(selectedStudentIds);
+        
+        // Sort students into available and selected based on class membership
+        const availableStudents = allStudents.filter(student => !selectedIdsSet.has(student.id));
+        const classMembers = allStudents.filter(student => selectedIdsSet.has(student.id));
+        
+        // Render available students (students not in the class)
+        availableStudentsList.innerHTML = availableStudents
+            .map(student => `
+                <div class="student-item" data-id="${student.id}">
+                    ID: ${student.id}
+                </div>
+            `).join('');
+
+        // Render selected students (students in the class)
+        classMembersList.innerHTML = classMembers
+            .map(student => `
+                <div class="student-item" data-id="${student.id}">
+                    ID: ${student.id}
+                </div>
+            `).join('');
+
+        // Add click handlers for selection
+        document.querySelectorAll('.student-item').forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('selected');
+            });
+        });
+    } catch (error) {
+        showAlert('Failed to load student data: ' + error.message, false);
+    }
+}
+
+function transferclassMembers(fromList, toList) {
+    const selectedItems = fromList.querySelectorAll('.student-item.selected');
+    selectedItems.forEach(item => {
+        item.classList.remove('selected');
+        toList.appendChild(item);
+    });
+}
+
+async function handleFormSubmit() {
+    try {
+        const selectedStudentIds = Array.from(classMembersList.children)
+            .map(item => parseInt(item.dataset.id));
+
+        const className = document.getElementById('className').value;
+
+        let apiResponse;
+        if (currentClassId) {
+            apiResponse = await updateClassRecord(currentClassId, className, selectedStudentIds);
+        } else {
+            apiResponse = await addNewClassRecord(className, selectedStudentIds);
+        }
+
+        if (apiResponse.isSuccessful) {
+            showAlert(apiResponse.message, true);
+            // Refresh the class list
+            classes = await getClassPage();
+            renderClasses();
+            closeModal();
+        } else {
+            if (apiResponse.data && apiResponse.data.invalid_ids) {
+                showAlert(`Some student IDs are invalid: ${apiResponse.data.invalid_ids.join(', ')}`, false);
+            } else {
+                showAlert(apiResponse.message, false);
+            }
+        }
+    } catch (error) {
+        showAlert('Failed to save class: ' + error.message, false);
+    }
+}
 
 function renderClasses(classesToRender = classes) {
     classesGrid.innerHTML = classesToRender.map(cls => `
@@ -102,54 +181,12 @@ function renderClasses(classesToRender = classes) {
                 ${cls.students ? cls.students.length : 0} Students
             </div>
             <div class="student-list">
-                ${cls.students ? cls.students.map(student => `
-                    <div class="student-item">${student.username}</div>
+                ${cls.students ? cls.students.map(studentId => `
+                    <div class="student-item">ID: ${studentId}</div>
                 `).join('') : ''}
             </div>
         </div>
     `).join('');
-}
-
-async function renderStudentLists(selectedStudentIds = []) {
-    try {
-        // Fetch fresh student data
-        const currentStudents = await getStudentPage();
-        
-        // Render available students
-        availableStudentsList.innerHTML = currentStudents
-            .filter(student => !selectedStudentIds.includes(student.id))
-            .map(student => `
-                <div class="student-item" data-id="${student.id}">
-                    ${student.username}
-                </div>
-            `).join('');
-
-        // Render selected students
-        selectedStudentsList.innerHTML = currentStudents
-            .filter(student => selectedStudentIds.includes(student.id))
-            .map(student => `
-                <div class="student-item" data-id="${student.id}">
-                    ${student.username}
-                </div>
-            `).join('');
-
-        // Add click handlers for selection
-        document.querySelectorAll('.student-item').forEach(item => {
-            item.addEventListener('click', () => {
-                item.classList.toggle('selected');
-            });
-        });
-    } catch (error) {
-        showAlert('Failed to load student data: ' + error.message, false);
-    }
-}
-
-function transferSelectedStudents(fromList, toList) {
-    const selectedItems = fromList.querySelectorAll('.student-item.selected');
-    selectedItems.forEach(item => {
-        item.classList.remove('selected');
-        toList.appendChild(item);
-    });
 }
 
 function openModal(classData = null) {
@@ -162,7 +199,8 @@ function openModal(classData = null) {
         currentClassId = classData.id;
         
         document.getElementById('className').value = classData.name;
-        renderStudentLists(classData.students ? classData.students.map(s => s.id) : []);
+        // renderStudentLists(classData.students ? classData.students.map(s => s.id) : []);
+        renderStudentLists(classData.students);
     } else {
         modalTitle.textContent = 'Add New Class';
         submitButton.textContent = 'Add Class';
@@ -185,45 +223,11 @@ function closeDeleteModal() {
     currentClassId = null;
 }
 
-async function handleFormSubmit() {
-    try {
-        const selectedStudentIds = Array.from(selectedStudentsList.children)
-            .map(item => parseInt(item.dataset.id));
-
-        const className = document.getElementById('className').value;
-
-        let apiResponse;
-        if (currentClassId) {
-            // Update existing class
-            apiResponse = await updateClassRecord(currentClassId, className, selectedStudentIds);
-        } else {
-            // Add new class
-            apiResponse = await addNewClassRecord(className, selectedStudentIds);
-        }
-
-        if (apiResponse.isSuccessful) {
-            showAlert(apiResponse.message, true);
-            // Refresh the class list
-            classes = await getClassPage();
-            renderClasses();
-            closeModal();
-        } else {
-            // Handle specific error cases from the API
-            if (apiResponse.data && apiResponse.data.invalid_ids) {
-                showAlert(`Some student IDs are invalid: ${apiResponse.data.invalid_ids.join(', ')}`, false);
-            } else {
-                showAlert(apiResponse.message, false);
-            }
-        }
-    } catch (error) {
-        showAlert('Failed to save class: ' + error.message, false);
-    }
-}
-
 async function editClass(id) {
     try {
         // Fetch the latest data for the class
-        const classData = classes.find(c => c.id === id);
+        // const classData = classes.find(c => c.id === id);
+        const classData = await getClassDetails(id);
         if (classData) {
             openModal(classData);
         }
