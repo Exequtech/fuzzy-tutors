@@ -95,6 +95,15 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                     MessageResponse(HTTP_OK);
                 }
 
+                $matches = BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `UserType` = ? AND `UserID` IN (" . implode(',', $request->students) . ');',
+                    'i', [ROLE_STUDENT], true,
+                    "Failed to fetch student records (specific class PATCH)");
+                
+                $existing = array_map(function($user){return $user['UserID'];},$matches);
+                $existDiffs = array_diff($request->students, $existing);
+                if(!empty($existDiffs))
+                    MessageResponse(HTTP_CONFLICT, "Some provided student ids don't exist.", ['invalid_ids' => $existDiffs]);
+
                 $matches = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ?;", 'i', [$classID], false,
                     "Failed to fetch StudentClass relations (specific class PATCH)");
 
