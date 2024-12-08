@@ -1,0 +1,25 @@
+{
+    "type": "object",
+    "properties": {
+        "subjectId": {
+            "oneOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "name": {
+            "type": "string",
+            "pattern": "^[\\w\\s]+$"
+        },
+        "description": {
+            "type": "string",
+            "pattern": "^[\\w\\s]+$"
+        }
+    },
+    "required": ["name", "subjectId"],
+    "additionalProperties": false
+}
