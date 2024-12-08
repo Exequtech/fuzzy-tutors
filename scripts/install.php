@@ -41,7 +41,7 @@ if($conn->connect_error)
     echo "Error occurred while connecting to database:  $conn->connect_error";
     exit;
 }
-echo "Connected successfully!";
+echo "Connected successfully!\n";
 
 $table_commands = [
     'User' =>
@@ -53,7 +53,7 @@ $table_commands = [
             `Password` CHAR(60),
             `UserType` TINYINT NOT NULL,
             `Authorized` BIT NOT NULL,
-            `RecordDate` DATETIME NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`UserID`)
         );",
     'Class' =>
@@ -61,7 +61,7 @@ $table_commands = [
         (
             `ClassID` INT NOT NULL UNIQUE AUTO_INCREMENT,
             `ClassName` VARCHAR(30) NOT NULL UNIQUE,
-            `RecordDate` DATETIME NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`ClassID`)
         );",
     'StudentClass' =>
@@ -69,7 +69,7 @@ $table_commands = [
         (
             `StudentID` INT NOT NULL,
             `ClassID` INT NOT NULL,
-            `RecordDate` DATETIME NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`),
             FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`),
             PRIMARY KEY(`StudentID`, `ClassID`)
