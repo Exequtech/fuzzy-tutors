@@ -100,7 +100,7 @@ async function renderStudentLists(selectedStudentIds = []) {
         availableStudentsList.innerHTML = availableStudents
             .map(student => `
                 <div class="student-item" data-id="${student.id}">
-                    ID: ${student.id}
+                    ${student.username}
                 </div>
             `).join('');
 
@@ -108,7 +108,7 @@ async function renderStudentLists(selectedStudentIds = []) {
         classMembersList.innerHTML = classMembers
             .map(student => `
                 <div class="student-item" data-id="${student.id}">
-                    ID: ${student.id}
+                    ${student.username}
                 </div>
             `).join('');
 
@@ -226,7 +226,6 @@ function closeDeleteModal() {
 async function editClass(id) {
     try {
         // Fetch the latest data for the class
-        // const classData = classes.find(c => c.id === id);
         const classData = await getClassDetails(id);
         if (classData) {
             openModal(classData);
