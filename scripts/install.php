@@ -53,7 +53,7 @@ $table_commands = [
             `Password` CHAR(60),
             `UserType` TINYINT NOT NULL,
             `Authorized` BIT NOT NULL,
-            `RecordDate` DATETIME NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`UserID`)
         );",
     'Class' =>
@@ -61,7 +61,7 @@ $table_commands = [
         (
             `ClassID` INT NOT NULL UNIQUE AUTO_INCREMENT,
             `ClassName` VARCHAR(30) NOT NULL UNIQUE,
-            `RecordDate` DATETIME NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`ClassID`)
         );",
     'StudentClass' =>
@@ -69,9 +69,9 @@ $table_commands = [
         (
             `StudentID` INT NOT NULL,
             `ClassID` INT NOT NULL,
-            `RecordDate` DATETIME NOT NULL,
-            FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`),
-            FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`),
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`) ON DELETE CASCADE,
+            FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`) ON DELETE CASCADE,
             PRIMARY KEY(`StudentID`, `ClassID`)
         );"
 ];

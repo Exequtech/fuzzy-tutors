@@ -38,29 +38,11 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $classID = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT 1 FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], true,
-                    "Failed to fetch class (specific class DELETE)");
+                $changes = BindedQuery($conn, "DELETE FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], true,
+                    "Failed to delete class (specific class DELETE)");
 
-                if(empty($matches))
+                if(!$changes)
                     MessageResponse(HTTP_NOT_FOUND);
-
-                $conn->begin_transaction() || InternalError("Failed to start class delete transaction (specific class DELETE)");
-                
-                $success = BindedQuery($conn, "DELETE FROM `StudentClass` WHERE `ClassID` = ?;", 'i', [$classID], false);
-                if(!$success)
-                {
-                    $conn->rollback();
-                    InternalError("Failed to detach students in specific class endpoint (DELETE)");
-                }
-
-                $success = BindedQuery($conn, "DELETE FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], false);
-                if(!$success)
-                {
-                    $conn->rollback();
-                    InternalError("Failed to delete class in specific class endpoint (DELETE)");
-                }
-
-                $conn->commit() || InternalError("Failed to commit class deletion (specific class DELETE)");
                 
                 MessageResponse(HTTP_OK);
             },
@@ -95,7 +77,7 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                     MessageResponse(HTTP_OK);
                 }
 
-                $matches = BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `UserType` = ? AND `UserID` IN (" . implode(',', $request->students) . ');',
+                $matches = empty($request->students) ? [] : BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `UserType` = ? AND `UserID` IN (" . implode(',', $request->students) . ');',
                     'i', [ROLE_STUDENT], true,
                     "Failed to fetch student records (specific class PATCH)");
                 
