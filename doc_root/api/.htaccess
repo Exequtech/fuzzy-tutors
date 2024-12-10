@@ -86,6 +86,10 @@ RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
 RewriteCond $1 ^topic/[\d]+/?$
 RewriteRule ^(.*)$ - [END,R=405]
 
+RewriteCond %{REQUEST_METHOD} !^(GET)$
+RewriteCond $1 ^subject/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Topic allowlist
 RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
 RewriteCond $1 ^topic/?$
@@ -93,6 +97,10 @@ RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^topic/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET)$
+RewriteCond $1 ^subject/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 # If no prior rules matched, the endpoint doesn't exist (404)
