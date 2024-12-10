@@ -104,16 +104,24 @@ $endpoints['/^topic\/?$/'] = [
             {
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
+                $conn->begin_transaction() || InternalError("Failed to begin topic creation transaction (toplevel topic POST)");
                 $types = ['s'];
                 $values = [$request->name];
                 // Collect optional properties provided
                 $properties = [];
                 if(isset($request->subjectId))
                 {
-                    $matches = BindedQuery($conn, "SELECT 1 FROM `Topic` WHERE `TopicID` = ? AND `SubjectID` IS NULL;", 'i', [$request->subjectId], true,
-                        "Failed to check for subject existence (toplevel topic POST)");
-                    if(count($matches) !== 1)
+                    $matches = BindedQuery($conn, "SELECT 1 FROM `Topic` WHERE `TopicID` = ? AND `SubjectID` IS NULL;", 'i', [$request->subjectId], false);
+                    if($matches === false)
+                    {
+                        $conn->rollback();
+                        InternalError("Failed to check for subject existence (toplevel topic POST)");
+                    }
+                    if(empty($matches))
+                    {
+                        $conn->rollback();
                         MessageResponse(HTTP_CONFLICT, "Subject ID does not exist / is not a subject");
+                    }
                     $properties[] = '`SubjectID`';
                     $types[] = 'i';
                     $values[] = $request->subjectId;
@@ -127,9 +135,15 @@ $endpoints['/^topic\/?$/'] = [
 
                 $query = "INSERT INTO `Topic`(`TopicName`" .(empty($properties) ? '' : ',' . implode(',',$properties)) . ')'
                     . ' VALUES (?' . str_repeat(',?', count($properties)) . ');';
-                BindedQuery($conn, $query, implode($types), $values, true,
-                    "Failed to insert topic record (toplevel topic POST)");
+                $success = BindedQuery($conn, $query, implode($types), $values, false);
 
+                if(!$success)
+                {
+                    $conn->rollback();
+                    InternalError("Failed to insert topic record (toplevel topic POST)");
+                }
+
+                $conn->commit() || InternalError("Failed to commit topic creation transaction (toplevel topic POST)");
                 MessageResponse(HTTP_OK);
             },
             'schema-path' => 'topic/toplevel/POST.json'

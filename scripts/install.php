@@ -82,7 +82,8 @@ $table_commands = [
             `TopicName` VARCHAR(30) NOT NULL,
             `Description` VARCHAR(255),
             `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
-            FOREIGN KEY(`SubjectID`) REFERENCES `Topic`(`TopicID`),
+            CONSTRAINT `unique_topicnames` UNIQUE (`SubjectID`, `TopicName`),
+            FOREIGN KEY(`SubjectID`) REFERENCES `Topic`(`TopicID`) ON DELETE CASCADE,
             PRIMARY KEY(`TopicID`)
         );"
 ];
