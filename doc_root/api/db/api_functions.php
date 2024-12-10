@@ -26,10 +26,13 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
     {
         if($stmt->errno !== 0)
         {
+            $stmt->close();
             InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
             return false;
         }
-        return $stmt->affected_rows;
+        $affectedRows = $stmt->affected_rows;
+        $stmt->close();
+        return $affectedRows;
     }
 
     $rows = $result->fetch_all(MYSQLI_ASSOC);

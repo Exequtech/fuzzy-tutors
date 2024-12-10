@@ -90,7 +90,13 @@ $endpoints['/^student\/?$/'] = [
                     }
                 }
 
-                $query = 'SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` FROM `User` WHERE ' . implode(' AND ', $conditions) . $order . " LIMIT $offset, $pagesize;";
+
+                $fromclause = 'FROM `User` WHERE ' . implode(' AND ', $conditions) . $order . " LIMIT $offset, $pagesize;";
+                $query = 'SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` ' .$fromclause;
+                $countquery = 'SELECT COUNT(*) AS `Count` ' . $fromclause;
+                $matches = BindedQuery($conn, $countquery, implode($types), $values, true,
+                    "Failed to fetch student count (toplevel student GET)");
+                $count = $matches[0]['Count'];
                 $matches = BindedQuery($conn, $query, implode('', $types), $values, true,
                     "Failed to fetch students (toplevel student GET)");
 
@@ -104,7 +110,8 @@ $endpoints['/^student\/?$/'] = [
                         $ret['authorized'] = $user['Authorized'] ? true : false;
                         $ret['recordDate'] = $user['RecordDate'];
                         return $ret;
-                    }, $matches)
+                    }, $matches),
+                    'total' => $count
                 ]);
             },
             'schema-path' => 'student/toplevel/GET.json'

@@ -70,8 +70,8 @@ $table_commands = [
             `StudentID` INT NOT NULL,
             `ClassID` INT NOT NULL,
             `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
-            FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`),
-            FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`),
+            FOREIGN KEY(`ClassID`) REFERENCES `Class`(`ClassID`) ON DELETE CASCADE,
+            FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`) ON DELETE CASCADE,
             PRIMARY KEY(`StudentID`, `ClassID`)
         );",
     'Topic' =>

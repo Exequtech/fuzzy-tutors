@@ -37,47 +37,51 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $id = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT], true,
+                $matches = BindedQuery($conn, "SELECT `Username`, `Email`, `Authorized` FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT], true,
                     "Failed to fetch student (specific student PATCH)");
 
-                if(count($matches) !== 1)
+                if(empty($matches))
                     MessageResponse(HTTP_NOT_FOUND);
+
+                $student = $matches[0];
 
                 $sets = [];
                 $types = [];
                 $values = [];
 
-                if(isset($request->username))
+                if(isset($request->username) && $request->username !== $student['Username'])
                 {
                     $sets[] = ' `Username` = ?';
                     $types[] = 's';
                     $values[] = $request->username;
                 }
-                if(isset($request->email))
+                if(isset($request->email) && $request->email !== $student['Email'])
                 {
                     $sets[] = ' `Email` = ?';
                     $types[] = 's';
                     $values[] = $request->email;
                 }
-                if(isset($request->password))
-                {
-                    $sets[] = ' `Password` = ?';
-                    $types[] = 's';
-                    $values[] = password_hash($request->password, PASSWORD_BCRYPT);
-                }
-                if(isset($request->authorized))
+                if(isset($request->authorized) && $request->authorized === ($student['Authorized'] === 1))
                 {
                     $sets[] = ' `Authorized` = ?';
                     $types[] = 'i';
                     $values[] = $request->authorized ? 1 : 0;
                 }
 
-                if(count($sets) === 0)
+                if(empty($sets))
                     MessageResponse(HTTP_OK);
 
                 $query = "UPDATE `User` SET" . implode(',', $sets) . " WHERE `UserID` = ?;";
-                BindedQuery($conn, $query, implode('', $types) . 'i', [...$values, $id], true,
+                $success = BindedQuery($conn, $query, implode('', $types) . 'i', [...$values, $id], true,
                     "Failed to update student (specific student PATCH)");
+
+                if(!$success)
+                {
+                    $matches = BindedQuery($conn, "SELECT 1 FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT], true,
+                        "Failed to check for student existence (student specific PATCH)");
+                    if(empty($matches))
+                        MessageResponse(HTTP_NOT_FOUND);
+                }
 
                 MessageResponse(HTTP_OK);
             },
@@ -89,14 +93,10 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $id = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT * FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT], true,
-                    "Failed to fetch student (specific student delete)");
-
-                if(count($matches) !== 1)
-                    MessageResponse(HTTP_NOT_FOUND, "Student does not exist.");
-
-                BindedQuery($conn, "DELETE FROM `User` WHERE `UserID` = ?;", 'i', [$id], true,
-                    "Failed to delete student (specific student delete)");
+                $success = BindedQuery($conn, "DELETE FROM `User` WHERE `UserID` = ? AND `UserType` = ?;", 'ii', [$id, ROLE_STUDENT], true,
+                    "Failed to delete student (specific student DELETE)");
+                if(!$success)
+                    MessageResponse(HTTP_NOT_FOUND);
 
                 MessageResponse(HTTP_OK);
             },
