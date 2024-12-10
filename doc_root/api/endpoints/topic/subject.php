@@ -80,6 +80,7 @@ $endpoints['/^subject\/?$/'] = [
                     {
                         $obj['id'] = $subjectID;
                         $obj['name'] = $record['SubjectName'];
+                        $obj['description'] = $record['SubjectDescription'];
                         $obj['topics'] = [];
                         $obj['recordDate'] = $record['SubjectDate'];
                     }
