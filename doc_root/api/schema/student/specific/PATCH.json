@@ -12,12 +12,6 @@
             "maxLength": 40,
             "pattern": "^(?=[^\\.]+(\\.[^\\.]+)?@[^\\.]+(\\.[^\\.]+)+)[\\w\\.]+@[\\w\\.]+$"
         },
-        "password": {
-            "type": "string",
-            "minLength": 8,
-            "maxLength": 50,
-            "pattern": "^(?=.*[A-Z]+)(?=.*[a-z])(?=.*[\\d])(?=.*[^\\w\\s])[\\x00-\\x7F]+$"
-        },
         "authorized": {
             "type": "boolean"
         }

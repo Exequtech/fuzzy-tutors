@@ -53,22 +53,29 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
             {
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
+                $conn->begin_transaction() || InternalError("Failed to begin class edit transaction (specific class PATCH)");
                 $classID = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT 1 FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], true,
-                    "Failed to check for class existence (specific class PATCH)");
+                $matches = BindedQuery($conn, "SELECT `ClassName` FROM `Class` WHERE `ClassID` = ? FOR UPDATE;", 'i', [$classID], false);
+                if($matches === false)
+                {
+                    $conn->rollback();
+                    InternalError("Failed to check for class existence (specific class PATCH)");
+                }
 
                 if(empty($matches))
+                {
+                    $conn->rollback();
                     MessageResponse(HTTP_NOT_FOUND);
+                }
 
-                $conn->begin_transaction() || InternalError("Failed to begin class edit transaction (specific class PATCH)");
 
-                if(isset($request->name))
+                if(isset($request->name) && $matches[0]['ClassName'] !== $request->name)
                 {
                     $success = BindedQuery($conn, "UPDATE `Class` SET `ClassName` = ? WHERE `ClassID` = ?;", 'si', [$request->name, $classID], false);
-                    if(!$success)
+                    if($success === false)
                     {
                         $conn->rollback();
-                        InternalError("Failed to update classname in specific class endpoint (PATCH)");
+                        InternalError("Failed to update classname in specific class endpoint (PATCH):\n $conn->error");
                     }
                 }
                 if(!isset($request->students))
@@ -78,16 +85,29 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 }
 
                 $matches = empty($request->students) ? [] : BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `UserType` = ? AND `UserID` IN (" . implode(',', $request->students) . ');',
-                    'i', [ROLE_STUDENT], true,
-                    "Failed to fetch student records (specific class PATCH)");
+                    'i', [ROLE_STUDENT], false);
+
+                if($matches === false)
+                {
+                    $conn->rollback();
+                    InternalError("Failed to fetch student records (specific class PATCH)");
+                }
                 
                 $existing = array_map(function($user){return $user['UserID'];},$matches);
                 $existDiffs = array_diff($request->students, $existing);
                 if(!empty($existDiffs))
+                {
+                    $conn->rollback();
                     MessageResponse(HTTP_CONFLICT, "Some provided student ids don't exist.", ['invalid_ids' => $existDiffs]);
+                }
 
-                $matches = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ?;", 'i', [$classID], false,
-                    "Failed to fetch StudentClass relations (specific class PATCH)");
+                $matches = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ?;", 'i', [$classID], false);
+
+                if($matches === false)
+                {
+                    $conn->rollback();
+                    InternalError("Failed to fetch StudentClass relations (specific class PATCH)");
+                }
 
                 $linkedIDs = array_map(function($record){return $record['StudentID'];}, $matches);
 
@@ -98,7 +118,7 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 {
                     $query = 'INSERT INTO `StudentClass`(`ClassID`, `StudentID`) VALUES ' 
                         .implode(',', array_map(function($id)use($classID){return "($classID,$id)";},$createDiffs)) . ';';
-                    BindedQuery($conn, $query, '', [], false);
+                    $success = BindedQuery($conn, $query, '', [], false);
 
                     if(!$success)
                     {
