@@ -85,6 +85,13 @@ $table_commands = [
             CONSTRAINT `unique_topicnames` UNIQUE (`SubjectID`, `TopicName`),
             FOREIGN KEY(`SubjectID`) REFERENCES `Topic`(`TopicID`) ON DELETE CASCADE,
             PRIMARY KEY(`TopicID`)
+        );",
+    'Trackables' =>
+        "CREATE TABLE `Trackable`
+        (
+            `TrackableName` VARCHAR(30) NOT NULL UNIQUE,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`TrackableName`)
         );"
 ];
 foreach($table_commands as $key => $value)
