@@ -61,4 +61,4 @@ foreach($endpoints as $key => $value)
     $endpoint['callback']($data, $conn, $matches);
 }
 
-MessageResponse(HTTP_NOT_FOUND);
+MessageResponse(HTTP_NOT_FOUND, 'That endpoint does not exist.');

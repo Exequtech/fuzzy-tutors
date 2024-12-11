@@ -81,7 +81,7 @@ async function makeApiCall(endpoint, method, body) {
                 headers,
                 body: JSON.stringify(body)
             });
-        } else if (method == "GET") {
+        } else if (method == "GET" && body != null) {
             const queryString = new URLSearchParams(body).toString();
 
             response = await fetch(`${API_CONFIG.baseUrl}${endpoint}?${queryString}`, {
@@ -98,6 +98,13 @@ async function makeApiCall(endpoint, method, body) {
                 method,
                 headers,
                 body: JSON.stringify(body)
+            });
+        } else if (method == "GET" && body == null) {
+            const queryString = new URLSearchParams(body).toString();
+
+            response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
+                method,
+                headers,
             });
         }
 
@@ -287,7 +294,7 @@ async function updateStudentRecord(studentId, username, email, authorized) {
  * @param {string} order - The order type (desc or asc)
  * @param {string} orderBy - Property name (id, name)
  * @param {object} filter - Dictionary of properties and values for filtering
- * @returns {object} Array of class objects
+ * @returns {array} Array of class objects
  */
 async function getClassPage(page = 1, pageSize=10, order="asc", orderBy="id", filter = {}) {
     const params = {
@@ -309,6 +316,88 @@ async function getClassPage(page = 1, pageSize=10, order="asc", orderBy="id", fi
     return response.data.results;
 }
 
+/**
+ * Add New class Record with associated students
+ * @param {string} name - The class name
+ * @param {array} studentIds - Array of associated student ID's
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function addNewClassRecord(name, students = []) {
+    const body = {
+        name,
+        students
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.classTopLevel, 'POST', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Delete class record
+ * @param {int} classId - The ID of the class to delete
+ * @returns {Promise<ApiResponse>} Response object
+ */
+async function deleteClassRecord(classId) {
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.classTopLevel}/${classId}`, 'DELETE', null)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Update class record
+ * @param {int} classId - The ID of the class to update
+ * @param {string} name - The new class name
+ * @param {array} students - Array of student IDs
+ * @returns {Promise<ApiResponse>} Response object
+ */
+async function updateClassRecord(classId, name, students = []) {
+    const body = {
+        name,
+        students
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.classTopLevel}/${classId}`, 'PATCH', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Get specific class details
+ * @param {int} classId - The ID of the class to fetch
+ * @returns {Promise<ApiResponse>} Response object
+ */
+async function getClassDetails(classId) {
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.classTopLevel}/${classId}`, 'GET', null)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response.data.result;
+}
+
 // Export the functions and classes
 export {
     registerUser,
@@ -319,5 +408,9 @@ export {
     deleteStudentRecord,
     addNewStudentRecord,
     updateStudentRecord,
-    getClassPage
+    getClassPage,
+    addNewClassRecord,
+    deleteClassRecord,
+    updateClassRecord,
+    getClassDetails
 };

@@ -1,0 +1,35 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "name": {
+            "type":"string",
+            "pattern": "^[\\w\\s]+$",
+            "maxLength": 30
+        },
+        "description": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "orderBy": {
+            "type": "string",
+            "enum": ["id", "name", "description"]
+        },
+        "order": {
+            "type": "string",
+            "enum": ["asc", "desc"]
+        },
+        "page": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "pageSize": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        }
+    },
+    "additionalProperties": false
+}
