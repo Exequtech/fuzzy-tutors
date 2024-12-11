@@ -53,7 +53,7 @@ $endpoints['/^trackable\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $matches = BindedQuery($conn, "SELECT 1 FROM `Trackable` WHERE `TrackableName` = ?;", 's', [$request->name], true,
-                    "Failed to check for trackable existence (toplevel trackable POST");
+                    "Failed to check for trackable existence (toplevel trackable POST)");
                 if(!empty($matches))
                     MessageResponse(HTTP_CONFLICT, "Name already exists.");
 

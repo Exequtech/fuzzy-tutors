@@ -4,9 +4,8 @@
         "name": {
             "type": "string",
             "pattern": "[^/]+",
-            "minLength": 3,
             "maxLength": 30
         }
     },
-    "additionalProperties": false
+    "additionalPropeties": false
 }
