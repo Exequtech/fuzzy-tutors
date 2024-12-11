@@ -1,0 +1,15 @@
+{
+    "type": "object",
+    "properties": {
+        "order": {
+            "type": "string",
+            "enum": ["asc", "desc"]
+        },
+        "name": {
+            "type": "string",
+            "pattern": "[\\x00-\\x7F]+",
+            "maxLength": 30
+        }
+    },
+    "additionalProperties": false
+}

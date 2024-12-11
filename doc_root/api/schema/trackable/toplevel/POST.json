@@ -1,0 +1,12 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "pattern": "[\\x00-\\x7F]+",
+            "minLength": 3,
+            "maxLength": 30
+        }
+    },
+    "additionalProperties": false
+}

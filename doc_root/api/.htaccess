@@ -103,5 +103,15 @@ RewriteCond %{REQUEST_METHOD} ^(GET)$
 RewriteCond $1 ^subject/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
+# Trackable denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^trackable/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Trackable allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^trackable/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
 # If no prior rules matched, the endpoint doesn't exist (404)
 RewriteRule ^ - [END,R=404]

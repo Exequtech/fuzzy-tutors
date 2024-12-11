@@ -1,6 +1,21 @@
 <?php
 require_once __DIR__ . "/../functions/api_responses.php";
 
+function MySQLiErrResponse(int $errCode, string $errStr, string $failContext = null): never
+{
+    $response = match($errCode)
+    {
+        1062 => ['status' => HTTP_CONFLICT, 'detail' => 'Unique constraint violation'],
+        1452 => ['status' => HTTP_CONFLICT, 'detail' => 'A referenced record does not exist'],
+        3819 => ['status' => HTTP_BAD_REQUEST, 'detail' => 'Failed db row validation'],
+        default => null
+    };
+    if($response)
+        MessageResponse($response['status'], $response['detail']);
+    else
+        InternalError($failContext ? "$failContext:\n$errStr" : $errStr);
+    exit;
+}
 function BindedQuery(mysqli $conn, string $query, string $types, array $values, bool $exitOnfailure=true, string $failContext = null): array|int|false
 {
     $stmt = $conn->prepare($query);
@@ -17,7 +32,10 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
 
     if(!$stmt->execute())
     {
-        InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
+        if($exitOnfailure)
+            MySQLiErrResponse($stmt->errno, $stmt->error, $failContext);
+        else
+            InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, false);
         return false;
     }
 
@@ -26,20 +44,13 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
     {
         if($stmt->errno !== 0)
         {
+            echo " I am here\n";
             if($exitOnfailure)
             {
-                $response = match($stmt->errno)
-                {
-                    1062 => ['status' => HTTP_CONFLICT, 'detail' => 'Unique constraint violation'],
-                    1452 => ['status' => HTTP_CONFLICT, 'detail' => 'A referenced record does not exist'],
-                    3819 => ['status' => HTTP_BAD_REQUEST, 'detail' => 'Failed db row validation'],
-                    default => null
-                };
+                $errCode = $stmt->errno;
+                $errStr = $stmt->error;
                 $stmt->close();
-                if($response)
-                    MessageResponse($response['status'], $response['detail']);
-                else
-                    InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
+                MySQLiErrResponse($errCode, $errStr, $failContext);
             }
             $stmt->close();
             InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
