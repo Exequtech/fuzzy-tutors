@@ -2,12 +2,11 @@
 
 require_once __DIR__ . "/response_codes.php";
 
-function InternalError($error, $exit = true): never
+function InternalError($error, $exit = true)
 {
     error_log($error);
     if($exit)
         MessageResponse(HTTP_INTERNAL_ERROR);
-    exit;
 }
 function MessageResponse($code, $detail = null, $overrides = []): never
 {

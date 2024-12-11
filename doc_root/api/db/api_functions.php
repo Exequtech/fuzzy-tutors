@@ -26,6 +26,21 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
     {
         if($stmt->errno !== 0)
         {
+            if($exitOnfailure)
+            {
+                $response = match($stmt->errno)
+                {
+                    1062 => ['status' => HTTP_CONFLICT, 'detail' => 'Unique constraint violation'],
+                    1452 => ['status' => HTTP_CONFLICT, 'detail' => 'A referenced record does not exist'],
+                    3819 => ['status' => HTTP_BAD_REQUEST, 'detail' => 'Failed db row validation'],
+                    default => null
+                };
+                $stmt->close();
+                if($response)
+                    MessageResponse($response['status'], $response['detail']);
+                else
+                    InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
+            }
             $stmt->close();
             InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
             return false;

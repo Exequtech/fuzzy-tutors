@@ -80,7 +80,7 @@ $endpoints['/^topic\/([\d]+)\/?$/'] = [
                     $types[] = 'i';
                     $values[] = $request->subjectId;
                 }
-                if(isset($request->name))
+                if(isset($request->name) && $request->name !== $topic['TopicName'])
                 {
                     $matches = BindedQuery($conn, "SELECT 1 FROM `Topic` WHERE `TopicName` = ?;", 's', [$request->name], true,
                         "Failed to fetch topic record (specific topic PATCH)");
@@ -91,7 +91,7 @@ $endpoints['/^topic\/([\d]+)\/?$/'] = [
                     $types[] = 's';
                     $values[] = $request->name;
                 }
-                if(isset($request->description))
+                if(isset($request->description) && $request->description !== $topic['Description'])
                 {
                     $sets[] = '`Description` = ?';
                     $types[] = 's';
@@ -102,8 +102,16 @@ $endpoints['/^topic\/([\d]+)\/?$/'] = [
                     MessageResponse(HTTP_OK);
 
                 $query = 'UPDATE `Topic` SET ' . implode(',',$sets) . ' WHERE `TopicID` = ?;';
-                BindedQuery($conn, $query, implode($types) . 'i', [...$values, $topicID], true,
-                    "Failed to update topic record (specific topic PATCH)") || InternalError("Topic disappeared during validation (specific topic PATCH)");
+                $rowsAffected = BindedQuery($conn, $query, implode($types) . 'i', [...$values, $topicID], true,
+                    "Failed to update topic record (specific topic PATCH)");
+                    
+                if(!$rowsAffected)
+                {
+                    $matches = BindedQuery($conn, "SELECT 1 FROM `Topic` WHERE `TopicID` = ?;", 'i', [$topicID], true,
+                        "Failed to check for topic existence (specific topic PATCH)");
+                    if(empty($matches))
+                        MessageResponse(HTTP_NOT_FOUND);
+                }
                 
                 MessageResponse(HTTP_OK);
             },
