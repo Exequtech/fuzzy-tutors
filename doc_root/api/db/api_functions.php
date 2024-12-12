@@ -30,7 +30,7 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
         return false;
     }
 
-    if(!$stmt->execute())
+    if(!$stmt->execute(null))
     {
         if($exitOnfailure)
             MySQLiErrResponse($stmt->errno, $stmt->error, $failContext);

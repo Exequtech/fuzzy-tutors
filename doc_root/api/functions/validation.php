@@ -13,3 +13,9 @@ function Validate(object $schema, object|null $data): array|bool
     else
         return $validator->getErrors();
 }
+
+function ValidateDate(string $date, string $format = 'Y-m-d H:i:s')
+{
+    $d = DateTime::createFromFormat($format, $date);
+    return $d && $d->format($format) === $date;
+}

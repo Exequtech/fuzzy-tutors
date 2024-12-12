@@ -143,5 +143,23 @@ RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^trackable/([^/]+)/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
+# Lesson denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^lesson/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^calendar/lesson/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Lesson allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^lesson/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^calendar/lesson/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
 # If no prior rules matched, the endpoint doesn't exist (404)
 RewriteRule ^ - [END,R=404]

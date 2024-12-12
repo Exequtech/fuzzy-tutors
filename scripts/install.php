@@ -108,14 +108,16 @@ $table_commands = [
         (
             `LessonID` INT NOT NULL UNIQUE AUTO_INCREMENT,
             `TutorID` INT NOT NULL,
+            `SubjectID` INT,
             `LocationID` INT,
             `LessonStart` DATETIME NOT NULL,
-            `LessonEnd` DATETIME,
+            `LessonEnd` DATETIME NOT NULL,
             `Notes` VARCHAR(1024),
             `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`LessonID`),
             FOREIGN KEY(`TutorID`) REFERENCES `User`(`UserID`) ON DELETE CASCADE,
-            FOREIGN KEY(`LocationID`) REFERENCES `Location`(`LocationID`) ON DELETE SET NULL
+            FOREIGN KEY(`LocationID`) REFERENCES `Location`(`LocationID`) ON DELETE SET NULL,
+            FOREIGN KEY(`SubjectID`) REFERENCES `Topic`(`TopicID`) ON DELETE SET NULL
         );",
     'Attendance' =>
         "CREATE TABLE `Attendance`
