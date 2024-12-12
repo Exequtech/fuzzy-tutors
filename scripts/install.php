@@ -83,6 +83,84 @@ $table_commands = [
             `Description` VARCHAR(255),
             `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`LocationID`)
+        );",
+    'Topic' =>
+        "CREATE TABLE `Topic`
+        (
+            `TopicID` INT NOT NULL UNIQUE AUTO_INCREMENT,
+            `SubjectID` INT,
+            `TopicName` VARCHAR(30) NOT NULL,
+            `Description` VARCHAR(255),
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            CONSTRAINT `unique_topicnames` UNIQUE (`SubjectID`, `TopicName`),
+            FOREIGN KEY(`SubjectID`) REFERENCES `Topic`(`TopicID`) ON DELETE CASCADE,
+            PRIMARY KEY(`TopicID`)
+        );",
+    'Trackable' =>
+        "CREATE TABLE `Trackable`
+        (
+            `TrackableName` VARCHAR(30) NOT NULL UNIQUE,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`TrackableName`)
+        );",
+    'Lesson' =>
+        "CREATE TABLE `Lesson`
+        (
+            `LessonID` INT NOT NULL UNIQUE AUTO_INCREMENT,
+            `TutorID` INT NOT NULL,
+            `LocationID` INT,
+            `LessonStart` DATETIME NOT NULL,
+            `LessonEnd` DATETIME,
+            `Notes` VARCHAR(1024),
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`LessonID`),
+            FOREIGN KEY(`TutorID`) REFERENCES `User`(`UserID`) ON DELETE CASCADE,
+            FOREIGN KEY(`LocationID`) REFERENCES `Location`(`LocationID`) ON DELETE SET NULL
+        );",
+    'Attendance' =>
+        "CREATE TABLE `Attendance`
+        (
+            `AttendanceID` INT NOT NULL UNIQUE AUTO_INCREMENT,
+            `StudentID` INT NOT NULL,
+            `LessonID` INT NOT NULL,
+            `Attended` BIT NOT NULL,
+            `Notes` VARCHAR(1024),
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            CONSTRAINT `unique_attendance` UNIQUE (`StudentID`, `LessonID`),
+            PRIMARY KEY(`AttendanceID`),
+            FOREIGN KEY(`StudentID`) REFERENCES `User`(`UserID`) ON DELETE CASCADE,
+            FOREIGN KEY(`LessonID`) REFERENCES `Lesson`(`LessonID`) ON DELETE CASCADE
+        );",
+    'LessonTrackable' =>
+        "CREATE TABLE `LessonTrackable`
+        (
+            `LessonID` INT NOT NULL,
+            `TrackableName` VARCHAR(30) NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`LessonID`, `TrackableName`),
+            FOREIGN KEY(`LessonID`) REFERENCES `Lesson`(`LessonID`) ON DELETE CASCADE,
+            FOREIGN KEY(`TrackableName`) REFERENCES `Trackable`(`TrackableName`) ON DELETE CASCADE ON UPDATE CASCADE
+        );",
+    'TrackableValue' =>
+        "CREATE TABLE `TrackableValue`
+        (
+            `AttendanceID` INT NOT NULL,
+            `TrackableName` VARCHAR(30) NOT NULL,
+            `Value` BIT NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`AttendanceID`, `TrackableName`),
+            FOREIGN KEY(`AttendanceID`) REFERENCES `Attendance`(`AttendanceID`) ON DELETE CASCADE,
+            FOREIGN KEY(`TrackableName`) REFERENCES `Trackable`(`TrackableName`) ON DELETE CASCADE ON UPDATE CASCADE
+        );",
+    'LessonTopic' =>
+        "CREATE TABLE `LessonTopic`
+        (
+            `LessonID` INT NOT NULL,
+            `TopicID` INT NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`LessonID`, `TopicID`),
+            FOREIGN KEY(`LessonID`) REFERENCES `Lesson`(`LessonID`) ON DELETE CASCADE,
+            FOREIGN KEY(`TopicID`) REFERENCES `Topic`(`TopicID`) ON DELETE CASCADE
         );"
 ];
 foreach($table_commands as $key => $value)
