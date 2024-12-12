@@ -96,6 +96,11 @@ $endpoints['/^location\/?$/'] = [
             {
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
+                $matches = BindedQuery($conn, "SELECT 1 FROM `Location` WHERE `LocationName` = ?;", 's', [$request->name], true,
+                    "Failed to check for location existence (toplevel location POST)");
+                if(!empty($matches))
+                    MessageResponse(HTTP_CONFLICT, "Name already exists");
+
                 $types = ['s'];
                 $values = [$request->name];
                 // Collect optional properties provided
