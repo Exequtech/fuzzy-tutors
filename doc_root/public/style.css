@@ -370,14 +370,14 @@ margin-top: auto;
 }
 
 .available-students,
-.selected-students {
+.class-members {
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 10px;
 }
 
 .available-students h3,
-.selected-students h3 {
+.class-members h3 {
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 1em;

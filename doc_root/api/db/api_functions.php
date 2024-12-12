@@ -1,15 +1,41 @@
 <?php
 require_once __DIR__ . "/../functions/api_responses.php";
 
-function BindedQuery(mysqli $conn, string $query, string $types, array $values, bool $exitOnfailure=true, string $failContext = null): array|bool
+function MySQLiErrResponse(int $errCode, string $errStr, string $failContext = null): never
+{
+    $response = match($errCode)
+    {
+        1062 => ['status' => HTTP_CONFLICT, 'detail' => 'Unique constraint violation'],
+        1452 => ['status' => HTTP_CONFLICT, 'detail' => 'A referenced record does not exist'],
+        3819 => ['status' => HTTP_BAD_REQUEST, 'detail' => 'Failed db row validation'],
+        default => null
+    };
+    if($response)
+        MessageResponse($response['status'], $response['detail']);
+    else
+        InternalError($failContext ? "$failContext:\n$errStr" : $errStr);
+    exit;
+}
+function BindedQuery(mysqli $conn, string $query, string $types, array $values, bool $exitOnfailure=true, string $failContext = null): array|int|false
 {
     $stmt = $conn->prepare($query);
-    if(!empty($values))
-        $stmt->bind_param($types, ...$values);
+    if(!$stmt)
+    {
+        InternalError($failContext ? "$failContext:\n$conn->error" : $conn->error, $exitOnfailure);
+        return false;
+    }
+    if(!empty($values) && !$stmt->bind_param($types, ...$values))
+    {
+        InternalError($failContext ? "$failContext:\n$conn->error" : $conn->error, $exitOnfailure);
+        return false;
+    }
 
     if(!$stmt->execute())
     {
-        InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
+        if($exitOnfailure)
+            MySQLiErrResponse($stmt->errno, $stmt->error, $failContext);
+        else
+            InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, false);
         return false;
     }
 
@@ -17,13 +43,28 @@ function BindedQuery(mysqli $conn, string $query, string $types, array $values, 
     if($result == false)
     {
         if($stmt->errno !== 0)
+        {
+            echo " I am here\n";
+            if($exitOnfailure)
+            {
+                $errCode = $stmt->errno;
+                $errStr = $stmt->error;
+                $stmt->close();
+                MySQLiErrResponse($errCode, $errStr, $failContext);
+            }
+            $stmt->close();
             InternalError($failContext ? "$failContext:\n$stmt->error" : $stmt->error, $exitOnfailure);
-        return $stmt->errno == 0;
+            return false;
+        }
+        $affectedRows = $stmt->affected_rows;
+        $stmt->close();
+        return $affectedRows;
     }
 
     $rows = $result->fetch_all(MYSQLI_ASSOC);
 
     $result->free();
+    $stmt->close();
     return $rows;
 }
 

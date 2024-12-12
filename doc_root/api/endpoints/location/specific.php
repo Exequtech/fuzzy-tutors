@@ -16,7 +16,7 @@ $endpoints['/^location\/([\d]+)\/?$/'] = [
                 $matches = BindedQuery($conn, "SELECT `LocationID`, `LocationName`, `Address`, `Description`, `RecordDate` FROM `Location` WHERE `LocationID` = ?;", 'i', [(int)$regex[1]], true,
                     "Failed to fetch location (specific location GET)");
                 
-                if(count($matches) !== 1)
+                if(empty($matches))
                     MessageResponse(HTTP_NOT_FOUND);
 
                 $ret = [];
@@ -36,41 +36,48 @@ $endpoints['/^location\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $id = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT 1 FROM `Location` WHERE `LocationID` = ?;", 'i', [$id], true,
+                $matches = BindedQuery($conn, "SELECT `LocationName`, `Address`, `Description` FROM `Location` WHERE `LocationID` = ?;", 'i', [$id], true,
                     "Failed to fetch location (specific location PATCH)");
                 
-                if(count($matches) !== 1)
+                if(empty($matches))
                     MessageResponse(HTTP_NOT_FOUND);
 
                 $sets = [];
                 $types = [];
                 $values = [];
 
-                if(isset($request->name))
+                if(isset($request->name) && $request->name !== $matches[0]['LocationName'])
                 {
                     $sets[] = '`LocationName` = ?';
                     $types[] = 's';
                     $values[] = $request->name;
                 }
-                if(property_exists($request, 'address'))
+                if(property_exists($request, 'address') && $request->address !== $matches[0]['Address'])
                 {
                     $sets[] = '`Address`  = ?';
                     $types[] = 's';
                     $values[] = $request->address;
                 }
-                if(property_exists($request, 'description'))
+                if(property_exists($request, 'description') && $request->description !== $matches[0]['Description'])
                 {
                     $sets[] = '`Description` = ?';
                     $types[] = 's';
-                    $values[] = $request->address;
+                    $values[] = $request->description;
                 }
 
                 if(empty($sets))
                     MessageResponse(HTTP_OK);
 
                 $query = "UPDATE `Location` SET " . implode(',',$sets) . " WHERE `LocationID` = ?;";
-                BindedQuery($conn, $query, implode($types) . 'i', [...$values, $id], true,
+                $affectedRows = BindedQuery($conn, $query, implode($types) . 'i', [...$values, $id], true,
                     "Failed to update location (specific location PATCH)");
+                if(!$affectedRows)
+                {
+                    $matches = BindedQuery($conn, "SELECT 1 FROM `Location` WHERE `LocationID` = ?;", 'i', [$id], true,
+                        "Failed to check for record existence (specific location PATCH)");
+                    if(empty($matches))
+                        MessageResponse(HTTP_NOT_FOUND);
+                }
                 
                 MessageResponse(HTTP_OK);
             },
@@ -82,14 +89,11 @@ $endpoints['/^location\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
                 $id = (int)$regex[1];
-                $matches = BindedQuery($conn, "SELECT 1 FROM `Location` WHERE `LocationID` = ?;", 'i', [$id], true,
-                    "Failed to fetch location (specific location DELETE)");
-
-                if(count($matches) !== 1)
-                    MessageResponse(HTTP_NOT_FOUND);
-
-                BindedQuery($conn, "DELETE FROM `Location` WHERE `LocationID` = ?;", 'i', [$id], true,
+                $affectedRows = BindedQuery($conn, "DELETE FROM `Location` WHERE `LocationID` = ?;", 'i', [$id], true,
                     "Failed to delete location (specific location DELETE)");
+
+                if(!$affectedRows)
+                    MessageResponse(HTTP_NOT_FOUND);
 
                 MessageResponse(HTTP_OK);
             },

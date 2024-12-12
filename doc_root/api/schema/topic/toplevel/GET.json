@@ -1,0 +1,46 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "subjectId": {
+            "type": "string",
+            "oneOf": [
+                {
+                    "pattern": "^[\\d]+$"
+                },
+                {
+                    "enum": ["null"]
+                }
+            ]
+        },
+        "name": {
+            "type": "string",
+            "pattern": "^[\\w\\s]+$",
+            "maxLength": 30
+        },
+        "description": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "orderBy": {
+            "type": "string",
+            "enum": ["id", "subjectId", "name", "description"]
+        },
+        "order": {
+            "type": "string",
+            "enum": ["asc", "desc"]
+        },
+        "page": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        },
+        "pageSize": {
+            "type": "string",
+            "pattern": "^[\\d]+$"
+        }
+    },
+    "additionalProperties": false
+}

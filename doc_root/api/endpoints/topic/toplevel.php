@@ -7,7 +7,7 @@ require_once API_ROOT . "/functions/api_responses.php";
 require_once API_ROOT . "/functions/authentication.php";
 require_once API_ROOT . "/functions/user_types.php";
 
-$endpoints['/^location\/?$/'] = [
+$endpoints['/^topic\/?$/'] = [
     'methods' => [
         'GET' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
@@ -32,21 +32,28 @@ $endpoints['/^location\/?$/'] = [
                 $conditions = [];
                 if(isset($request->id))
                 {
-                    $conditions[] = '`LocationID` = ?';
+                    $conditions[] = '`TopicID` = ?';
                     $types[] = 'i';
                     $values[] = (int)$request->id;
                 }
+                if(isset($request->subjectId))
+                {
+                    if($request->subjectId === "null")
+                    {
+                        $conditions[] = '`SubjectID` IS NULL';
+                    }
+                    else
+                    {
+                        $conditions[] = '`SubjectID` = ?';
+                        $types[] = 'i';
+                        $values[] = (int)$request->subjectId;
+                    }
+                }
                 if(isset($request->name))
                 {
-                    $conditions[] = '`LocationName` LIKE ?';
+                    $conditions[] = '`TopicName` LIKE ?';
                     $types[] = 's';
                     $values[] = '%' . EscapeWildChars($request->name) . '%';
-                }
-                if(isset($request->address))
-                {
-                    $conditions[] = '`Address` LIKE ?';
-                    $types[] = 's';
-                    $values[] = '%' . EscapeWildChars($request->address) . '%';
                 }
                 if(isset($request->description))
                 {
@@ -60,10 +67,10 @@ $endpoints['/^location\/?$/'] = [
                 {
                     $order = ' ORDER BY ' . match($request->orderBy)
                     {
-                        'id' => '`LocationID`',
-                        'name' => '`LocationName`',
-                        'address' => '`Address`',
-                        'Description' => '`Description`',
+                        'id' => '`TopicID`',
+                        'subjectId' => '`SubjectID`',
+                        'name' => '`TopicName`',
+                        'description' => '`Description`',
                     };
                     if(isset($request->order))
                         $order .= match($request->order)
@@ -73,43 +80,47 @@ $endpoints['/^location\/?$/'] = [
                         };
                 }
 
-                $query = 'SELECT `LocationID`, `LocationName`, `Address`, `Description`, `RecordDate` FROM `Location`'
+                $query = "SELECT `TopicID`, `SubjectID`, `TopicName`, `Description`, `RecordDate` FROM `Topic`"
                     .(empty($conditions) ? '' : ' WHERE ' . implode(' AND ', $conditions))
-                    . $order . " LIMIT $offset, $pageSize";
+                    . $order . " LIMIT $offset, $pageSize;";
                 $matches = BindedQuery($conn, $query, implode($types), $values, true,
-                    "Failed to fetch locations (toplevel location GET)");
+                    "Failed to fetch topics (toplevel topic GET)");
                 
-                MessageResponse(HTTP_OK, null, ['results' => array_map(function($location){
+                MessageResponse(HTTP_OK, null, ['results' => array_map(function($topic)
+                {
                     $ret = [];
-                    $ret['id'] = $location['LocationID'];
-                    $ret['name'] = $location['LocationName'];
-                    $ret['address'] = $location['Address'];
-                    $ret['description'] = $location['Description'];
-                    $ret['recordDate'] = $location['RecordDate'];
+                    $ret['id'] = $topic['TopicID'];
+                    $ret['subjectId'] = $topic['SubjectID'];
+                    $ret['name'] = $topic['TopicName'];
+                    $ret['description'] = $topic['Description'];
+                    $ret['recordDate'] = $topic['RecordDate'];
                     return $ret;
                 }, $matches)]);
             },
-            'schema-path' => 'location/toplevel/GET.json'
+            'schema-path' => 'topic/toplevel/GET.json'
         ],
         'POST' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
             {
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
 
-                $matches = BindedQuery($conn, "SELECT 1 FROM `Location` WHERE `LocationName` = ?;", 's', [$request->name], true,
-                    "Failed to check for location existence (toplevel location POST)");
-                if(!empty($matches))
-                    MessageResponse(HTTP_CONFLICT, "Name already exists");
-
+                $conn->begin_transaction() || InternalError("Failed to begin topic creation transaction (toplevel topic POST)");
                 $types = ['s'];
                 $values = [$request->name];
                 // Collect optional properties provided
                 $properties = [];
-                if(isset($request->address))
+                if(isset($request->subjectId))
                 {
-                    $properties[] = '`Address`';
-                    $types[] = 's';
-                    $values[] = $request->address;
+                    $matches = BindedQuery($conn, "SELECT 1 FROM `Topic` WHERE `TopicID` = ? AND `SubjectID` IS NULL;", 'i', [$request->subjectId], true,
+                        "Failed to check for subject existence (toplevel topic POST)");
+                    if(empty($matches))
+                    {
+                        $conn->rollback();
+                        MessageResponse(HTTP_CONFLICT, "Subject ID does not exist / is not a subject");
+                    }
+                    $properties[] = '`SubjectID`';
+                    $types[] = 'i';
+                    $values[] = $request->subjectId;
                 }
                 if(isset($request->description))
                 {
@@ -118,14 +129,15 @@ $endpoints['/^location\/?$/'] = [
                     $values[] = $request->description;
                 }
 
-                $query = "INSERT INTO `Location`(`LocationName`" .(empty($properties) ? '' : ',' . implode(',',$properties)) . ')'
+                $query = "INSERT INTO `Topic`(`TopicName`" .(empty($properties) ? '' : ',' . implode(',',$properties)) . ')'
                     . ' VALUES (?' . str_repeat(',?', count($properties)) . ');';
                 BindedQuery($conn, $query, implode($types), $values, true,
-                    "Failed to insert location record (toplevel location POST)");
+                    "Failed to insert topic record (toplevel topic POST)");
 
+                $conn->commit() || InternalError("Failed to commit topic creation transaction (toplevel topic POST)");
                 MessageResponse(HTTP_OK);
             },
-            'schema-path' => 'location/toplevel/POST.json'
+            'schema-path' => 'topic/toplevel/POST.json'
         ]
     ]
 ];
