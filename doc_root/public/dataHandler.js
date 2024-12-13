@@ -412,7 +412,8 @@ async function getClassDetails(classId) {
 async function addNewTopicRecord(subjectId, name, description) {
     const body = {
         subjectId,
-        name
+        name,
+        description
     };
 
     const response = await withRetry(() => 
