@@ -1,17 +1,81 @@
-    <div id="calendar-wrapper" class="calendar-wrapper">
-      <div class="calendar-header">
-        <button id="prevMonth" class="nav-btn">◀</button>
-        <h2 id="monthDisplay"></h2>
-        <button id="nextMonth" class="nav-btn">▶</button>
+<div class="calendar-container">
+  <div class="calendar-header">
+      <div class="header-left">
+          <button id="prevMonth" class="nav-btn">◀</button>
+          <h2 id="monthDisplay"></h2>
+          <button id="nextMonth" class="nav-btn">▶</button>
       </div>
-      <div class="weekdays">
-        <div>Sun</div>
-        <div>Mon</div>
-        <div>Tue</div>
-        <div>Wed</div>
-        <div>Thu</div>
-        <div>Fri</div>
-        <div>Sat</div>
+      <button id="addLessonBtn" class="add-button">
+          <i class="fas fa-plus"></i>
+          New Lesson
+      </button>
+  </div>
+  <div class="weekdays">
+      <div>Sun</div>
+      <div>Mon</div>
+      <div>Tue</div>
+      <div>Wed</div>
+      <div>Thu</div>
+      <div>Fri</div>
+      <div>Sat</div>
+  </div>
+  <div id="calendar" class="calendar-grid"></div>
+</div>
+
+<!-- Add Lesson Modal -->
+<div id="lessonModal" class="modal hidden">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h2>Schedule New Lesson</h2>
+          <span class="close-button">&times;</span>
       </div>
-      <div id="calendar" class="calendar-grid"></div>
-    </div>
+      <form id="lessonForm">
+          <div class="form-group">
+              <label for="lessonDate">Date:</label>
+              <input type="date" id="lessonDate" required>
+          </div>
+          <div class="form-group">
+              <label for="startTime">Start Time:</label>
+              <input type="time" id="startTime" required>
+          </div>
+          <div class="form-group">
+              <label for="endTime">End Time:</label>
+              <input type="time" id="endTime" required>
+          </div>
+          <div class="form-group">
+              <label for="subjectSelect">Subject:</label>
+              <select id="subjectSelect" required>
+                  <!-- Will be populated dynamically -->
+              </select>
+          </div>
+          <div class="form-group">
+              <label>Students:</label>
+              <div class="student-selection">
+                  <div class="available-students">
+                      <h3>Available Students</h3>
+                      <div id="availableStudents" class="student-list"></div>
+                  </div>
+                  <div class="student-controls">
+                      <button type="button" id="addStudentBtn" class="control-button">&gt;&gt;</button>
+                      <button type="button" id="removeStudentBtn" class="control-button">&lt;&lt;</button>
+                  </div>
+                  <div class="class-members">
+                      <h3>Lesson Students</h3>
+                      <div id="lessonStudents" class="student-list"></div>
+                  </div>
+              </div>
+          </div>
+          <div class="form-group">
+              <label for="trackables">Trackable Items (comma-separated names):</label>
+              <input type="text" id="trackables" placeholder="e.g., homework,attendance,participation">
+              <small class="help-text">Enter names of boolean values you want to track for this lesson</small>
+          </div>
+          <div class="form-buttons">
+              <button type="button" class="cancel-button">Cancel</button>
+              <button type="submit" class="submit-button">Schedule Lesson</button>
+          </div>
+      </form>
+  </div>
+</div>
+
+<div id="alertMessage" class="alert hidden"></div>

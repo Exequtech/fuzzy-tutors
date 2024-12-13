@@ -2,6 +2,7 @@ const toggleBtn = document.querySelector('.toggle-btn');
 const sidebar = document.querySelector('.sidebar');
 const mainContent = document.getElementById('mainContent');
 const navItems = document.querySelectorAll('.nav-item');
+let oldScript;
 
 // Toggle sidebar
 toggleBtn.addEventListener('click', () => {
@@ -27,11 +28,10 @@ async function loadContent(page) {
             }
         });
 
-        await loadPageScript(page);
-
         // Update URL without page reload
         history.pushState({page: page}, '', `?page=${page}`);
         // Load and execute the page's specific JavaScript
+        await loadPageScript(page);
     } catch (error) {
         console.error('Error loading content:', error);
         mainContent.innerHTML = '<div class="error">Error loading content</div>';
@@ -41,36 +41,40 @@ async function loadContent(page) {
 // Function to load and execute page-specific JavaScript
 async function loadPageScript(page) {
     // Remove any previously loaded page script
-    const oldScript = document.querySelector(`script[data-page="${page}"]`);
-    if (oldScript) {
-        oldScript.remove();
+    if(oldScript) {
+        document.body.removeChild(oldScript);
+        oldScript = null;
     }
 
     // Create and append new script
     const script = document.createElement('script');
     script.src = `${page}/${page}.js`;
     script.type = "module";
-    script.dataset.page = page; // Add data attribute to identify the script
+    script.dataset.page = page;
     
     // Create a promise to handle script loading
     const loadPromise = new Promise((resolve, reject) => {
-        script.onload = () => {
-            // Initialize the page if it has an init function
-            if (typeof window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
-                window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`]();
-            }
-            resolve();
-        };
+        script.onload = () => resolve();
         script.onerror = () => reject(new Error(`Failed to load ${page}.js`));
     });
 
     document.body.appendChild(script);
-    
+
     try {
         await loadPromise;
+        // After script is loaded, ensure any cleanup of previous state is done
+        if (typeof window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
+            window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`]();
+        }
+        // Initialize the page
+        if (typeof window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
+            await window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`]();
+        }
     } catch (error) {
         console.error('Error loading page script:', error);
     }
+
+    oldScript = document.querySelector(`script[data-page="${page}"]`);
 }
 
 // Add click handlers to navigation items

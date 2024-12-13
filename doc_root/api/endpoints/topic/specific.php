@@ -91,7 +91,7 @@ $endpoints['/^topic\/([\d]+)\/?$/'] = [
                     $types[] = 's';
                     $values[] = $request->name;
                 }
-                if(isset($request->description) && $request->description !== $topic['Description'])
+                if(property_exists($request, 'description') && $request->description !== $topic['Description'])
                 {
                     $sets[] = '`Description` = ?';
                     $types[] = 's';

@@ -16,8 +16,16 @@
             "pattern": "^[\\w\\s]+$"
         },
         "description": {
-            "type": "string",
-            "pattern": "^[\\w\\s]+$"
+            "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^[\\x00-\\x7F]+$",
+                    "maxLength": 255
+                },
+                {
+                    "type": "null"
+                }
+            ]
         }
     },
     "required": ["name", "subjectId"],
