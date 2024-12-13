@@ -568,5 +568,7 @@ export {
     addNewTopicRecord,
     updateTopicRecord,
     deleteTopicRecord,
-    getSubjectsPage
+    getSubjectsPage,
+    addNewLessonRecord,
+    getLessons
 };
