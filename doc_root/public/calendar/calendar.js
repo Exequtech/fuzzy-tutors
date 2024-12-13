@@ -1,9 +1,13 @@
-import { getLessons, addNewLessonRecord, getStudentPage, getSubjectsPage } from '../DataHandler.js';
+import { getLessons, addNewLessonRecord, getStudentPage, getSubjectsPage, getClassPage, getTrackables, getLocationPage } from '../dataHandler.js';
 
 let currentDate = new Date();
 let currentMonth = currentDate.getMonth();
 let currentYear = currentDate.getFullYear();
 let lessons = [];
+let subjects = [];
+let classes = [];
+let locations = [];
+let trackables = [];
 
 // DOM Elements
 const monthDisplay = document.getElementById('monthDisplay');
@@ -21,11 +25,30 @@ const lessonStudentsList = document.getElementById('lessonStudents');
 async function init() {
     try {
         await fetchAndRenderLessons();
+        await loadFormData();
         setupEventListeners();
-        populateSubjectSelect();
-        renderStudentLists();
+        setupFormEventListeners();
     } catch (error) {
         showAlert('Failed to initialize calendar: ' + error.message, false);
+    }
+}
+
+async function loadFormData() {
+    try {
+        // Load all necessary data
+        subjects = await getSubjectsPage();
+        classes = await getClassPage();
+        locations = await getLocationPage();
+        trackables = await getTrackables();
+
+        // Populate form selects
+        populateSubjectSelect();
+        populateClassSelect();
+        populateLocationSelect();
+        populateTrackables();
+        await renderStudentLists();
+    } catch (error) {
+        showAlert('Failed to load form data: ' + error.message, false);
     }
 }
 
@@ -33,14 +56,6 @@ async function fetchAndRenderLessons() {
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     
-    // Format dates for API
-    const formatDateForApi = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day} 00:00:00`;
-    };
-
     try {
         lessons = await getLessons(
             formatDateForApi(firstDay),
@@ -89,17 +104,74 @@ function setupEventListeners() {
     });
 }
 
-async function populateSubjectSelect() {
-    try {
-        const subjects = await getSubjectsPage();
-        const select = document.getElementById('subjectSelect');
-        
-        select.innerHTML = subjects.map(subject => 
-            `<option value="${subject.id}">${subject.name}</option>`
-        ).join('');
-    } catch (error) {
-        showAlert('Failed to load subjects: ' + error.message, false);
+function setupFormEventListeners() {
+    // Student selection type toggle
+    document.querySelectorAll('input[name="studentType"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const classSelection = document.getElementById('classSelection');
+            const studentSelection = document.getElementById('studentSelection');
+            
+            if (e.target.value === 'class') {
+                classSelection.classList.remove('hidden');
+                studentSelection.classList.add('hidden');
+            } else {
+                classSelection.classList.add('hidden');
+                studentSelection.classList.remove('hidden');
+            }
+        });
+    });
+
+    // Subject change handler for topics
+    document.getElementById('subjectSelect').addEventListener('change', async (e) => {
+        const subjectId = parseInt(e.target.value);
+        const subject = subjects.find(s => s.id === subjectId);
+        if (subject) {
+            populateTopicSelect(subject.topics || []);
+        }
+    });
+}
+
+function populateSubjectSelect() {
+    const select = document.getElementById('subjectSelect');
+    select.innerHTML = subjects.map(subject => 
+        `<option value="${subject.id}">${subject.name}</option>`
+    ).join('');
+    
+    // Initially populate topics for first subject
+    if (subjects.length > 0) {
+        populateTopicSelect(subjects[0].topics || []);
     }
+}
+
+function populateTopicSelect(topics) {
+    const select = document.getElementById('topicSelect');
+    select.innerHTML = topics.map(topic => 
+        `<option value="${topic.id}">${topic.name}</option>`
+    ).join('');
+}
+
+function populateClassSelect() {
+    const select = document.getElementById('classSelect');
+    select.innerHTML = classes.map(cls => 
+        `<option value="${cls.id}">${cls.name}</option>`
+    ).join('');
+}
+
+function populateLocationSelect() {
+    const select = document.getElementById('locationSelect');
+    select.innerHTML = locations.map(location => 
+        `<option value="${location.id}">${location.name}</option>`
+    ).join('');
+}
+
+function populateTrackables() {
+    const container = document.getElementById('trackablesList');
+    container.innerHTML = trackables.map(trackable => `
+        <div class="trackable-item">
+            <input type="checkbox" id="trackable-${trackable.name}" value="${trackable.name}">
+            <label for="trackable-${trackable.name}">${trackable.name}</label>
+        </div>
+    `).join('');
 }
 
 async function renderStudentLists() {
@@ -176,18 +248,14 @@ function createDayElement(dayNumber, extraClass, dayLessons) {
             ${dayLessons.map(lesson => `
                 <div class="lesson-item">
                     <div class="lesson-time">
-                        ${formatTimeFromApiString(lesson.startDate)} - 
-                        ${formatTimeFromApiString(lesson.endDate)}
+                        ${formatTimeFromDate(new Date(lesson.startDate))} - 
+                        ${formatTimeFromDate(new Date(lesson.endDate))}
                     </div>
                     <div class="lesson-subject">${lesson.subjectId}</div>
                 </div>
             `).join('')}
         </div>
     `;
-}
-
-function formatTime(date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function transferStudents(fromList, toList) {
@@ -217,42 +285,37 @@ async function handleLessonSubmit(e) {
         const startTime = document.getElementById('startTime').value;
         const endTime = document.getElementById('endTime').value;
         
-        // Create date objects for manipulation
-        const startDate = new Date(`${lessonDate}T${startTime}`);
-        const endDate = new Date(`${lessonDate}T${endTime}`);
-        
-        // Format dates to match API requirement: YYYY-MM-DD HH:mm:ss
-        const formatDateForApi = (date) => {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-            
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-        };
-
-        const formattedStartDate = formatDateForApi(startDate);
-        const formattedEndDate = formatDateForApi(endDate);
+        const startDate = formatDateForApi(new Date(`${lessonDate}T${startTime}`));
+        const endDate = formatDateForApi(new Date(`${lessonDate}T${endTime}`));
         
         const subjectId = parseInt(document.getElementById('subjectSelect').value);
-        const studentIds = Array.from(lessonStudentsList.children).map(item => 
-            parseInt(item.dataset.id)
-        );
+        const topics = Array.from(document.getElementById('topicSelect').selectedOptions)
+            .map(option => parseInt(option.value));
         
-        // Get trackables as array of strings from comma-separated input
-        const trackables = document.getElementById('trackables').value
-            .split(',')
-            .map(item => item.trim())
-            .filter(item => item.length > 0);
+        // Get selected trackables
+        const selectedTrackables = Array.from(document.querySelectorAll('#trackablesList input:checked'))
+            .map(checkbox => checkbox.value);
+        
+        // Get students based on selection type
+        const studentType = document.querySelector('input[name="studentType"]:checked').value;
+        let classId = null;
+        let students = null;
+        
+        if (studentType === 'class') {
+            classId = parseInt(document.getElementById('classSelect').value);
+        } else {
+            students = Array.from(document.getElementById('lessonStudents').children)
+                .map(item => parseInt(item.dataset.id));
+        }
 
         const response = await addNewLessonRecord(
-            formattedStartDate,
-            formattedEndDate,
             subjectId,
-            trackables,
-            studentIds
+            classId,
+            students,
+            startDate,
+            endDate,
+            selectedTrackables,
+            topics
         );
 
         if (response.isSuccessful) {
@@ -267,19 +330,28 @@ async function handleLessonSubmit(e) {
     }
 }
 
+function formatDateForApi(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function formatTimeFromDate(date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 function showAlert(message, isSuccess) {
-    alertMessage.textContent = message;
+    alertMessage.textContent = message ?? '';
     alertMessage.className = `alert alert-${isSuccess ? 'success' : 'error'} show`;
     
     setTimeout(() => {
         alertMessage.classList.remove('show');
     }, 3000);
-}
-
-// helper function to format time from API date string
-function formatTimeFromApiString(dateString) {
-    const date = new Date(dateString.replace(' ', 'T'));
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 // Initialize the calendar

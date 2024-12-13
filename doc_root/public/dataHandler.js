@@ -500,59 +500,6 @@ async function getSubjectsPage(page = 1, pageSize=10, order="asc", orderBy="id",
 }
 
 /**
- * Get all lessons between 2 dates
- * @param {DateTime} before - The inclusive start date
- * @param {DateTime} after - The inclusive end date
- * @returns {array} Array of lesson objects
- */
-async function getLessons(before, after) {
-    const params = {
-        before,
-        after
-    };
-
-    const response = await withRetry(() => 
-        makeApiCall(API_CONFIG.endpoints.calendar, 'GET', params)
-    );
-
-    if (response.isSuccessful) {
-        await SessionManager.getNewToken();
-    }
-
-    return response.data.results;
-}
-
-/**
- * Add New lesson Record with associated data
- * @param {DateTime} startDate - When the lesson starts
- * @param {DateTime} endDate - When the lesson ends
- * @param {int} subjectId - Reference to the subject of the lesson
- * @param {list<string>} trackables - Booleans to track extra data of every student with attendance
- * @param {list<int>} students - List of student ids associated with the lesson 
- * @returns {Promise<ApiResponse>} Response object
- */
-
-async function addNewLessonRecord(startDate, endDate, subjectId, trackables, students) {
-    const body = {
-        startDate,
-        endDate,
-        subjectId,
-        trackables,
-        students
-    };
-
-    const response = await withRetry(() => 
-        makeApiCall(API_CONFIG.endpoints.lessonTopLevel, 'POST', body)
-    );
-
-    if (response.isSuccessful) {
-        await SessionManager.getNewToken();
-    }
-
-    return response;
-}
-
-/**
  * Add New Trackable Record
  * @param {string} name - The trackable name
  * @param {string} description - Trackable description
@@ -771,6 +718,70 @@ async function getLocationPage(page = 1, pageSize=10, order="asc", orderBy="id",
    return response.data.results;
 }
 
+/**
+ * Get all lessons between 2 dates
+ * @param {DateTime} before - The inclusive start date
+ * @param {DateTime} after - The inclusive end date
+ * @returns {array} Array of lesson objects
+ */
+async function getLessons(after, before) {
+    const params = {
+        before,
+        after
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.calendar, 'GET', params)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response.data.results;
+}
+
+/**
+ * Add New lesson Record with associated data
+ * @param {int} subjectId - Reference to the subject of the lesson
+ * @param {int} classId - If selected students must be null
+ * @param {list<int>} students - If selected classId must be null
+ * @param {DateTime} startDate - When the lesson starts
+ * @param {DateTime} endDate - When the lesson ends
+ * @param {list<string>} trackables - Booleans to track extra data of every student with attendance
+ * @param {list<int>} topics - List of topic ids associated with the subjectId 
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function addNewLessonRecord(subjectId, classId, students, startDate, endDate, trackables, topics) {
+    const body = {
+        startDate,
+        endDate,
+        subjectId,
+        trackables,
+        topics
+    };
+
+    if (classId !== null && students !== null) {
+        return new ApiResponse(false, 'You can only select a class or students, NOT BOTH!', null);
+    }
+
+    if (classId)
+        body.classId = classId;
+    if (students)
+        body.students = students;
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.lessonTopLevel, 'POST', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
 // Export the functions and classes
 export {
     registerUser,
@@ -790,8 +801,6 @@ export {
     updateTopicRecord,
     deleteTopicRecord,
     getSubjectsPage,
-    addNewLessonRecord,
-    getLessons,
     addNewTrackableRecord,
     updateTrackableRecord,
     getTrackableDetails,
@@ -801,5 +810,7 @@ export {
     updateLocationRecord,
     deleteLocationRecord,
     getLocationDetails,
-    getLocationPage
+    getLocationPage,
+    addNewLessonRecord,
+    getLessons
 };
