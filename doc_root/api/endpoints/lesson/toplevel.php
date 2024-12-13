@@ -12,23 +12,23 @@ $endpoints['/^lesson\/?$/'] = [
         'GET' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
             {
+                if(isset($request->before) && !ValidateDate($request->before))
+                    MessageResponse(HTTP_BAD_REQUEST, "Invalid before date");
+                if(isset($request->after) && !ValidateDate($request->after))
+                    MessageResponse(HTTP_BAD_REQUEST, "Invalid after date");
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
                 // Resolve pagination variables
-                $paginate = !isset($request->before) || !isset($request->after);
-                $offset = null; $pageSize = API_PAGE_SIZE;
-                if($paginate)
+                $pageSize = API_PAGE_SIZE;
+                if(isset($request->pageSize))
                 {
-                    if(isset($request->pageSize))
-                    {
-                        $val = (int)$request->pageSize;
-                        if($val > API_PAGE_SIZE)
-                            MessageResponse(HTTP_BAD_REQUEST, "Requested page size too big.");
-                        $pageSize = $val;
-                    }
-                    $page = isset($request->page) ? (int)$request->page : 1;
-                    $offset = ($page - 1) * $pageSize;
+                    $val = (int)$request->pageSize;
+                    if($val > API_PAGE_SIZE)
+                        MessageResponse(HTTP_BAD_REQUEST, "Requested page size too big.");
+                    $pageSize = $val;
                 }
+                $page = isset($request->page) ? (int)$request->page : 1;
+                $offset = ($page - 1) * $pageSize;
 
                 $values = [];
                 $types = [];
@@ -106,25 +106,71 @@ $endpoints['/^lesson\/?$/'] = [
                     'desc' => ' DESC',
                 };
 
+                $conn->begin_transaction() || InternalError("Failed to begin read transaction (toplevel lesson GET)");
                 $lessonQuery = "SELECT `LessonID`, `TutorID`, `SubjectID`, `LocationID`, `LessonStart`, `LessonEnd`, `Notes` FROM `Lesson`"
                         .(empty($conditions) ? '' : ' WHERE ' . implode(' AND ', $conditions)). $order
-                        . ($paginate ? " LIMIT $offset, $pageSize;" : ';');
+                        . " LIMIT $offset, $pageSize";
+                $mainQuery = "SELECT `LessonID`, `Username`, `TopicName`, `LocationName`, `LessonStart`, `LessonEnd`, `Notes` FROM ($lessonQuery) `l`"
+                        ." LEFT JOIN `Location` ON `l`.`LocationID` = `Location`.`LocationID`"
+                        ." LEFT JOIN `Topic` ON `l`.`SubjectID` = `Topic`.`TopicID`"
+                        ." LEFT JOIN `User` ON `l`.`TutorID` = `UserID`;";
 
-                $lessons = BindedQuery($conn, $lessonQuery, implode($types), $values, true,
+                $lessonRecords = BindedQuery($conn, $mainQuery, implode($types), $values, true,
                     "Failed to fetch lessons (toplevel lesson GET)");
-
-                MessageResponse(HTTP_OK, null, ['results' => array_map(function($record)
+                
+                $lessons = [];
+                foreach($lessonRecords as $record)
                 {
-                    $ret = [];
-                    $ret['id'] = $record['LessonID'];
-                    $ret['tutorId'] = $record['TutorID'];
-                    $ret['subjectId'] = $record['SubjectID'];
-                    $ret['locationId'] = $record['LocationID'];
-                    $ret['startDate'] = $record['LessonStart'];
-                    $ret['endDate'] = $record['LessonEnd'];
-                    $ret['notes'] = $record['Notes'];
-                    return $ret;
-                }, $lessons), 'paginated' => $paginate]);
+                    $lessons[$record['LessonID']] = [
+                        'id' => $record['LessonID'],
+                        'tutorName' => $record['Username'],
+                        'subjectName' => $record['TopicName'],
+                        'locationName' => $record['LocationName'],
+                        'startDate' => $record['LessonStart'],
+                        'endDate' => $record['LessonEnd'],
+                        'notes' => $record['Notes'],
+                        'students' => [],
+                        'topics' => [],
+                        'trackables' => []
+                    ];
+                }
+
+                $lessonIDs = array_map(function($record){return $record['LessonID'];}, $lessonRecords);
+                
+                $studentQuery = "SELECT `StudentID`, `LessonID`, `Attended`, `TrackableName`, `Value` FROM `Attendance` LEFT JOIN `TrackableValue` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID`"
+                        ." WHERE `LessonID` IN (" . implode(',', $lessonIDs) . ");";
+                $students = BindedQuery($conn, $studentQuery, '', [], true,
+                    "Failed to fetch attendance (toplevel lesson GET)");
+                foreach($students as $record)
+                {
+                    if(!isset($lessons[$record['LessonID']]['students'][$record['StudentID']]))
+                    {
+                        $obj = [];
+                        $obj['attended'] = $record['Attended'] === 1;
+                        $obj['trackables'] = [];
+                        $lessons[$record['LessonID']]['students'][$record['StudentID']] = $obj;
+                        if(!isset($record['TrackableName']))
+                            continue;
+                    }
+                    $lessons[$record['LessonID']]['students'][$record['StudentID']]['trackables'][$record['TrackableName']] = $record['Value'] === 1;
+                }
+                foreach($lessons as $lesson)
+                {
+                    $lesson['students'] = array_values($lesson['students']);
+                }
+
+                $topics = BindedQuery($conn, "SELECT `LessonID`, `TopicID` FROM `LessonTopic` WHERE `LessonID` IN (" . implode(',', $lessonIDs) . ");", '', [], true,
+                    "Failed to fetch topics (toplevel lesson GET)");
+                foreach($topics as $record)
+                    $lessons[$record['LessonID']]['topics'][] = $record['TopicID'];
+
+                $trackables = BindedQuery($conn, "SELECT `LessonID`, `TrackableName` FROM `LessonTrackable` WHERE `LessonID` IN (" . implode(',',$lessonIDs) . ");", '', [], true,
+                    "Failed to fetch trackables (toplevel lesson GET)");
+                foreach($trackables as $record)
+                    $lessons[$record['LessonID']]['trackables'][] = $record['TrackableName'];
+
+                $conn->commit();
+                MessageResponse(HTTP_OK, null, ['results' => array_values($lessons)]);
             },
             'schema-path' => 'lesson/toplevel/GET.json'
         ],
@@ -182,7 +228,7 @@ $endpoints['/^lesson\/?$/'] = [
                 }
                 if(isset($request->locationId))
                 {
-                    $matches = BindedQuery($conn, "SELECT 1 FROM `Location` WHERE `LocationID` = ? FOR UPDATE;", 'i', [$request->locationId], true,
+                    $matches = BindedQuery($conn, "SELECT 1 FROM `Location` WHERE `LocationID` = ? FOR SHARE;", 'i', [$request->locationId], true,
                         "Failed to check for location existence (toplevel lesson POST)");
                     if(empty($matches))
                     {
@@ -281,7 +327,6 @@ $endpoints['/^lesson\/?$/'] = [
                 }
                 if(!empty($request->trackables))
                 {
-                    MessageResponse(HTTP_OK);
                     $values = [];
                     foreach($request->trackables as $trackable)
                     {
