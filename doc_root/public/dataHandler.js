@@ -15,7 +15,11 @@ const API_CONFIG = {
         login: '/auth/login',
         token: '/auth/ot-token',
         studentTopLevel: '/student',
-        classTopLevel: '/class'
+        classTopLevel: '/class',
+        topicsTopLevel: '/topic',
+        subject: '/subject',
+        calendar: '/calendar/lesson',
+        lessonTopLevel: '/lesson'
     }
 };
 
@@ -398,6 +402,154 @@ async function getClassDetails(classId) {
     return response.data.result;
 }
 
+/**
+ * Add New Topic Record with associated students
+ * @param {string} name - The class name
+ * @param {array} studentIds - Array of associated student ID's
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function addNewTopicRecord(subjectId, name, description) {
+    const body = {
+        subjectId,
+        name
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.topicsTopLevel, 'POST', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Update Topic Record
+ * @param {string} username - The username
+ * @param {string} email - The email address
+ * @param {bool} authorized - Student access
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function updateTopicRecord(topicId, name, description) {
+    const body = {
+        name,
+        description
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.topicsTopLevel}/${topicId}`, 'PATCH', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Delete topic/subject record from topics table
+ * @param {int} topicId - The ID of the topic record you want to delete
+ */
+async function deleteTopicRecord(topicId) {
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.topicsTopLevel}/${topicId}`, 'DELETE', null)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Get topics page
+ * @param {int} page - The page number
+ * @param {int} pageSize - The amount of class records to return (max 10)
+ * @param {string} order - The order type (desc or asc)
+ * @param {string} orderBy - Property name (id, name)
+ * @param {object} filter - name
+ * @returns {array} Array of Subject objects
+ */
+async function getSubjectsPage(page = 1, pageSize=10, order="asc", orderBy="id", filter = {}) {
+    const params = {
+        page,
+        pageSize,
+        order,
+        orderBy,
+        ...filter
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.subject, 'GET', params)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    console.log(response.data.results);
+    return response.data.results;
+}
+
+/**
+ * Get all lessons between 2 dates
+ * @param {DateTime} before - The inclusive start date
+ * @param {DateTime} after - The inclusive end date
+ * @returns {array} Array of lesson objects
+ */
+async function getLessons(before, after) {
+    const params = {
+        before,
+        after
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.calendar, 'GET', params)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response.data.results;
+}
+
+/**
+ * Add New lesson Record with associated data
+ * @param {DateTime} startDate - When the lesson starts
+ * @param {DateTime} endDate - When the lesson ends
+ * @param {int} subjectId - Reference to the subject of the lesson
+ * @param {list<string>} trackables - Booleans to track extra data of every student with attendance
+ * @param {list<int>} students - List of student ids associated with the lesson 
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function addNewLessonRecord(startDate, endDate, subjectId, trackables, students) {
+    const body = {
+        startDate,
+        endDate,
+        subjectId,
+        trackables,
+        students
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.lessonTopLevel, 'POST', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
 // Export the functions and classes
 export {
     registerUser,
@@ -412,5 +564,9 @@ export {
     addNewClassRecord,
     deleteClassRecord,
     updateClassRecord,
-    getClassDetails
+    getClassDetails,
+    addNewTopicRecord,
+    updateTopicRecord,
+    deleteTopicRecord,
+    getSubjectsPage
 };
