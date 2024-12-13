@@ -33,12 +33,18 @@ async function fetchAndRenderLessons() {
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     
+    // Format dates for API
+    const formatDateForApi = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day} 00:00:00`;
+    };
+
     try {
-        console.log(firstDay);
-        console.log(firstDay.toISOString());
         lessons = await getLessons(
-            firstDay.toISOString(),
-            lastDay.toISOString()
+            formatDateForApi(firstDay),
+            formatDateForApi(lastDay)
         );
         renderCalendar();
     } catch (error) {
@@ -170,8 +176,8 @@ function createDayElement(dayNumber, extraClass, dayLessons) {
             ${dayLessons.map(lesson => `
                 <div class="lesson-item">
                     <div class="lesson-time">
-                        ${formatTime(new Date(lesson.startDate))} - 
-                        ${formatTime(new Date(lesson.endDate))}
+                        ${formatTimeFromApiString(lesson.startDate)} - 
+                        ${formatTimeFromApiString(lesson.endDate)}
                     </div>
                     <div class="lesson-subject">${lesson.subjectId}</div>
                 </div>
@@ -268,6 +274,12 @@ function showAlert(message, isSuccess) {
     setTimeout(() => {
         alertMessage.classList.remove('show');
     }, 3000);
+}
+
+// helper function to format time from API date string
+function formatTimeFromApiString(dateString) {
+    const date = new Date(dateString.replace(' ', 'T'));
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 // Initialize the calendar
