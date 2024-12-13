@@ -1,0 +1,84 @@
+<div class="trackables-container"></div>
+    <div class="header-section">
+        <h1>Trackables Report</h1>
+        <button id="configTrackablesBtn" class="config-button">
+            <i class="fas fa-cog"></i>
+            Configure
+        </button>
+    </div>
+
+    <div id="alertMessage" class="alert hidden"></div>
+
+    <div class="filter-section">
+        <div class="date-filters">
+            <div class="form-group">
+                <label for="startDate">From:</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="form-group">
+                <label for="endDate">To:</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="trackableSelect">Trackable:</label>
+            <select id="trackableSelect">
+                <!-- Will be populated dynamically -->
+            </select>
+        </div>
+    </div>
+
+    <div class="report-container">
+        <div class="chart-container">
+            <canvas id="trackableChart"></canvas>
+        </div>
+        <div class="stats-container">
+            <!-- Statistics will be added here dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Modal -->
+<div id="trackableConfigModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Manage Trackables</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="config-content">
+            <div class="config-actions">
+                <button id="addTrackableBtn" class="add-button">
+                    <i class="fas fa-plus"></i>
+                    New Trackable
+                </button>
+            </div>
+            <div id="trackablesList" class="config-list">
+                <!-- Trackables will be listed here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Trackable Modal -->
+<div id="trackableFormModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="trackableFormTitle">Add New Trackable</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <form id="trackableForm">
+            <div class="form-group">
+                <label for="trackableName">Name:</label>
+                <input type="text" id="trackableName" required>
+            </div>
+            <div class="form-group">
+                <label for="trackableDescription">Description:</label>
+                <textarea id="trackableDescription"></textarea>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="cancel-button">Cancel</button>
+                <button type="submit" class="submit-button">Add Trackable</button>
+            </div>
+        </form>
+    </div>
+</div>

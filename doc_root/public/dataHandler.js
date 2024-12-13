@@ -19,7 +19,8 @@ const API_CONFIG = {
         topicsTopLevel: '/topic',
         subject: '/subject',
         calendar: '/calendar/lesson',
-        lessonTopLevel: '/lesson'
+        lessonTopLevel: '/lesson',
+        trackableTopLevel: '/trackable'
     }
 };
 
@@ -494,7 +495,6 @@ async function getSubjectsPage(page = 1, pageSize=10, order="asc", orderBy="id",
         await SessionManager.getNewToken();
     }
 
-    console.log(response.data.results);
     return response.data.results;
 }
 
@@ -551,6 +551,113 @@ async function addNewLessonRecord(startDate, endDate, subjectId, trackables, stu
     return response;
 }
 
+/**
+ * Add New Trackable Record
+ * @param {string} name - The trackable name
+ * @param {array} description - Trackable description
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function addNewTrackableRecord(name, description) {
+    const body = {
+        name
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.trackableTopLevel, 'POST', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Update Trackable Record
+ * @param {string} oldName - The Trackables old name
+ * @param {string} name - The Trackables new name
+ * @param {bool} description - Trackable description
+ * @returns {Promise<ApiResponse>} Response object
+ */
+
+async function updateTrackableRecord(oldName, name, description) {
+    const body = {
+        name
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.trackableTopLevel}/${oldName}`, 'PATCH', body)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Get specific trackable details
+ * @param {string} name - The name of the trackable to fetch
+ * @returns {Promise<ApiResponse>} Response object
+ */
+async function getTrackableDetails(name) {
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.trackableTopLevel}/${name}`, 'GET', null)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response.data.result;
+}
+
+/**
+ * Delete trackable record
+ * @param {string} name - The name of the trackable you want to delete
+* @returns {Promise<ApiResponse>} Response object
+ */
+async function deleteTrackableRecord(name) {
+    const response = await withRetry(() => 
+        makeApiCall(`${API_CONFIG.endpoints.trackableTopLevel}/${name}`, 'DELETE', null)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response;
+}
+
+/**
+ * Get trackables page
+ * @param {int} page - The page number
+ * @param {int} pageSize - The amount of class records to return (max 10)
+ * @param {string} order - The order type (desc or asc)
+ * @param {string} orderBy - Property name (id, name)
+ * @param {object} filter - name
+ * @returns {array} Array of Subject objects
+ */
+async function getTrackables(order="asc", filter = {}) {
+    const params = {
+        order,
+        ...filter
+    };
+
+    const response = await withRetry(() => 
+        makeApiCall(API_CONFIG.endpoints.trackableTopLevel, 'GET', params)
+    );
+
+    if (response.isSuccessful) {
+        await SessionManager.getNewToken();
+    }
+
+    return response.data.results;
+}
+
 // Export the functions and classes
 export {
     registerUser,
@@ -571,5 +678,10 @@ export {
     deleteTopicRecord,
     getSubjectsPage,
     addNewLessonRecord,
-    getLessons
+    getLessons,
+    addNewTrackableRecord,
+    updateTrackableRecord,
+    getTrackableDetails,
+    deleteTrackableRecord,
+    getTrackables
 };

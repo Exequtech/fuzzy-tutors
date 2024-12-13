@@ -1,0 +1,88 @@
+<div class="locations-container"></div>
+    <div class="header-section">
+        <h1>Location Usage Report</h1>
+        <button id="configLocationsBtn" class="config-button">
+            <i class="fas fa-cog"></i>
+            Configure
+        </button>
+    </div>
+
+    <div id="alertMessage" class="alert hidden"></div>
+
+    <div class="filter-section">
+        <div class="date-filters">
+            <div class="form-group">
+                <label for="startDate">From:</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="form-group">
+                <label for="endDate">To:</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="locationSelect">Location:</label>
+            <select id="locationSelect">
+                <!-- Will be populated dynamically -->
+            </select>
+        </div>
+    </div>
+
+    <div class="report-container">
+        <div class="chart-container">
+            <canvas id="locationChart"></canvas>
+        </div>
+        <div class="stats-container">
+            <!-- Statistics will be added here dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Modal -->
+<div id="locationConfigModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Manage Locations</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="config-content">
+            <div class="config-actions">
+                <button id="addLocationBtn" class="add-button">
+                    <i class="fas fa-plus"></i>
+                    New Location
+                </button>
+            </div>
+            <div id="locationsList" class="config-list">
+                <!-- Locations will be listed here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Location Modal -->
+<div id="locationFormModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="locationFormTitle">Add New Location</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <form id="locationForm">
+            <div class="form-group">
+                <label for="locationName">Name:</label>
+                <input type="text" id="locationName" required>
+            </div>
+            <div class="form-group">
+                <label for="locationAddress">Address:</label>
+                <input type="text" id="locationAddress" required>
+            </div>
+            <div class="form-group">
+                <label for="locationDescription">Description:</label>
+                <textarea id="locationDescription"></textarea>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="cancel-button">Cancel</button>
+                <button type="submit" class="submit-button">Add Location</button>
+            </div>
+        </form>
+    </div>
+</div>
