@@ -1,4 +1,4 @@
-import { SessionManager } from '../DataHandler.js';
+import { deleteLocationRecord, getLocationDetails, getLocationPage, SessionManager, updateLocationRecord, addNewLocationRecord } from '../dataHandler.js';
 
 // DOM Elements
 const configBtn = document.getElementById('configLocationsBtn');
@@ -57,10 +57,12 @@ function setupEventListeners() {
 async function loadLocations() {
     try {
         // TODO: Replace with actual API call
-        const locations = [
-            { id: 1, name: 'Main Campus', address: '123 Main St', description: 'Main teaching location' },
-            { id: 2, name: 'Library Study Room', address: '456 Library Ave', description: 'Quiet study space' }
-        ];
+        // const locations = [
+        //     { id: 1, name: 'Main Campus', address: '123 Main St', description: 'Main teaching location' },
+        //     { id: 2, name: 'Library Study Room', address: '456 Library Ave', description: 'Quiet study space' }
+        // ];
+
+        const locations = await getLocationPage();
 
         renderLocationsList(locations);
         populateLocationSelect(locations);
@@ -124,15 +126,17 @@ async function handleFormSubmit(e) {
         address: document.getElementById('locationAddress').value,
         description: document.getElementById('locationDescription').value
     };
+    let apiResponse;
 
     try {
-        // TODO: Replace with actual API calls
         if (currentLocationId) {
             // Update existing location
-            showAlert('Location updated successfully', true);
+            apiResponse = await updateLocationRecord(currentLocationId, formData.name, formData.address, formData.description);
+            showAlert(apiResponse.message, apiResponse.isSuccessful);
         } else {
             // Add new location
-            showAlert('Location added successfully', true);
+            apiResponse = await addNewLocationRecord(formData.name, formData.address, formData.description);
+            showAlert(apiResponse.message, apiResponse.isSuccessful);
         }
 
         await loadLocations();
@@ -224,22 +228,17 @@ function showAlert(message, isSuccess) {
 }
 
 // Make functions available globally
-window.editLocation = function(id) {
-    // TODO: Fetch location data and open form modal
-    const locationData = { 
-        id, 
-        name: 'Sample Location', 
-        address: '123 Sample St',
-        description: 'Sample description' 
-    };
+window.editLocation = async function(id) {
+    // Fetch location data and open form modal
+    const locationData = await getLocationDetails(id);
     openFormModal(locationData);
 };
 
 window.deleteLocation = async function(id) {
     if (confirm('Are you sure you want to delete this location?')) {
         try {
-            // TODO: Replace with actual API call
-            showAlert('Location deleted successfully', true);
+            let apiResponse = await deleteLocationRecord(id)
+            showAlert(apiResponse.message, apiResponse.isSuccessful);
             await loadLocations();
         } catch (error) {
             showAlert('Failed to delete location: ' + error.message, false);
