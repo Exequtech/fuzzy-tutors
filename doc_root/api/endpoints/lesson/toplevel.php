@@ -148,7 +148,7 @@ $endpoints['/^lesson\/?$/'] = [
                 $students = [];
                 if(isset($request->classId))
                 {
-                    $matches = BindedQuery($conn, "SELECT `StudentID` FROM `Class` LEFT JOIN `StudentClass` ON `Class`.`ClassID` = `StudentClass`.`ClassID` WHERE `ClassID` = ?;", 'i', [$request->classId], true,
+                    $matches = BindedQuery($conn, "SELECT `StudentID` FROM `Class` LEFT JOIN `StudentClass` ON `Class`.`ClassID` = `StudentClass`.`ClassID` WHERE `Class`.`ClassID` = ?;", 'i', [$request->classId], true,
                         "Failed to fetch class student data (toplevel lesson POST)");
                     if(empty($matches))
                     {
