@@ -13,21 +13,26 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
                 $classID = (int)$regex[1];
+                $conn->begin_transaction() || InternalError("Failed to initiate read transaction");
                 $matches = BindedQuery($conn, "SELECT `ClassName`, `RecordDate` FROM `Class` WHERE `ClassID` = ?;", 'i', [$classID], true,
                     "Failed to fetch class (specific class GET)");
                 
                 if(empty($matches))
                     MessageResponse(HTTP_NOT_FOUND);
 
-                $students = BindedQuery($conn, "SELECT `StudentID` FROM `StudentClass` WHERE `ClassID` = ? ORDER BY `StudentID`;", 'i', [$classID], true,
+                $students = BindedQuery($conn, "SELECT `StudentID`, `Username` FROM `StudentClass` INNER JOIN `User` ON `UserID` = `StudentID` WHERE `ClassID` = ? ORDER BY `StudentID`;", 'i', [$classID], true,
                     "Failed to fetch students (specific class GET)");
 
                 $ret = [];
                 $ret['id'] = $classID;
                 $ret['name'] = $matches[0]['ClassName'];
-                $ret['students'] = array_map(function($record){return $record['StudentID'];}, $students);
+                $ret['students'] = array_map(function($record){return [
+                    'id' => $record['StudentID'],
+                    'name' => $record['Username']
+                ];}, $students);
                 $ret['recordDate'] = $matches[0]['RecordDate'];
 
+                $conn->commit();
                 MessageResponse(HTTP_OK, null, ["result" => $ret]);
             },
             'schema-path' => 'class/specific/GET.json'
