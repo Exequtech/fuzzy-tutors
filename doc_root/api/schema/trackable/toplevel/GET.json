@@ -18,11 +18,12 @@
             "oneOf": [
                 {
                     "type": "string",
-                    "pattern": "^[\\x00-\\x7F]+",
+                    "pattern": "^[^/]$",
                     "maxLength": 255
                 },
                 {
-                    "type": "null"
+                    "type": "string",
+                    "enum": ["/null"]
                 }
             ]
         }

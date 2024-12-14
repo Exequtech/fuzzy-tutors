@@ -13,7 +13,7 @@ $endpoints['/^trackable\/([^\/]+)\/?$/'] = [
             {
                 EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
-                $matches = BindedQuery($conn, "SELECT `TrackableName`, `RecordDate` FROM `Trackable` WHERE `TrackableName` = ?;", 's', [$regex[1]], true,
+                $matches = BindedQuery($conn, "SELECT `TrackableName`, `Description`, `RecordDate` FROM `Trackable` WHERE `TrackableName` = ?;", 's', [$regex[1]], true,
                     "Failed to fetch trackable (specific trackable GET)");
 
                 if(empty($matches))
@@ -22,6 +22,7 @@ $endpoints['/^trackable\/([^\/]+)\/?$/'] = [
                 $ret = [];
                 $ret['name'] = $matches[0]['TrackableName'];
                 $ret['recordDate'] = $matches[0]['RecordDate'];
+                $ret['description'] = $matches[0]['Description'];
 
                 MessageResponse(HTTP_OK, null, ['result' => $ret]);
             },
@@ -67,7 +68,7 @@ $endpoints['/^trackable\/([^\/]+)\/?$/'] = [
                     $types[] = 's';
                     $values[] = $request->name;
                 }
-                if(property_exists($request, 'description') && $request->description !== $matches['Description'])
+                if(property_exists($request, 'description') && $request->description !== $matches[0]['Description'])
                 {
                     $sets[] = '`Description` = ?';
                     $types[] = 's';

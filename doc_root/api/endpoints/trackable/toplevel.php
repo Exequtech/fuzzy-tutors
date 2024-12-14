@@ -24,9 +24,9 @@ $endpoints['/^trackable\/?$/'] = [
                     $types[] = 's';
                     $values[] = '%' . EscapeWildChars($request->name) . '%';
                 }
-                if(property_exists($request, 'description'))
+                if(isset($request->description))
                 {
-                    if($request->description === null)
+                    if($request->description === "/null")
                         $conditions[] = '`Description` IS NULL';
                     else
                     {
