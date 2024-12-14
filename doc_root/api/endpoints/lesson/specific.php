@@ -26,8 +26,10 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
 
                 $lesson = [
                     'id' => $matches[0]['LessonID'],
+                    'locationId' => $matches[0]['LocationID'],
                     'locationName' => isset($matches[0]['LocationID']) ? BindedQuery($conn, "SELECT `LocationName` FROM `Location` WHERE `LocationID` = ?;", 'i', [$matches[0]['LocationID']], true,
                                         "Failed to fetch location (specific lesson GET)")[0]['LocationName'] : null,
+                    'subjectId' => $matches[0]['SubjectID'],
                     'subjectName' => isset($matches[0]['SubjectID']) ? BindedQuery($conn, "SELECT `TopicName` FROM `Topic` WHERE `TopicID` = ?;", 'i', [$matches[0]['SubjectID']], true,
                                         "Failed to fetch topic (specific lesson GET)")[0]['TopicName'] : null,
                     'startDate' => $matches[0]['LessonStart'],
@@ -140,8 +142,8 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                 if(isset($request->studentOverrides) && !empty(get_object_vars($request->studentOverrides)))
                 {
                     $references = array_map(function($str){return (int)$str;}, array_keys(get_object_vars($request->studentOverrides)));
-                    $query = "SELECT `UserID` FROM `User` WHERE `UserType = ? AND `UserID` IN (" . implode(',', $references) . ");";
-                    $matches = BindedQuery($conn, $query, 'i', [$id], true,
+                    $query = "SELECT `UserID` FROM `User` WHERE `UserType` = ? AND `UserID` IN (" . implode(',', $references) . ");";
+                    $matches = BindedQuery($conn, $query, 'i', [ROLE_STUDENT], true,
                         "Failed to lock students (specific lesson PATCH)");
                     if(count($matches) !== count($references))
                     {
@@ -157,10 +159,10 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                         $matches = BindedQuery($conn, $query, 'i', [$id], true,
                             "Failed to fetch attendance (specific lesson PATCH)");
                         $linked = array_column($matches, 'StudentID');
-                        if(count($references) !== count($linked))
+                        $diffs = array_diff($references, $linked);
+                        if(!empty($diffs))
                         {
                             $conn->rollback();
-                            $diffs = array_diff($references, $linked);
                             MessageResponse(HTTP_CONFLICT, "Some student ids are not in the lesson", ['invalid_ids' => $diffs]);
                         }
                     }
@@ -396,8 +398,8 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                 if(isset($request->studentOverrides))
                 {
                     $references = array_keys(get_object_vars($request->studentOverrides));
-                    $query = "SELECT `StudentID`, `TrackableName`, `Value`" 
-                            ." FROM `Attendance` LEFT JOIN `TrackableValue` ON `Attendance`.`StudentID` = `TrackableValue`.`StudentID`"
+                    $query = "SELECT `StudentID`, `TrackableName`, `Attended`, `Value`" 
+                            ." FROM `Attendance` LEFT JOIN `TrackableValue` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID`"
                             ." WHERE `LessonID` = ? AND `StudentID` IN (" . implode(',', $references) . ");";
                     $matches = BindedQuery($conn, $query, 'i', [$id], true,
                         "Failed to fetch attendance and trackables (specific lesson PATCH)");
@@ -415,9 +417,8 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                             if(!isset($record['TrackableName']))
                                 continue;
                         }
-                        $students[$record['StudentID']][$record['TrackableName']] = $record['Value'];
+                        $students[$record['StudentID']]['Trackables'][$record['TrackableName']] = $record['Value'] === 1;
                     }
-
                     foreach($request->studentOverrides as $key => $value)
                     {
                         $studentID = (int)$key;
@@ -435,7 +436,8 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                                 {
                                     $query = "UPDATE `TrackableValue` INNER JOIN `Attendance` ON"
                                             ." `TrackableValue`.`AttendanceID` = `Attendance`.`AttendanceID`"
-                                            ." SET `Value` = ? WHERE `StudentID` = ? AND `LessonID` = ?";
+                                            ." SET `Value` = ? WHERE `StudentID` = ? AND `LessonID` = ? AND `TrackableName` = ?;";
+                                    BindedQuery($conn, $query, 'iiis', [$trackableValue ? 1 : 0, $studentID, $id, $trackableName]);
                                 }
                             }
                         }

@@ -110,7 +110,7 @@ $endpoints['/^lesson\/?$/'] = [
                 $lessonQuery = "SELECT `LessonID`, `TutorID`, `SubjectID`, `LocationID`, `LessonStart`, `LessonEnd`, `Notes` FROM `Lesson`"
                         .(empty($conditions) ? '' : ' WHERE ' . implode(' AND ', $conditions)). $order
                         . " LIMIT $offset, $pageSize";
-                $mainQuery = "SELECT `LessonID`, `Username`, `TopicName`, `LocationName`, `LessonStart`, `LessonEnd`, `Notes` FROM ($lessonQuery) `l`"
+                $mainQuery = "SELECT `LessonID`, `Username`, `l`.`SubjectID`, `TopicName`, `l`.`LocationID`, `LocationName`, `LessonStart`, `LessonEnd`, `Notes` FROM ($lessonQuery) `l`"
                         ." LEFT JOIN `Location` ON `l`.`LocationID` = `Location`.`LocationID`"
                         ." LEFT JOIN `Topic` ON `l`.`SubjectID` = `Topic`.`TopicID`"
                         ." LEFT JOIN `User` ON `l`.`TutorID` = `UserID`;";
@@ -124,7 +124,9 @@ $endpoints['/^lesson\/?$/'] = [
                     $lessons[$record['LessonID']] = [
                         'id' => $record['LessonID'],
                         'tutorName' => $record['Username'],
+                        'subjectId' => $record['SubjectID'],
                         'subjectName' => $record['TopicName'],
+                        'locationId' => $record['LocationID'],
                         'locationName' => $record['LocationName'],
                         'startDate' => $record['LessonStart'],
                         'endDate' => $record['LessonEnd'],
