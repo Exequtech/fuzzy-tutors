@@ -9,19 +9,17 @@ const classForm = document.getElementById('classForm');
 const searchInput = document.getElementById('searchInput');
 const alertMessage = document.getElementById('alertMessage');
 const addClassBtn = document.getElementById('addClassBtn');
-const availableStudentsList = document.getElementById('availableStudents');
-const classMembersList = document.getElementById('classMembers');
 
 let currentClassId = null;
 let classes = [];
-let students = [];
+let selectedStudents = new Set();
+let searchTimeout = null;
 
 // Initialize
 async function init() {
     try {
         // Load initial data
         classes = await getClassPage();
-        students = await getStudentPage();
         renderClasses();
     } catch (error) {
         showAlert('Failed to load data: ' + error.message, false);
@@ -75,67 +73,161 @@ deleteModal.querySelector('.delete-button').addEventListener('click', async () =
     }
 });
 
-// Student Transfer Buttons
-document.getElementById('addStudentBtn').addEventListener('click', () => {
-    transferclassMembers(availableStudentsList, classMembersList);
-});
+function setupMemberManagement() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const searchResults = document.getElementById('searchResults');
 
-document.getElementById('removeStudentBtn').addEventListener('click', () => {
-    transferclassMembers(classMembersList, availableStudentsList);
-});
-
-async function renderStudentLists(selectedStudentIds = []) {
-    try {
-        // Get all students from the API
-        const allStudents = await getStudentPage();
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
         
-        // Create sets for faster lookup
-        const selectedIdsSet = new Set(selectedStudentIds);
-        
-        // Sort students into available and selected based on class membership
-        const availableStudents = allStudents.filter(student => !selectedIdsSet.has(student.id));
-        const classMembers = allStudents.filter(student => selectedIdsSet.has(student.id));
-        
-        // Render available students (students not in the class)
-        availableStudentsList.innerHTML = availableStudents
-            .map(student => `
-                <div class="student-item" data-id="${student.id}">
-                    ${student.username}
-                </div>
-            `).join('');
+        if (searchTerm.length === 0) {
+            searchResults.classList.add('hidden');
+            return;
+        }
 
-        // Render selected students (students in the class)
-        classMembersList.innerHTML = classMembers
-            .map(student => `
-                <div class="student-item" data-id="${student.id}">
-                    ${student.username}
-                </div>
-            `).join('');
+        searchTimeout = setTimeout(async () => {
+            try {
+                const students = await getStudentPage(1, 5, "asc", "username", {
+                    username: searchTerm
+                });
+                renderSearchResults(students, searchResults);
+            } catch (error) {
+                showAlert('Search failed: ' + error.message, false);
+            }
+        }, 300);
+    });
 
-        // Add click handlers for selection
-        document.querySelectorAll('.student-item').forEach(item => {
-            item.addEventListener('click', () => {
-                item.classList.toggle('selected');
-            });
-        });
-    } catch (error) {
-        showAlert('Failed to load student data: ' + error.message, false);
-    }
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+        }
+    });
 }
 
-function transferclassMembers(fromList, toList) {
-    const selectedItems = fromList.querySelectorAll('.student-item.selected');
-    selectedItems.forEach(item => {
-        item.classList.remove('selected');
-        toList.appendChild(item);
-    });
+function renderSearchResults(students, searchResults) {
+    const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
+    const results = students.filter(student => !existingIds.has(student.id));
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item">No students found</div>';
+    } else {
+        searchResults.innerHTML = results.map(student => `
+            <div class="search-result-item">
+                <div class="student-info">
+                    <div class="student-name">${student.username}</div>
+                    <div class="student-email">${student.email}</div>
+                </div>
+                <button onclick="addClassMember(${student.id}, '${student.username}', '${student.email}')" 
+                        class="action-button add" title="Add to class">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    searchResults.classList.remove('hidden');
+}
+
+function renderClassMembers() {
+    const membersList = document.getElementById('classMembersList');
+    const members = Array.from(selectedStudents.values());
+    
+    membersList.innerHTML = members.map(member => `
+        <div class="member-item">
+            <div class="student-info">
+                <div class="student-name">${member.username}</div>
+            </div>
+            <button onclick="removeClassMember(${member.id})" 
+                    class="action-button" title="Remove from class">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function renderClasses(classesToRender = classes) {
+    classesGrid.innerHTML = classesToRender.map(cls => `
+        <div class="class-card">
+            <div class="class-header">
+                <h3 class="class-title">${cls.name}</h3>
+                <div class="class-actions">
+                    <button onclick="editClass(${cls.id})" class="edit-button">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="confirmDelete(${cls.id})" class="delete-button">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="student-count">
+                ${cls.students ? cls.students.length : 0} Students
+            </div>
+            <div class="student-list">
+                ${cls.students ? cls.students.map(student => `
+                    <div class="student-item">
+                        <div class="student-name">${student.name}</div>
+                    </div>
+                `).join('') : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function openModal(classData = null) {
+    const modalTitle = document.getElementById('modalTitle');
+    const submitButton = classForm.querySelector('.submit-button');
+    
+    if (classData) {
+        modalTitle.textContent = 'Edit Class';
+        submitButton.textContent = 'Update Class';
+        currentClassId = classData.id;
+        document.getElementById('className').value = classData.name;
+        selectedStudents = new Set(classData.students.map(student => ({
+            id: student.id,
+            username: student.name
+        })));
+    } else {
+        modalTitle.textContent = 'Add New Class';
+        submitButton.textContent = 'Add Class';
+        currentClassId = null;
+        classForm.reset();
+        selectedStudents = new Set();
+    }
+    
+    renderClassMembers();
+    setupMemberManagement();
+    classModal.classList.add('show');
+}
+
+function addClassMember(id, username, email) {
+    selectedStudents.add({ id, username, email });
+    renderClassMembers();
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('studentSearchInput').value = '';
+}
+
+function removeClassMember(id) {
+    selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
+    renderClassMembers();
+}
+
+function closeModal() {
+    classModal.classList.remove('show');
+    currentClassId = null;
+    classForm.reset();
+    selectedStudents = new Set();
+}
+
+function closeDeleteModal() {
+    deleteModal.classList.remove('show');
+    currentClassId = null;
 }
 
 async function handleFormSubmit() {
     try {
-        const selectedStudentIds = Array.from(classMembersList.children)
-            .map(item => parseInt(item.dataset.id));
-
+        const selectedStudentIds = Array.from(selectedStudents).map(student => student.id);
         const className = document.getElementById('className').value;
 
         let apiResponse;
@@ -161,66 +253,6 @@ async function handleFormSubmit() {
     } catch (error) {
         showAlert('Failed to save class: ' + error.message, false);
     }
-}
-
-function renderClasses(classesToRender = classes) {
-    classesGrid.innerHTML = classesToRender.map(cls => `
-        <div class="class-card">
-            <div class="class-header">
-                <h3 class="class-title">${cls.name}</h3>
-                <div class="class-actions">
-                    <button onclick="editClass(${cls.id})" class="edit-button">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="confirmDelete(${cls.id})" class="delete-button">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="student-count">
-                ${cls.students ? cls.students.length : 0} Students
-            </div>
-            <div class="student-list">
-                ${cls.students ? cls.students.map(studentId => `
-                    <div class="student-item">ID: ${studentId}</div>
-                `).join('') : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-function openModal(classData = null) {
-    const modalTitle = document.getElementById('modalTitle');
-    const submitButton = classForm.querySelector('.submit-button');
-    
-    if (classData) {
-        modalTitle.textContent = 'Edit Class';
-        submitButton.textContent = 'Update Class';
-        currentClassId = classData.id;
-        
-        document.getElementById('className').value = classData.name;
-        // renderStudentLists(classData.students ? classData.students.map(s => s.id) : []);
-        renderStudentLists(classData.students);
-    } else {
-        modalTitle.textContent = 'Add New Class';
-        submitButton.textContent = 'Add Class';
-        currentClassId = null;
-        classForm.reset();
-        renderStudentLists([]);
-    }
-    
-    classModal.classList.add('show');
-}
-
-function closeModal() {
-    classModal.classList.remove('show');
-    currentClassId = null;
-    classForm.reset();
-}
-
-function closeDeleteModal() {
-    deleteModal.classList.remove('show');
-    currentClassId = null;
 }
 
 async function editClass(id) {
@@ -269,6 +301,8 @@ function showAlert(message, isSuccess) {
 // Make functions available globally
 window.editClass = editClass;
 window.confirmDelete = confirmDelete;
+window.addClassMember = addClassMember;
+window.removeClassMember = removeClassMember;
 
 // Initialize the page
 init();

@@ -319,6 +319,8 @@ async function getClassPage(page = 1, pageSize=10, order="asc", orderBy="id", fi
         await SessionManager.getNewToken();
     }
 
+
+    console.log(response.data.results)
     return response.data.results;
 }
 
@@ -508,7 +510,8 @@ async function getSubjectsPage(page = 1, pageSize=10, order="asc", orderBy="id",
 
 async function addNewTrackableRecord(name, description) {
     const body = {
-        name
+        name,
+        description
     };
 
     const response = await withRetry(() => 
@@ -532,7 +535,8 @@ async function addNewTrackableRecord(name, description) {
 
 async function updateTrackableRecord(oldName, name, description) {
     const body = {
-        name
+        name,
+        description
     };
 
     const response = await withRetry(() => 
