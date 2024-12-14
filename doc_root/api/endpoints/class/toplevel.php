@@ -65,8 +65,9 @@ $endpoints['/^class\/?$/'] = [
                 $classQuery = 'SELECT `ClassID`, `ClassName`, `RecordDate` FROM `Class`'
                         .(empty($conditions) ? '' : ' WHERE ' . implode(' AND ', $conditions))
                         . $order . " LIMIT $offset, $pageSize";
-                $fullQuery = "SELECT `c`.`ClassID`, `c`.`ClassName`, `sc`.`StudentID`, `c`.`RecordDate` FROM ($classQuery) `c`"
-                        .' LEFT JOIN (SELECT `StudentID`, `ClassID` FROM `StudentClass` ORDER BY `StudentID`) `sc` ON `c`.`ClassID` = `sc`.`ClassID`;';
+                $fullQuery = "SELECT `c`.`ClassID`, `c`.`ClassName`, `sc`.`StudentID`, `u`.`Username`, `c`.`RecordDate` FROM ($classQuery) `c`"
+                        .' LEFT JOIN (SELECT `StudentID`, `ClassID` FROM `StudentClass` ORDER BY `StudentID`) `sc` ON `c`.`ClassID` = `sc`.`ClassID`'
+                        .' INNER JOIN `User` `u` ON `sc`.`StudentID` = `u`.`UserID`;';
                 $results = BindedQuery($conn, $fullQuery, implode($types), $values, true, "Failed to fetch class records (toplevel class GET)");
 
                 $classes = [];
@@ -79,13 +80,15 @@ $endpoints['/^class\/?$/'] = [
                         $obj['id'] = $classID;
                         $obj['name'] = $record['ClassName'];
                         $obj['students'] = [];
-                        if(isset($record['StudentID']))
-                            $obj['students'][] = $record['StudentID'];
                         $obj['recordDate'] = $record['RecordDate'];
                         $classes[$classID] = $obj;
+                        if(!isset($record['StudentID']))
+                            continue;
                     }
-                    else
-                        $classes[$classID]['students'][] = $record['StudentID'];
+                    $classes[$classID]['students'][] = [
+                        'id' => $record['StudentID'],
+                        'name' => $record['Username'],
+                    ];
                 }
                 MessageResponse(HTTP_OK, null, ['results' => array_values($classes)]);
             },
