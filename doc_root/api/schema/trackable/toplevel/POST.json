@@ -3,10 +3,23 @@
     "properties": {
         "name": {
             "type": "string",
-            "pattern": "[^/]+",
+            "pattern": "^[^/]+$",
             "minLength": 3,
             "maxLength": 30
+        },
+        "description": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^[\\x00-\\x7F]+$",
+                    "maxLength": 255
+                },
+                {
+                    "type": "null"
+                }
+            ]
         }
     },
+    "required": ["name"],
     "additionalProperties": false
 }

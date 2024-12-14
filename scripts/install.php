@@ -100,6 +100,7 @@ $table_commands = [
         "CREATE TABLE `Trackable`
         (
             `TrackableName` VARCHAR(30) NOT NULL UNIQUE,
+            `Description` VARCHAR(255),
             `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`TrackableName`)
         );",
