@@ -120,7 +120,7 @@ function renderSearchResults(students, searchResults) {
                     <div class="student-email">${student.email}</div>
                 </div>
                 <button onclick="addClassMember(${student.id}, '${student.username}', '${student.email}')" 
-                        class="action-button add" title="Add to class">
+                        class="action-button add" title="Add to class" type="button">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
