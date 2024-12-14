@@ -133,8 +133,8 @@ $endpoints['/^class\/([\d]+)\/?$/'] = [
                 }
                 if(!empty($deleteDiffs))
                 {
-                    $query = 'DELETE FROM `StudentClass` WHERE `StudentID` IN (' . implode(',',$deleteDiffs) . ');';
-                    $success = BindedQuery($conn, $query, '', [], false);
+                    $query = 'DELETE FROM `StudentClass` WHERE `ClassID` = ? AND `StudentID` IN (' . implode(',',$deleteDiffs) . ');';
+                    $success = BindedQuery($conn, $query, 'i', [$classID], false);
 
                     if(!$success)
                     {

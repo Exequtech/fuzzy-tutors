@@ -67,7 +67,7 @@ $endpoints['/^class\/?$/'] = [
                         . $order . " LIMIT $offset, $pageSize";
                 $fullQuery = "SELECT `c`.`ClassID`, `c`.`ClassName`, `sc`.`StudentID`, `u`.`Username`, `c`.`RecordDate` FROM ($classQuery) `c`"
                         .' LEFT JOIN (SELECT `StudentID`, `ClassID` FROM `StudentClass` ORDER BY `StudentID`) `sc` ON `c`.`ClassID` = `sc`.`ClassID`'
-                        .' INNER JOIN `User` `u` ON `sc`.`StudentID` = `u`.`UserID`;';
+                        .' LEFT JOIN `User` `u` ON `sc`.`StudentID` = `u`.`UserID`;';
                 $results = BindedQuery($conn, $fullQuery, implode($types), $values, true, "Failed to fetch class records (toplevel class GET)");
 
                 $classes = [];
