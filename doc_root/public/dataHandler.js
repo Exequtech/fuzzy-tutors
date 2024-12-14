@@ -757,13 +757,14 @@ async function getLessons(after, before) {
  * @returns {Promise<ApiResponse>} Response object
  */
 
-async function addNewLessonRecord(subjectId, classId, students, startDate, endDate, trackables, topics) {
+async function addNewLessonRecord(subjectId, classId, students, startDate, endDate, trackables, topics, locationId) {
     const body = {
         startDate,
         endDate,
         subjectId,
         trackables,
-        topics
+        topics,
+        locationId
     };
 
     if (classId !== null && students !== null) {

@@ -295,6 +295,8 @@ async function handleLessonSubmit(e) {
         // Get selected trackables
         const selectedTrackables = Array.from(document.querySelectorAll('#trackablesList input:checked'))
             .map(checkbox => checkbox.value);
+
+        const locationId = parseInt(document.getElementById('locationSelect').value);
         
         // Get students based on selection type
         const studentType = document.querySelector('input[name="studentType"]:checked').value;
@@ -315,7 +317,8 @@ async function handleLessonSubmit(e) {
             startDate,
             endDate,
             selectedTrackables,
-            topics
+            topics,
+            locationId
         );
 
         if (response.isSuccessful) {
