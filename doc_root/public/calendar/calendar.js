@@ -251,7 +251,8 @@ function createDayElement(dayNumber, extraClass, dayLessons) {
                         ${formatTimeFromDate(new Date(lesson.startDate))} - 
                         ${formatTimeFromDate(new Date(lesson.endDate))}
                     </div>
-                    <div class="lesson-subject">${lesson.subjectName}</div>
+                    <div class="lesson-subject-name">${lesson.subjectName}</div>
+                    <div class="lesson-location">${lesson.locationName || 'No location'}</div>
                 </div>
             `).join('')}
         </div>

@@ -316,7 +316,6 @@ margin-top: auto;
     display: none;
 }
 
-  /* Calendar Container */
 .calendar-container {
     height: calc(100vh - 50px);
     background: white;
@@ -385,25 +384,6 @@ margin-top: auto;
     margin-bottom: 5px;
 }
 
-/* Lesson Items */
-.lesson-item {
-    background: #e3f2fd;
-    border-radius: 4px;
-    padding: 5px;
-    margin-bottom: 4px;
-    font-size: 0.9em;
-    cursor: pointer;
-}
-
-.lesson-item:hover {
-    background: #bbdefb;
-}
-
-.lesson-time {
-    font-size: 0.8em;
-    color: #666;
-}
-
 /* Tracking Options */
 .tracking-options {
     display: flex;
@@ -415,6 +395,41 @@ margin-top: auto;
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+.lesson-item {
+    background: #e3f2fd;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    position: relative;
+}
+
+.lesson-item:hover {
+    background: #bbdefb;
+}
+
+.lesson-time {
+    font-size: 0.8em;
+    color: #333;
+}
+
+.lesson-subject-name {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-weight: bold;
+    color: #2196f3;
+    font-size: 0.8em;
+}
+
+.lesson-location {
+    text-align: center;
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 2px;
 }
 
 /* ================= Classes Option =================== */
