@@ -492,8 +492,8 @@ margin-top: auto;
 
 .form-row {
     display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 .form-row .form-group {
@@ -507,7 +507,7 @@ margin-top: auto;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 5px;
 }
 
 .form-row label {
@@ -517,7 +517,6 @@ margin-top: auto;
     color: #333;
 }
 
-/* Adjust modal content max-width for better layout */
 .modal-content {
     max-width: 800px;
     width: 90%;
@@ -525,7 +524,10 @@ margin-top: auto;
 
 /* Ensure consistent input heights */
 .form-row input[type="date"],
-.form-row input[type="time"],
+.form-row input[type="time"] {
+    height: 30px;
+}
+
 .form-row select {
     height: 38px;
 }
@@ -761,7 +763,6 @@ margin-top: auto;
 }
 
 /* ================= Students Option =================== */
-/* Students Container Styles */
 .students-container {
     padding: 20px;
     max-width: 1200px;

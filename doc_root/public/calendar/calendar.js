@@ -90,8 +90,6 @@ function setupEventListeners() {
 
     addLessonBtn.addEventListener('click', () => openLessonModal());
     
-    lessonForm.addEventListener('submit', handleLessonSubmit);
-    
     document.getElementById('addStudentBtn').addEventListener('click', () => {
         transferStudents(availableStudentsList, lessonStudentsList);
     });
@@ -106,7 +104,7 @@ function setupEventListeners() {
     });
 }
 
-// function setupFormEventListeners() {
+function setupFormEventListeners() {
     // Student selection type toggle
     document.querySelectorAll('input[name="studentType"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -132,7 +130,14 @@ function setupEventListeners() {
             populateTopicSelect(subject.topics || []);
         }
     });
-// }
+
+    // Close modal handlers
+    document.querySelectorAll('.close-button, .cancel-button').forEach(button => {
+        button.addEventListener('click', closeLessonModal);
+    });
+
+    lessonForm.addEventListener('submit', handleLessonSubmit);
+}
 
 function populateSubjectSelect() {
     const select = document.getElementById('subjectSelect');
@@ -362,6 +367,7 @@ function transferStudents(fromList, toList) {
 function openLessonModal() {
     lessonModal.classList.add('show');
     document.getElementById('lessonDate').min = new Date().toISOString().split('T')[0];
+    setupFormEventListeners();
 }
 
 function closeLessonModal() {
