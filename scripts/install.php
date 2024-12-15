@@ -31,7 +31,60 @@ if(!isset($dbName))
 {
     echo "Enter the database name\n";
     while(($dbName = rtrim(fgets(STDIN))) == "")
-        echo "Database name is required";
+        echo "Database name is required\n";
+}
+if(!isset($nrEmail))
+{
+    echo "Enter the noreply email (will be used to send forgotpassword emails)\n";
+    while(($nrEmail = rtrim(fgets(STDIN))) == "")
+        echo "Noreply email is required\n";
+}
+if(!isset($nrPassword))
+{
+    echo "Enter the password for the noreply email\n";
+    while(($nrPassword = rtrim(fgets(STDIN))) == "")
+        echo "Noreply password is required\n";
+}
+if(!isset($nrHost))
+{
+    echo "Enter the smtp host for the nr email (e.g., smtp.gmail.com)\n";
+    while(($nrHost = rtrim(fgets(STDIN))) == "")
+        echo "Noreply host is required\n";
+}
+if(!isset($nrEncryption))
+{
+    echo "Please provide the type of encryption (ssl/tls) for the noreply email. (Blank for no encryption: NOT RECOMMENDED)\n";
+    while(true)
+    {
+        $nrEncryption = rtrim(fgets(STDIN));
+        if(!in_array($nrEncryption, ['','tls','ssl']))
+        {
+            echo "Please provide ssl, tls or don't provide anything\n";
+            continue;
+        }
+
+        break;
+    }
+}
+if(!isset($nrPort))
+{
+    echo "Please provide the port for noreply auth. (TLS usually 587/2525, SSL 465)\n";
+    while(true)
+    {
+        $response = rtrim(fgets(STDIN));
+        if(!ctype_digit($response))
+        {
+            echo "Please provide a number.\n";
+            continue;
+        }
+        $nrPort = (int)$response;
+        if($nrPort < 1 || $nrPort > 65535)
+        {
+            echo "Port numbers are between 1 and 65535\n";
+            continue;
+        }
+        break;
+    }
 }
 // Execute installation code
 $conn = new mysqli($dbHostname, $dbUsername, $dbPassword, $dbName);
@@ -206,6 +259,11 @@ $configStr .= '$dbHostname = ' . json_encode($dbHostname) . ";\n";
 $configStr .= '$dbUsername = ' . json_encode($dbUsername) . ";\n";
 $configStr .= '$dbPassword = ' . json_encode($dbPassword) . ";\n";
 $configStr .= '$dbName = ' . json_encode($dbName) . ";\n";
+$configStr .= '$nrEmail = ' . json_encode($nrEmail) . ";\n";
+$configStr .= '$nrPassword = ' . json_encode($nrPassword) . ";\n";
+$configStr .= '$nrHost = ' . json_encode($nrHost) . ";\n";
+$configStr .= '$nrEncryption = ' . json_encode($nrEncryption) . ";\n";
+$configStr .= '$nrPort = ' . "$nrPort;\n";
 
 $configfile = fopen($configPath, "w");
 fwrite($configfile, $configStr);

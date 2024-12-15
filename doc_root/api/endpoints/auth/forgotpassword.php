@@ -3,6 +3,7 @@
 require_once API_ROOT . "/db/api_functions.php";
 require_once API_ROOT . "/functions/api_responses.php";
 require_once API_ROOT . "/functions/authentication.php";
+require_once API_ROOT . "/functions/emails.php";
 
 $endpoints['/^auth\/forgotpassword$/'] = [
     'methods' => [
@@ -11,6 +12,7 @@ $endpoints['/^auth\/forgotpassword$/'] = [
             {
                 $conn->begin_transaction() || InternalError("Failed to begin forgotpassword POST transaction");
                 $userID = null;
+                $email = null;
                 if(isset($request->email))
                 {
                     $matches = BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `Email` = ? AND `Authorized` = 1 FOR SHARE;", 's', [$request->email], true,
@@ -18,14 +20,16 @@ $endpoints['/^auth\/forgotpassword$/'] = [
                     if(empty($matches))
                         MessageResponse(HTTP_OK);
                     $userID = $matches[0]['UserID'];
+                    $email = $request->email;
                 }
                 else if(isset($request->username))
                 {
-                    $matches = BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `Username` = ? AND `Authorized` = 1 FOR SHARE;", 's', [$request->username], true,
+                    $matches = BindedQuery($conn, "SELECT `UserID`, `Email` FROM `User` WHERE `Username` = ? AND `Authorized` = 1 FOR SHARE;", 's', [$request->username], true,
                         "Failed to fetch user (auth forgotpassword POST)");
                     if(empty($matches))
                         MessageResponse(HTTP_OK);
                     $userID = $matches[0]['UserID'];
+                    $email = $matches[0]['Email'];
                 } else InternalError("Impossible (forgotpassword)");
 
                 // Generate a token
@@ -41,6 +45,8 @@ $endpoints['/^auth\/forgotpassword$/'] = [
 
                 BindedQuery($conn, "INSERT INTO `PassToken`(`Token`, `UserID`) VALUES (?,?);", 'ss', [$hash, $userID], true,
                     "Failed to create passtoken (auth forgotpassword POST)");
+                
+                SendForgotPassword($email, $token);
                 $conn->commit() || InternalError("Failed to commit forgotpassword POST transaction");
                 MessageResponse(HTTP_OK);
             },
