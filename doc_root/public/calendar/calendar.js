@@ -144,10 +144,19 @@ function populateSubjectSelect() {
 }
 
 function populateTopicSelect(topics) {
-    const select = document.getElementById('topicSelect');
-    select.innerHTML = topics.map(topic => 
-        `<option value="${topic.id}">${topic.name}</option>`
-    ).join('');
+    const topicList = document.getElementById('availableTopics');
+    topicList.innerHTML = topics.map(topic => `
+        <div class="topic-item" data-id="${topic.id}">
+            <span class="topic-name">${topic.name}</span>
+        </div>
+    `).join('');
+
+    // Add click handlers for selection
+    document.querySelectorAll('.topic-item').forEach(item => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('selected');
+        });
+    });
 }
 
 function populateClassSelect() {
@@ -165,13 +174,19 @@ function populateLocationSelect() {
 }
 
 function populateTrackables() {
-    const container = document.getElementById('trackablesList');
-    container.innerHTML = trackables.map(trackable => `
-        <div class="trackable-item">
-            <input type="checkbox" id="trackable-${trackable.name}" value="${trackable.name}">
-            <label for="trackable-${trackable.name}">${trackable.name}</label>
+    const trackableList = document.getElementById('availableTrackables');
+    trackableList.innerHTML = trackables.map(trackable => `
+        <div class="trackable-item" data-name="${trackable.name}">
+            <span class="trackable-name">${trackable.name}</span>
         </div>
     `).join('');
+
+    // Add click handlers for selection
+    document.querySelectorAll('.trackable-item').forEach(item => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('selected');
+        });
+    });
 }
 
 async function renderStudentLists() {
@@ -290,12 +305,12 @@ async function handleLessonSubmit(e) {
         const endDate = formatDateForApi(new Date(`${lessonDate}T${endTime}`));
         
         const subjectId = parseInt(document.getElementById('subjectSelect').value);
-        const topics = Array.from(document.getElementById('topicSelect').selectedOptions)
-            .map(option => parseInt(option.value));
+        const topics = Array.from(document.querySelectorAll('#availableTopics .topic-item.selected'))
+            .map(item => parseInt(item.dataset.id));
         
-        // Get selected trackables
-        const selectedTrackables = Array.from(document.querySelectorAll('#trackablesList input:checked'))
-            .map(checkbox => checkbox.value);
+        // Updated trackables selection
+        const selectedTrackables = Array.from(document.querySelectorAll('#availableTrackables .trackable-item.selected'))
+            .map(item => item.dataset.name);
 
         const locationId = parseInt(document.getElementById('locationSelect').value);
         

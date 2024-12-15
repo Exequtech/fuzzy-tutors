@@ -63,12 +63,13 @@
                 </div>
             </div>
 
-            <!-- Rest of the form remains the same -->
             <div class="form-group">
-                <label for="topicSelect">Topics:</label>
-                <select id="topicSelect" multiple>
-                    <!-- Will be populated based on selected subject -->
-                </select>
+                <label>Topics:</label>
+                <div class="topic-selection-container">
+                    <div id="availableTopics" class="topic-list">
+                        <!-- Available topics will be populated here -->
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -110,8 +111,10 @@
 
             <div class="form-group">
                 <label>Trackables:</label>
-                <div id="trackablesList" class="trackables-grid">
-                    <!-- Will be populated dynamically -->
+                <div class="trackable-selection-container">
+                    <div id="availableTrackables" class="trackable-list">
+                        <!-- Trackables will be populated here -->
+                    </div>
                 </div>
             </div>
 
