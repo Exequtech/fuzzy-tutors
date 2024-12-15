@@ -56,6 +56,15 @@ $table_commands = [
             `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
             PRIMARY KEY(`UserID`)
         );",
+    'PassToken' =>
+        "CREATE TABLE `PassToken`
+        (
+            `Token` CHAR(64) NOT NULL,
+            `UserID` INT NOT NULL,
+            `RecordDate` DATETIME NOT NULL DEFAULT NOW(),
+            PRIMARY KEY(`Token`),
+            FOREIGN KEY(`UserID`) REFERENCES `User`(`UserID`) ON DELETE CASCADE
+        );",
     'Class' =>
         "CREATE TABLE `Class`
         (
