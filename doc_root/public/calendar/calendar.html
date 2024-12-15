@@ -23,6 +23,7 @@
 </div>
 
 <!-- Add Lesson Modal -->
+<!-- Updated Lesson Form Section -->
 <div id="lessonModal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
@@ -30,30 +31,46 @@
             <span class="close-button">&times;</span>
         </div>
         <form id="lessonForm">
-            <div class="form-group">
-                <label for="lessonDate">Date:</label>
-                <input type="date" id="lessonDate" required>
+            <!-- Date and Time Row -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="lessonDate">Date:</label>
+                    <input type="date" id="lessonDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="startTime">Start Time:</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="endTime">End Time:</label>
+                    <input type="time" id="endTime" required>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="startTime">Start Time:</label>
-                <input type="time" id="startTime" required>
+
+            <!-- Subject and Location Row -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="subjectSelect">Subject:</label>
+                    <select id="subjectSelect" required>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="locationSelect">Location:</label>
+                    <select id="locationSelect" required>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="endTime">End Time:</label>
-                <input type="time" id="endTime" required>
-            </div>
-            <div class="form-group">
-                <label for="subjectSelect">Subject:</label>
-                <select id="subjectSelect" required>
-                    <!-- Will be populated dynamically -->
-                </select>
-            </div>
+
+            <!-- Rest of the form remains the same -->
             <div class="form-group">
                 <label for="topicSelect">Topics:</label>
                 <select id="topicSelect" multiple>
                     <!-- Will be populated based on selected subject -->
                 </select>
             </div>
+
             <div class="form-group">
                 <label>Student Selection Type:</label>
                 <div class="selection-type">
@@ -65,12 +82,14 @@
                     </label>
                 </div>
             </div>
+
             <div id="classSelection" class="form-group">
                 <label for="classSelect">Class:</label>
                 <select id="classSelect">
                     <!-- Will be populated dynamically -->
                 </select>
             </div>
+
             <div id="studentSelection" class="form-group hidden">
                 <label>Students:</label>
                 <div class="student-selection">
@@ -88,18 +107,14 @@
                     </div>
                 </div>
             </div>
+
             <div class="form-group">
                 <label>Trackables:</label>
                 <div id="trackablesList" class="trackables-grid">
                     <!-- Will be populated dynamically -->
                 </div>
             </div>
-            <div class="form-group">
-                <label for="locationSelect">Location:</label>
-                <select id="locationSelect" required>
-                    <!-- Will be populated dynamically -->
-                </select>
-            </div>
+
             <div class="form-buttons">
                 <button type="button" class="cancel-button">Cancel</button>
                 <button type="submit" class="submit-button">Schedule Lesson</button>
@@ -107,5 +122,60 @@
         </form>
     </div>
 </div>
+
+<style>
+/* Updated Form Styles */
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+    margin: 0;
+}
+
+.form-row input,
+.form-row select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Adjust modal content max-width for better layout */
+.modal-content {
+    max-width: 800px;
+    width: 90%;
+}
+
+/* Ensure consistent input heights */
+.form-row input[type="date"],
+.form-row input[type="time"],
+.form-row select {
+    height: 38px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-row .form-group {
+        width: 100%;
+    }
+}
+</style>
 
 <div id="alertMessage" class="alert hidden"></div>
