@@ -121,4 +121,81 @@
     </div>
 </div>
 
+<div id="lessonDetailsModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Lesson Overview</h2>
+            <div class="lesson-tracking">
+                <button class="tracking-button">
+                    <i class="fas fa-clipboard-check"></i>
+                    Tracking
+                </button>
+            </div>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="lesson-details">
+            <div class="lesson-main-info">
+                <div class="lesson-datetime">
+                    <div class="date"></div>
+                    <div class="time"></div>
+                </div>
+                <div class="lesson-location">
+                    <span class="subject"></span> - 
+                    <span class="location"></span>
+                    <div class="location-details"></div>
+                </div>
+            </div>
+            
+            <div class="lesson-topics">
+                <h3>Topics</h3>
+                <div class="topics-list"></div>
+            </div>
+            
+            <div class="lesson-notes">
+                <h3>Notes</h3>
+                <div class="notes-content"></div>
+            </div>
+            
+            <div class="lesson-actions">
+                <div class="main-options">
+                    <button class="action-button" data-action="topics">
+                        <i class="fas fa-list"></i>
+                        Manage Topics
+                    </button>
+                    <button class="action-button" data-action="trackables">
+                        <i class="fas fa-chart-line"></i>
+                        Manage Trackables
+                    </button>
+                    <button class="action-button" data-action="students">
+                        <i class="fas fa-users"></i>
+                        Manage Students
+                    </button>
+                </div>
+                
+                <div class="calendar-options">
+                    <div class="repeat-option">
+                        <label for="repeatBy">Repeat:</label>
+                        <select id="repeatBy">
+                            <option value="none">None</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div class="lesson-controls">
+                        <button class="delete-button" data-action="delete">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                        <button class="edit-button" data-action="update">
+                            <i class="fas fa-edit"></i>
+                            Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="alertMessage" class="alert hidden"></div>

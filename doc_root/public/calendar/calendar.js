@@ -11,6 +11,9 @@ let trackables = [];
 let selectedStudents = new Set();
 let searchTimeout = null;
 
+let currentLesson = null;
+const lessonDetailsModal = document.getElementById('lessonDetailsModal');
+
 // DOM Elements
 const monthDisplay = document.getElementById('monthDisplay');
 const calendar = document.getElementById('calendar');
@@ -343,7 +346,7 @@ function createDayElement(dayNumber, extraClass, dayLessons) {
         <div class="calendar-day ${extraClass}">
             <div class="day-number">${dayNumber}</div>
             ${dayLessons.map(lesson => `
-                <div class="lesson-item">
+                <div class="lesson-item" data-lesson-id="${lesson.id}" onclick="showLessonDetails(${JSON.stringify(lesson).replace(/"/g, '&quot;')})">
                     <div class="lesson-time">
                         ${formatTimeFromDate(new Date(lesson.startDate))} - 
                         ${formatTimeFromDate(new Date(lesson.endDate))}
@@ -477,6 +480,113 @@ function showAlert(message, isSuccess) {
         alertMessage.classList.remove('show');
     }, 3000);
 }
+
+// Function to show lesson details
+function showLessonDetails(lesson) {
+    currentLesson = lesson;
+    const modal = document.getElementById('lessonDetailsModal');
+    
+    // Populate modal with lesson details
+    const startDate = new Date(lesson.startDate);
+    const endDate = new Date(lesson.endDate);
+    
+    modal.querySelector('.date').textContent = startDate.toLocaleDateString();
+    modal.querySelector('.time').textContent = `${formatTimeFromDate(startDate)} - ${formatTimeFromDate(endDate)}`;
+    
+    modal.querySelector('.subject').textContent = lesson.subjectName;
+    modal.querySelector('.location').textContent = lesson.locationName || 'No location';
+    
+    const locationDetails = [];
+    if (lesson.locationAddress) locationDetails.push(lesson.locationAddress);
+    if (lesson.locationDescription) locationDetails.push(lesson.locationDescription);
+    modal.querySelector('.location-details').textContent = locationDetails.join(' | ');
+    
+    // Populate topics
+    const topicsList = modal.querySelector('.topics-list');
+    topicsList.innerHTML = lesson.topics ? lesson.topics.map(topic => 
+        `<span class="topic-tag">${topic.name}</span>`
+    ).join('') : 'No topics assigned';
+    
+    // Show the modal
+    modal.classList.add('show');
+    
+    // Setup event handlers
+    setupModalEventHandlers();
+}
+
+function setupModalEventHandlers() {
+    // Close button
+    lessonDetailsModal.querySelector('.close-button').onclick = () => {
+        lessonDetailsModal.classList.remove('show');
+    };
+    
+    // Action buttons
+    lessonDetailsModal.querySelectorAll('.action-button').forEach(button => {
+        button.onclick = () => handleAction(button.dataset.action);
+    });
+    
+    // Tracking button
+    lessonDetailsModal.querySelector('.tracking-button').onclick = () => {
+        handleTracking();
+    };
+    
+    // Delete and Update buttons
+    lessonDetailsModal.querySelector('[data-action="delete"]').onclick = () => {
+        handleDelete();
+    };
+    
+    lessonDetailsModal.querySelector('[data-action="update"]').onclick = () => {
+        handleUpdate();
+    };
+    
+    // Repeat select
+    lessonDetailsModal.querySelector('#repeatBy').onchange = (e) => {
+        handleRepeat(e.target.value);
+    };
+}
+
+// Handler functions
+function handleAction(action) {
+    switch(action) {
+        case 'topics':
+            // TODO: Implement topics management
+            console.log('Managing topics');
+            break;
+        case 'trackables':
+            // TODO: Implement trackables management
+            console.log('Managing trackables');
+            break;
+        case 'students':
+            // TODO: Implement students management
+            console.log('Managing students');
+            break;
+    }
+}
+
+function handleTracking() {
+    // TODO: Implement tracking functionality
+    console.log('Opening tracking');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this lesson?')) {
+        // TODO: Implement delete functionality
+        console.log('Deleting lesson');
+    }
+}
+
+function handleUpdate() {
+    // TODO: Implement update functionality
+    console.log('Updating lesson');
+}
+
+function handleRepeat(repeatType) {
+    // TODO: Implement repeat functionality
+    console.log('Setting repeat to:', repeatType);
+}
+
+// Make functions available globally
+window.showLessonDetails = showLessonDetails;
 
 window.addLessonMember = function(id, username, email) {
     selectedStudents.add({ id, username, email });
