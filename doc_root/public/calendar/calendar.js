@@ -8,6 +8,8 @@ let subjects = [];
 let classes = [];
 let locations = [];
 let trackables = [];
+let selectedStudents = new Set();
+let searchTimeout = null;
 
 // DOM Elements
 const monthDisplay = document.getElementById('monthDisplay');
@@ -104,7 +106,7 @@ function setupEventListeners() {
     });
 }
 
-function setupFormEventListeners() {
+// function setupFormEventListeners() {
     // Student selection type toggle
     document.querySelectorAll('input[name="studentType"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -117,6 +119,7 @@ function setupFormEventListeners() {
             } else {
                 classSelection.classList.add('hidden');
                 studentSelection.classList.remove('hidden');
+                setupStudentManagement();
             }
         });
     });
@@ -129,7 +132,7 @@ function setupFormEventListeners() {
             populateTopicSelect(subject.topics || []);
         }
     });
-}
+// }
 
 function populateSubjectSelect() {
     const select = document.getElementById('subjectSelect');
@@ -208,6 +211,80 @@ async function renderStudentLists() {
     } catch (error) {
         showAlert('Failed to load students: ' + error.message, false);
     }
+}
+
+function setupStudentManagement() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+        
+        if (searchTerm.length === 0) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const students = await getStudentPage(1, 5, "asc", "username", {
+                    username: searchTerm
+                });
+                renderSearchResults(students, searchResults);
+            } catch (error) {
+                showAlert('Search failed: ' + error.message, false);
+            }
+        }, 300);
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+        }
+    });
+}
+
+function renderSearchResults(students, searchResults) {
+    const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
+    const results = students.filter(student => !existingIds.has(student.id));
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item">No students found</div>';
+    } else {
+        searchResults.innerHTML = results.map(student => `
+            <div class="search-result-item">
+                <div class="student-info">
+                    <div class="student-name">${student.username}</div>
+                    <div class="student-email">${student.email}</div>
+                </div>
+                <button onclick="addLessonMember(${student.id}, '${student.username}', '${student.email}')" 
+                        class="action-button add" title="Add to lesson" type="button">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    searchResults.classList.remove('hidden');
+}
+
+function renderLessonMembers() {
+    const membersList = document.getElementById('lessonMembersList');
+    const members = Array.from(selectedStudents.values());
+    
+    membersList.innerHTML = members.map(member => `
+        <div class="member-item">
+            <div class="student-info">
+                <div class="student-name">${member.username}</div>
+            </div>
+            <button onclick="removeLessonMember(${member.id})" 
+                    class="action-button" title="Remove from lesson">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
 }
 
 function renderCalendar() {
@@ -290,28 +367,36 @@ function openLessonModal() {
 function closeLessonModal() {
     lessonModal.classList.remove('show');
     lessonForm.reset();
-    renderStudentLists();
+    selectedStudents = new Set();
+    const searchResults = document.getElementById('searchResults');
+    if (searchResults) {
+        searchResults.classList.add('hidden');
+    }
 }
 
 async function handleLessonSubmit(e) {
     e.preventDefault();
     
     try {
+        // Get date and time values
         const lessonDate = document.getElementById('lessonDate').value;
         const startTime = document.getElementById('startTime').value;
         const endTime = document.getElementById('endTime').value;
         
+        // Format dates for API
         const startDate = formatDateForApi(new Date(`${lessonDate}T${startTime}`));
         const endDate = formatDateForApi(new Date(`${lessonDate}T${endTime}`));
         
+        // Get subject and topic selections
         const subjectId = parseInt(document.getElementById('subjectSelect').value);
         const topics = Array.from(document.querySelectorAll('#availableTopics .topic-item.selected'))
             .map(item => parseInt(item.dataset.id));
         
-        // Updated trackables selection
+        // Get selected trackables
         const selectedTrackables = Array.from(document.querySelectorAll('#availableTrackables .trackable-item.selected'))
             .map(item => item.dataset.name);
 
+        // Get location
         const locationId = parseInt(document.getElementById('locationSelect').value);
         
         // Get students based on selection type
@@ -322,10 +407,24 @@ async function handleLessonSubmit(e) {
         if (studentType === 'class') {
             classId = parseInt(document.getElementById('classSelect').value);
         } else {
-            students = Array.from(document.getElementById('lessonStudents').children)
-                .map(item => parseInt(item.dataset.id));
+            students = Array.from(selectedStudents).map(student => student.id);
         }
 
+        // Validate that either class or students are selected
+        if (!classId && (!students || students.length === 0)) {
+            showAlert('Please select either a class or at least one student', false);
+            return;
+        }
+
+        // Validate end time is after start time
+        const startDateTime = new Date(`${lessonDate}T${startTime}`);
+        const endDateTime = new Date(`${lessonDate}T${endTime}`);
+        if (endDateTime <= startDateTime) {
+            showAlert('End time must be after start time', false);
+            return;
+        }
+
+        // Make API call to create lesson
         const response = await addNewLessonRecord(
             subjectId,
             classId,
@@ -342,7 +441,7 @@ async function handleLessonSubmit(e) {
             await fetchAndRenderLessons();
             closeLessonModal();
         } else {
-            showAlert(response.message, false);
+            showAlert(response.message || 'Failed to schedule lesson', false);
         }
     } catch (error) {
         showAlert('Failed to schedule lesson: ' + error.message, false);
@@ -372,6 +471,18 @@ function showAlert(message, isSuccess) {
         alertMessage.classList.remove('show');
     }, 3000);
 }
+
+window.addLessonMember = function(id, username, email) {
+    selectedStudents.add({ id, username, email });
+    renderLessonMembers();
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('studentSearchInput').value = '';
+};
+
+window.removeLessonMember = function(id) {
+    selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
+    renderLessonMembers();
+};
 
 // Initialize the calendar
 init();

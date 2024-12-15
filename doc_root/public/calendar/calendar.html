@@ -93,18 +93,15 @@
 
             <div id="studentSelection" class="form-group hidden">
                 <label>Students:</label>
-                <div class="student-selection">
-                    <div class="available-students">
-                        <h3>Available Students</h3>
-                        <div id="availableStudents" class="student-list"></div>
+                <div class="member-management">
+                    <div class="search-container">
+                        <input type="text" id="studentSearchInput" placeholder="Search students to add..." class="search-input">
+                        <div id="searchResults" class="search-results hidden">
+                            <!-- Search results will be populated here -->
+                        </div>
                     </div>
-                    <div class="student-controls">
-                        <button type="button" id="addStudentBtn" class="control-button">&gt;&gt;</button>
-                        <button type="button" id="removeStudentBtn" class="control-button">&lt;&lt;</button>
-                    </div>
-                    <div class="class-members">
-                        <h3>Selected Students</h3>
-                        <div id="lessonStudents" class="student-list"></div>
+                    <div id="lessonMembersList" class="members-list">
+                        <!-- Selected students will be shown here -->
                     </div>
                 </div>
             </div>
