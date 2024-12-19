@@ -242,19 +242,6 @@ margin-top: auto;
     margin-top: 10px;
   }
   
-  .calendar-day {
-    min-height: 100px;
-    padding: 10px;
-    background: white;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .calendar-day.today {
-    background: #e8f5e9;
-  }
-  
   .calendar-day.other-month {
     background: #f8f8f8;
     color: #999;
@@ -423,7 +410,7 @@ margin-top: auto;
 }
 
 .calendar-day.today {
-    background: #e8f5e9;
+    background: #6aff0048;
 }
 
 .calendar-day.other-month {
