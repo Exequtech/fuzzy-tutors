@@ -533,7 +533,6 @@ margin-top: auto;
 }
 
 /* ----------------------- Lesson overview popup ----------------------------*/
-/* Add these styles to style.css */
 .lesson-details {
     padding: 20px;
 }
@@ -564,7 +563,7 @@ margin-top: auto;
     margin-bottom: 20px;
 }
 
-.topics-list {
+.topics-list-inline {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -614,6 +613,18 @@ margin-top: auto;
     background: #e0e0e0;
 }
 
+.bottom-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.lesson-controls {
+    display: flex;
+    gap: 10px;
+}
+
 .tracking-button {
     background: #57cc02;
     color: white;
@@ -630,32 +641,7 @@ margin-top: auto;
     background: #45a802;
 }
 
-.repeat-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.repeat-option select {
-    padding: 6px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
-
-.lesson-controls {
-    display: flex;
-    gap: 10px;
-}
-
-.delete-button {
-    background: #ff3b3b;
-    color: white;
-}
-
-.edit-button {
-    background: #2196f3;
-    color: white;
-}
+/* ----------------- modal styles ---------- */
 
 .modal.show {
     display: flex;
@@ -993,14 +979,14 @@ tr:hover {
     justify-content: flex-end;
 }
 
-.edit-button, .delete-button {
+.edit-button, .delete-button, .repeat-button {
     background: none;
     border: none;
     cursor: pointer;
     padding: 5px;
 }
 
-.edit-button {
+.edit-button, .repeat-button{
     color: #2196f3;
 }
 

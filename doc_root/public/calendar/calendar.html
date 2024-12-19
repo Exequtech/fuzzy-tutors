@@ -66,7 +66,7 @@
             <div class="form-group">
                 <label>Topics:</label>
                 <div class="topic-selection-container">
-                    <div id="availableTopics" class="topic-list">
+                    <div id="availableTopics" class="topic-list-inline">
                         <!-- Available topics will be populated here -->
                     </div>
                 </div>
@@ -125,12 +125,6 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2>Lesson Overview</h2>
-            <div class="lesson-tracking">
-                <button class="tracking-button">
-                    <i class="fas fa-clipboard-check"></i>
-                    Tracking
-                </button>
-            </div>
             <span class="close-button">&times;</span>
         </div>
         <div class="lesson-details">
@@ -172,16 +166,7 @@
                     </button>
                 </div>
                 
-                <div class="calendar-options">
-                    <div class="repeat-option">
-                        <label for="repeatBy">Repeat:</label>
-                        <select id="repeatBy">
-                            <option value="none">None</option>
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                        </select>
-                    </div>
+                <div class="bottom-controls">
                     <div class="lesson-controls">
                         <button class="delete-button" data-action="delete">
                             <i class="fas fa-trash"></i>
@@ -191,7 +176,15 @@
                             <i class="fas fa-edit"></i>
                             Update
                         </button>
+                        <button class="repeat-button" data-action="repeat">
+                            <i class="fas fa-redo"></i>
+                            Repeat
+                        </button>
                     </div>
+                    <button class="tracking-button">
+                        <i class="fas fa-clipboard-check"></i>
+                        Tracking
+                    </button>
                 </div>
             </div>
         </div>

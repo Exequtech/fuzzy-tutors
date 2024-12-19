@@ -539,9 +539,8 @@ function setupModalEventHandlers() {
         handleUpdate();
     };
     
-    // Repeat select
-    lessonDetailsModal.querySelector('#repeatBy').onchange = (e) => {
-        handleRepeat(e.target.value);
+    lessonDetailsModal.querySelector('[data-action="repeat"]').onclick = () => {
+        handleRepeat()
     };
 }
 
@@ -580,9 +579,9 @@ function handleUpdate() {
     console.log('Updating lesson');
 }
 
-function handleRepeat(repeatType) {
+function handleRepeat() {
     // TODO: Implement repeat functionality
-    console.log('Setting repeat to:', repeatType);
+    console.log('Setting repeat');
 }
 
 // Make functions available globally
