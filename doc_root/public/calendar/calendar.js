@@ -539,9 +539,9 @@ function setupModalEventHandlers() {
         handleUpdate();
     };
     
-    lessonDetailsModal.querySelector('[data-action="repeat"]').onclick = () => {
-        handleRepeat()
-    };
+    // lessonDetailsModal.querySelector('[data-action="repeat"]').onclick = () => {
+    //     handleRepeat()
+    // };
 }
 
 // Handler functions
