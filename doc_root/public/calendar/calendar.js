@@ -1,5 +1,14 @@
-import { getLessons, addNewLessonRecord, getStudentPage, getSubjectsPage, getClassPage, getTrackables, getLocationPage } from '../dataHandler.js';
+import { 
+    getLessons, 
+    addNewLessonRecord, 
+    getStudentPage, 
+    getSubjectsPage, 
+    getClassPage, 
+    getTrackables, 
+    getLocationPage
+} from '../dataHandler.js';
 
+// State Management
 let currentDate = new Date();
 let currentMonth = currentDate.getMonth();
 let currentYear = currentDate.getFullYear();
@@ -9,291 +18,19 @@ let classes = [];
 let locations = [];
 let trackables = [];
 let selectedStudents = new Set();
+let currentLesson = null;
 let searchTimeout = null;
 
-let currentLesson = null;
-const lessonDetailsModal = document.getElementById('lessonDetailsModal');
-
-// DOM Elements
-const monthDisplay = document.getElementById('monthDisplay');
-const calendar = document.getElementById('calendar');
-const prevBtn = document.getElementById('prevMonth');
-const nextBtn = document.getElementById('nextMonth');
-const addLessonBtn = document.getElementById('addLessonBtn');
-const lessonModal = document.getElementById('lessonModal');
-const lessonForm = document.getElementById('lessonForm');
-const alertMessage = document.getElementById('alertMessage');
-const availableStudentsList = document.getElementById('availableStudents');
-const lessonStudentsList = document.getElementById('lessonStudents');
-
-// Initialize
-async function init() {
-    try {
-        await fetchAndRenderLessons();
-        await loadFormData();
-        setupEventListeners();
-        setupFormEventListeners();
-    } catch (error) {
-        showAlert('Failed to initialize calendar: ' + error.message, false);
-    }
-}
-
-async function loadFormData() {
-    try {
-        // Load all necessary data
-        subjects = await getSubjectsPage();
-        classes = await getClassPage();
-        locations = await getLocationPage();
-        trackables = await getTrackables();
-
-        // Populate form selects
-        populateSubjectSelect();
-        populateClassSelect();
-        populateLocationSelect();
-        populateTrackables();
-        await renderStudentLists();
-    } catch (error) {
-        showAlert('Failed to load form data: ' + error.message, false);
-    }
-}
-
-async function fetchAndRenderLessons() {
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    
-    try {
-        lessons = await getLessons(
-            formatDateForApi(firstDay),
-            formatDateForApi(lastDay)
-        );
-        renderCalendar();
-    } catch (error) {
-        showAlert('Failed to fetch lessons: ' + error.message, false);
-    }
-}
-
-function setupEventListeners() {
-    prevBtn.addEventListener('click', () => {
-        currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
-        fetchAndRenderLessons();
-    });
-
-    nextBtn.addEventListener('click', () => {
-        currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
-        fetchAndRenderLessons();
-    });
-
-    addLessonBtn.addEventListener('click', () => openLessonModal());
-    
-    document.getElementById('addStudentBtn').addEventListener('click', () => {
-        transferStudents(availableStudentsList, lessonStudentsList);
-    });
-
-    document.getElementById('removeStudentBtn').addEventListener('click', () => {
-        transferStudents(lessonStudentsList, availableStudentsList);
-    });
-
-    // Close modal handlers
-    document.querySelectorAll('.close-button, .cancel-button').forEach(button => {
-        button.addEventListener('click', closeLessonModal);
-    });
-}
-
-function setupFormEventListeners() {
-    // Student selection type toggle
-    document.querySelectorAll('input[name="studentType"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const classSelection = document.getElementById('classSelection');
-            const studentSelection = document.getElementById('studentSelection');
-            
-            if (e.target.value === 'class') {
-                classSelection.classList.remove('hidden');
-                studentSelection.classList.add('hidden');
-            } else {
-                classSelection.classList.add('hidden');
-                studentSelection.classList.remove('hidden');
-                setupStudentManagement();
-            }
-        });
-    });
-
-    // Subject change handler for topics
-    document.getElementById('subjectSelect').addEventListener('change', async (e) => {
-        const subjectId = parseInt(e.target.value);
-        const subject = subjects.find(s => s.id === subjectId);
-        if (subject) {
-            populateTopicSelect(subject.topics || []);
-        }
-    });
-
-    // Close modal handlers
-    document.querySelectorAll('.close-button, .cancel-button').forEach(button => {
-        button.addEventListener('click', closeLessonModal);
-    });
-
-    lessonForm.addEventListener('submit', handleLessonSubmit);
-}
-
-function populateSubjectSelect() {
-    const select = document.getElementById('subjectSelect');
-    select.innerHTML = subjects.map(subject => 
-        `<option value="${subject.id}">${subject.name}</option>`
-    ).join('');
-    
-    // Initially populate topics for first subject
-    if (subjects.length > 0) {
-        populateTopicSelect(subjects[0].topics || []);
-    }
-}
-
-function populateTopicSelect(topics) {
-    const topicList = document.getElementById('availableTopics');
-    topicList.innerHTML = topics.map(topic => `
-        <div class="topic-item" data-id="${topic.id}">
-            <span class="topic-name">${topic.name}</span>
-        </div>
-    `).join('');
-
-    // Add click handlers for selection
-    document.querySelectorAll('.topic-item').forEach(item => {
-        item.addEventListener('click', () => {
-            item.classList.toggle('selected');
-        });
-    });
-}
-
-function populateClassSelect() {
-    const select = document.getElementById('classSelect');
-    select.innerHTML = classes.map(cls => 
-        `<option value="${cls.id}">${cls.name}</option>`
-    ).join('');
-}
-
-function populateLocationSelect() {
-    const select = document.getElementById('locationSelect');
-    select.innerHTML = locations.map(location => 
-        `<option value="${location.id}">${location.name}</option>`
-    ).join('');
-}
-
-function populateTrackables() {
-    const trackableList = document.getElementById('availableTrackables');
-    trackableList.innerHTML = trackables.map(trackable => `
-        <div class="trackable-item" data-name="${trackable.name}">
-            <span class="trackable-name">${trackable.name}</span>
-        </div>
-    `).join('');
-
-    // Add click handlers for selection
-    document.querySelectorAll('.trackable-item').forEach(item => {
-        item.addEventListener('click', () => {
-            item.classList.toggle('selected');
-        });
-    });
-}
-
-async function renderStudentLists() {
-    try {
-        const students = await getStudentPage();
-        
-        availableStudentsList.innerHTML = students.map(student => `
-            <div class="student-item" data-id="${student.id}">
-                ${student.username}
-            </div>
-        `).join('');
-
-        // Add click handlers for selection
-        document.querySelectorAll('.student-item').forEach(item => {
-            item.addEventListener('click', () => {
-                item.classList.toggle('selected');
-            });
-        });
-    } catch (error) {
-        showAlert('Failed to load students: ' + error.message, false);
-    }
-}
-
-function setupStudentManagement() {
-    const searchInput = document.getElementById('studentSearchInput');
-    const searchResults = document.getElementById('searchResults');
-
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const searchTerm = e.target.value.trim();
-        
-        if (searchTerm.length === 0) {
-            searchResults.classList.add('hidden');
-            return;
-        }
-
-        searchTimeout = setTimeout(async () => {
-            try {
-                const students = await getStudentPage(1, 5, "asc", "username", {
-                    username: searchTerm
-                });
-                renderSearchResults(students, searchResults);
-            } catch (error) {
-                showAlert('Search failed: ' + error.message, false);
-            }
-        }, 300);
-    });
-
-    // Hide search results when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!searchResults.contains(e.target) && e.target !== searchInput) {
-            searchResults.classList.add('hidden');
-        }
-    });
-}
-
-function renderSearchResults(students, searchResults) {
-    const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
-    const results = students.filter(student => !existingIds.has(student.id));
-    
-    if (results.length === 0) {
-        searchResults.innerHTML = '<div class="search-result-item">No students found</div>';
-    } else {
-        searchResults.innerHTML = results.map(student => `
-            <div class="search-result-item">
-                <div class="student-info">
-                    <div class="student-name">${student.username}</div>
-                    <div class="student-email">${student.email}</div>
-                </div>
-                <button onclick="addLessonMember(${student.id}, '${student.username}', '${student.email}')" 
-                        class="action-button add" title="Add to lesson" type="button">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        `).join('');
-    }
-    
-    searchResults.classList.remove('hidden');
-}
-
-function renderLessonMembers() {
-    const membersList = document.getElementById('lessonMembersList');
-    const members = Array.from(selectedStudents.values());
-    
-    membersList.innerHTML = members.map(member => `
-        <div class="member-item">
-            <div class="student-info">
-                <div class="student-name">${member.username}</div>
-            </div>
-            <button onclick="removeLessonMember(${member.id})" 
-                    class="action-button" title="Remove from lesson">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `).join('');
-}
+// Modal Management
+const modals = {
+    lesson: document.getElementById('lessonModal'),
+    lessonDetails: document.getElementById('lessonDetailsModal'),
+    update: document.getElementById('updateLessonModal'),
+    topics: document.getElementById('manageTopicsModal'),
+    trackables: document.getElementById('manageTrackablesModal'),
+    students: document.getElementById('manageStudentsModal'),
+    tracking: document.getElementById('trackingModal')
+};
 
 function renderCalendar() {
     const firstDay = new Date(currentYear, currentMonth, 1);
@@ -359,12 +96,103 @@ function createDayElement(dayNumber, extraClass, dayLessons) {
     `;
 }
 
-function transferStudents(fromList, toList) {
-    const selectedItems = fromList.querySelectorAll('.student-item.selected');
-    selectedItems.forEach(item => {
-        item.classList.remove('selected');
-        toList.appendChild(item);
+// Initialize
+async function init() {
+    try {
+        await fetchAndRenderLessons();
+        await loadFormData();
+        setupEventListeners();
+        setupFormEventListeners();
+    } catch (error) {
+        showAlert('Failed to initialize calendar: ' + error.message, false);
+    }
+}
+
+async function loadFormData() {
+    try {
+        subjects = await getSubjectsPage();
+        classes = await getClassPage();
+        locations = await getLocationPage();
+        trackables = await getTrackables();
+
+        populateSubjectSelect();
+        populateClassSelect();
+        populateLocationSelect();
+    } catch (error) {
+        showAlert('Failed to load form data: ' + error.message, false);
+    }
+}
+
+async function fetchAndRenderLessons() {
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    
+    try {
+        lessons = await getLessons(
+            formatDateForApi(firstDay),
+            formatDateForApi(lastDay)
+        );
+        renderCalendar();
+    } catch (error) {
+        showAlert('Failed to fetch lessons: ' + error.message, false);
+    }
+}
+
+// Event Listeners Setup
+function setupEventListeners() {
+    // Navigation
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        fetchAndRenderLessons();
     });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        fetchAndRenderLessons();
+    });
+
+    // Add Lesson Button
+    document.getElementById('addLessonBtn').addEventListener('click', () => openLessonModal());
+
+    // Close Buttons
+    document.querySelectorAll('.close-button, .cancel-button').forEach(button => {
+        button.addEventListener('click', closeAllModals);
+    });
+
+    // Action Buttons in Lesson Details Modal
+    document.querySelectorAll('.action-button, .tracking-button').forEach(button => {
+        button.addEventListener('click', (e) => handleModalAction(e.target.closest('button').dataset.action));
+    });
+
+    // Setup Student Type Selection
+    document.querySelectorAll('input[name="studentType"]').forEach(radio => {
+        radio.addEventListener('change', toggleStudentSelectionType);
+    });
+}
+
+function setupFormEventListeners() {
+    // Main Lesson Form
+    document.getElementById('lessonForm').addEventListener('submit', handleLessonSubmit);
+    
+    // Update Lesson Form
+    document.getElementById('updateLessonForm').addEventListener('submit', handleUpdateLessonSubmit);
+    
+    // Save Buttons for Management Modals
+    document.getElementById('saveTopicsBtn').addEventListener('click', handleSaveTopics);
+    document.getElementById('saveTrackablesBtn').addEventListener('click', handleSaveTrackables);
+    document.getElementById('saveStudentsBtn').addEventListener('click', handleSaveStudents);
+    document.getElementById('saveTrackingBtn').addEventListener('click', handleSaveTracking);
+
+    // Student Search
+    setupStudentManagement();
 }
 
 function openLessonModal() {
@@ -383,6 +211,97 @@ function closeLessonModal() {
     }
 }
 
+// Modal Action Handlers
+function handleModalAction(action) {
+    hideAllModals();
+    
+    switch(action) {
+        case 'update':
+            showUpdateModal();
+            break;
+        case 'topics':
+            showTopicsModal();
+            break;
+        case 'trackables':
+            showTrackablesModal();
+            break;
+        case 'students':
+            showStudentsModal();
+            break;
+        case 'tracking':
+            showTrackingModal();
+            break;
+        case 'delete':
+            handleDeleteLesson();
+            break;
+    }
+}
+
+// Modal Display Functions
+function showUpdateModal() {
+    const modal = modals.update;
+    const startDate = new Date(currentLesson.startDate);
+    const endDate = new Date(currentLesson.endDate);
+    
+    document.getElementById('updateDate').value = startDate.toISOString().split('T')[0];
+    document.getElementById('updateStartTime').value = startDate.toTimeString().slice(0,5);
+    document.getElementById('updateEndTime').value = endDate.toTimeString().slice(0,5);
+    
+    populateSubjectSelect('updateSubject', currentLesson.subjectId);
+    modal.classList.add('show');
+    console.log('Modal is supposed to show');
+}
+
+function populateSubjectSelect() {
+    const select = document.getElementById('subjectSelect');
+    select.innerHTML = subjects.map(subject => 
+        `<option value="${subject.id}">${subject.name}</option>`
+    ).join('');
+}
+
+function populateClassSelect() {
+    const select = document.getElementById('classSelect');
+    select.innerHTML = classes.map(cls => 
+        `<option value="${cls.id}">${cls.name}</option>`
+    ).join('');
+}
+
+function populateLocationSelect() {
+    const select = document.getElementById('locationSelect');
+    select.innerHTML = locations.map(location => 
+        `<option value="${location.id}">${location.name}</option>`
+    ).join('');
+}
+
+async function showTopicsModal() {
+    const modal = modals.topics;
+    const subject = subjects.find(s => s.id === currentLesson.subjectId);
+    
+    if (subject && subject.topics) {
+        renderTopicLists(subject.topics, currentLesson.topics || []);
+    }
+    
+    modal.classList.add('show');
+}
+
+async function showTrackablesModal() {
+    const modal = modals.trackables;
+    renderTrackableLists(trackables, currentLesson.trackables || []);
+    modal.classList.add('show');
+}
+
+function showStudentsModal() {
+    const modal = modals.students;
+    setupStudentManagement();
+    modal.classList.add('show');
+}
+
+function showTrackingModal() {
+    const modal = modals.tracking;
+    renderTrackingTable();
+    modal.classList.add('show');
+}
+
 async function handleLessonSubmit(e) {
     e.preventDefault();
     
@@ -398,12 +317,10 @@ async function handleLessonSubmit(e) {
         
         // Get subject and topic selections
         const subjectId = parseInt(document.getElementById('subjectSelect').value);
-        const topics = Array.from(document.querySelectorAll('#availableTopics .topic-item.selected'))
-            .map(item => parseInt(item.dataset.id));
+        const topics = [];
         
         // Get selected trackables
-        const selectedTrackables = Array.from(document.querySelectorAll('#availableTrackables .trackable-item.selected'))
-            .map(item => item.dataset.name);
+        const selectedTrackables = [];
 
         // Get location
         const locationId = parseInt(document.getElementById('locationSelect').value);
@@ -457,6 +374,434 @@ async function handleLessonSubmit(e) {
     }
 }
 
+// Form Submission Handlers
+async function handleUpdateLessonSubmit(e) {
+    e.preventDefault();
+    try {
+        const formData = {
+            date: document.getElementById('updateDate').value,
+            startTime: document.getElementById('updateStartTime').value,
+            endTime: document.getElementById('updateEndTime').value,
+            subjectId: parseInt(document.getElementById('updateSubject').value)
+        };
+        
+        const startDate = new Date(`${formData.date}T${formData.startTime}`);
+        const endDate = new Date(`${formData.date}T${formData.endTime}`);
+        
+        if (endDate <= startDate) {
+            showAlert('End time must be after start time', false);
+            return;
+        }
+        
+        // todo
+        // const response = await updateLessonRecord(
+        //     currentLesson.id,
+        //     formData.subjectId,
+        //     formatDateForApi(startDate),
+        //     formatDateForApi(endDate)
+        // );
+        
+        let response = {isSuccessful: false}
+        if (response.isSuccessful) {
+            showAlert('Lesson updated successfully!', true);
+            await fetchAndRenderLessons();
+            closeAllModals();
+        } else {
+            showAlert(response.message || 'Failed to update lesson', false);
+        }
+    } catch (error) {
+        showAlert('Failed to update lesson: ' + error.message, false);
+    }
+}
+
+async function handleSaveTopics() {
+    try {
+        const selectedTopics = Array.from(
+            document.querySelectorAll('#selectedTopicsList .topic-item')
+        ).map(item => parseInt(item.dataset.id));
+        
+        const response = await updateLessonRecord(
+            currentLesson.id,
+            currentLesson.subjectId,
+            currentLesson.startDate,
+            currentLesson.endDate,
+            selectedTopics
+        );
+        
+        if (response.isSuccessful) {
+            showAlert('Topics updated successfully!', true);
+            await fetchAndRenderLessons();
+            closeAllModals();
+        } else {
+            showAlert(response.message || 'Failed to update topics', false);
+        }
+    } catch (error) {
+        showAlert('Failed to save topics: ' + error.message, false);
+    }
+}
+
+async function handleSaveTrackables() {
+    try {
+        const selectedTrackables = Array.from(
+            document.querySelectorAll('#selectedTrackablesList .trackable-item')
+        ).map(item => item.dataset.name);
+        
+        const response = await updateLessonRecord(
+            currentLesson.id,
+            currentLesson.subjectId,
+            currentLesson.startDate,
+            currentLesson.endDate,
+            undefined,
+            selectedTrackables
+        );
+        
+        if (response.isSuccessful) {
+            showAlert('Trackables updated successfully!', true);
+            await fetchAndRenderLessons();
+            closeAllModals();
+        } else {
+            showAlert(response.message || 'Failed to update trackables', false);
+        }
+    } catch (error) {
+        showAlert('Failed to save trackables: ' + error.message, false);
+    }
+}
+
+async function handleSaveStudents() {
+    try {
+        const studentType = document.querySelector('input[name="studentType"]:checked').value;
+        let classId = null;
+        let students = null;
+        
+        if (studentType === 'class') {
+            classId = parseInt(document.getElementById('classSelect').value);
+        } else {
+            students = Array.from(selectedStudents).map(student => student.id);
+        }
+        
+        if (!classId && (!students || students.length === 0)) {
+            showAlert('Please select either a class or at least one student', false);
+            return;
+        }
+        
+        const response = await updateLessonRecord(
+            currentLesson.id,
+            currentLesson.subjectId,
+            currentLesson.startDate,
+            currentLesson.endDate,
+            undefined,
+            undefined,
+            classId,
+            students
+        );
+        
+        if (response.isSuccessful) {
+            showAlert('Students updated successfully!', true);
+            await fetchAndRenderLessons();
+            closeAllModals();
+        } else {
+            showAlert(response.message || 'Failed to update students', false);
+        }
+    } catch (error) {
+        showAlert('Failed to save students: ' + error.message, false);
+    }
+}
+
+async function handleSaveTracking() {
+    try {
+        const trackingData = Array.from(
+            document.querySelectorAll('#trackingTable tbody tr')
+        ).map(row => ({
+            studentId: parseInt(row.dataset.studentId),
+            attendance: row.querySelector('.attendance-checkbox').checked,
+            trackables: Array.from(row.querySelectorAll('.trackable-checkbox')).map(checkbox => ({
+                name: checkbox.dataset.trackable,
+                value: checkbox.checked
+            }))
+        }));
+        
+        const response = await updateLessonRecord(
+            currentLesson.id,
+            currentLesson.subjectId,
+            currentLesson.startDate,
+            currentLesson.endDate,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            trackingData
+        );
+        
+        if (response.isSuccessful) {
+            showAlert('Tracking data saved successfully!', true);
+            closeAllModals();
+        } else {
+            showAlert(response.message || 'Failed to save tracking data', false);
+        }
+    } catch (error) {
+        showAlert('Failed to save tracking data: ' + error.message, false);
+    }
+}
+
+async function handleDeleteLesson() {
+    if (confirm('Are you sure you want to delete this lesson?')) {
+        try {
+            // todo
+            // const response = await deleteLessonRecord(currentLesson.id);
+            
+            let response = {isSuccessful: false}
+            if (response.isSuccessful) {
+                showAlert('Lesson deleted successfully!', true);
+                await fetchAndRenderLessons();
+                closeAllModals();
+            } else {
+                showAlert(response.message || 'Failed to delete lesson', false);
+            }
+        } catch (error) {
+            showAlert('Failed to delete lesson: ' + error.message, false);
+        }
+    }
+}
+
+// Render Functions
+function renderTopicLists(availableTopics, selectedTopics) {
+    const availableList = document.getElementById('availableTopicsList');
+    const selectedList = document.getElementById('selectedTopicsList');
+    
+    availableList.innerHTML = availableTopics
+        .filter(topic => !selectedTopics.find(st => st.id === topic.id))
+        .map(topic => createTopicItem(topic))
+        .join('');
+        
+    selectedList.innerHTML = selectedTopics
+        .map(topic => createTopicItem(topic))
+        .join('');
+        
+    setupTopicDragAndDrop();
+}
+
+function renderTrackableLists(availableTrackables, selectedTrackables) {
+    const availableList = document.getElementById('availableTrackablesList');
+    const selectedList = document.getElementById('selectedTrackablesList');
+    
+    availableList.innerHTML = availableTrackables
+        .filter(trackable => !selectedTrackables.includes(trackable.name))
+        .map(trackable => createTrackableItem(trackable))
+        .join('');
+        
+    selectedList.innerHTML = selectedTrackables
+        .map(trackableName => {
+            const trackable = availableTrackables.find(t => t.name === trackableName);
+            return createTrackableItem(trackable);
+        })
+        .join('');
+        
+    setupTrackableDragAndDrop();
+}
+
+function renderTrackingTable() {
+    const table = document.getElementById('trackingTable');
+    const thead = table.querySelector('thead tr');
+    const tbody = table.querySelector('tbody');
+    
+    thead.innerHTML = `
+        <th>Student</th>
+        <th>Attendance</th>
+        ${currentLesson.trackables.map(trackable => 
+            `<th>${trackable}</th>`
+        ).join('')}
+    `;
+    
+    tbody.innerHTML = currentLesson.students.map(student => `
+        <tr data-student-id="${student.id}">
+            <td>${student.username}</td>
+            <td>
+                <input type="checkbox" 
+                       class="attendance-checkbox" 
+                       ${student.attendance ? 'checked' : ''}>
+            </td>
+            ${currentLesson.trackables.map(trackable => `
+                <td>
+                    <input type="checkbox" 
+                           class="trackable-checkbox"
+                           data-trackable="${trackable}"
+                           ${student.trackables?.[trackable] ? 'checked' : ''}>
+                </td>
+            `).join('')}
+        </tr>
+    `).join('');
+}
+
+// Helper Functions
+function createTopicItem(topic) {
+    return `
+        <div class="topic-item" data-id="${topic.id}" draggable="true">
+            <span class="topic-name">${topic.name}</span>
+        </div>
+    `;
+}
+
+function createTrackableItem(trackable) {
+    return `
+        <div class="trackable-item" data-name="${trackable.name}" draggable="true">
+            <span class="trackable-name">${trackable.name}</span>
+        </div>
+    `;
+}
+
+function setupTopicDragAndDrop() {
+    const items = document.querySelectorAll('.topic-item');
+    const lists = document.querySelectorAll('.topics-list-inline');
+
+    items.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+    });
+
+    lists.forEach(list => {
+        list.addEventListener('dragover', handleDragOver);
+        list.addEventListener('drop', handleDrop);
+    });
+}
+
+function setupTrackableDragAndDrop() {
+    const items = document.querySelectorAll('.trackable-item');
+    const lists = document.querySelectorAll('.trackable-list');
+
+    items.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+    });
+
+    lists.forEach(list => {
+        list.addEventListener('dragover', handleDragOver);
+        list.addEventListener('drop', handleDrop);
+    });
+}
+
+// Drag and Drop Event Handlers
+function handleDragStart(e) {
+    e.target.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', e.target.outerHTML);
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('text/plain');
+    const draggingElement = document.querySelector('.dragging');
+    
+    if (draggingElement) {
+        draggingElement.remove();
+    }
+    
+    e.currentTarget.innerHTML += data;
+    e.currentTarget.classList.remove('drag-over');
+    
+    // Re-setup drag and drop
+    setupTopicDragAndDrop();
+    setupTrackableDragAndDrop();
+}
+
+// Student Management
+function setupStudentManagement() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+        
+        if (searchTerm.length === 0) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const students = await getStudentPage(1, 5, "asc", "username", {
+                    username: searchTerm
+                });
+                renderSearchResults(students, searchResults);
+            } catch (error) {
+                showAlert('Search failed: ' + error.message, false);
+            }
+        }, 300);
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+        }
+    });
+}
+
+function toggleStudentSelectionType(e) {
+    const classSelection = document.getElementById('classSelection');
+    const studentSelection = document.getElementById('studentSelection');
+    
+    if (e.target.value === 'class') {
+        classSelection.classList.remove('hidden');
+        studentSelection.classList.add('hidden');
+    } else {
+        classSelection.classList.add('hidden');
+        studentSelection.classList.remove('hidden');
+        setupStudentManagement();
+    }
+}
+
+// Render Functions
+function renderSearchResults(students, searchResults) {
+    const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
+    const results = students.filter(student => !existingIds.has(student.id));
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item">No students found</div>';
+    } else {
+        searchResults.innerHTML = results.map(student => `
+            <div class="search-result-item">
+                <div class="student-info">
+                    <div class="student-name">${student.username}</div>
+                    <div class="student-email">${student.email}</div>
+                </div>
+                <button onclick="addLessonMember(${student.id}, '${student.username}', '${student.email}')" 
+                        class="action-button add" title="Add to lesson" type="button">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    searchResults.classList.remove('hidden');
+}
+
+function renderLessonMembers() {
+    const membersList = document.getElementById('lessonMembersList');
+    const members = Array.from(selectedStudents.values());
+    
+    membersList.innerHTML = members.map(member => `
+        <div class="member-item">
+            <div class="student-info">
+                <div class="student-name">${member.username}</div>
+            </div>
+            <button onclick="removeLessonMember(${member.id})" 
+                    class="action-button" title="Remove from lesson">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+// Utility Functions
 function formatDateForApi(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -472,121 +817,31 @@ function formatTimeFromDate(date) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function hideAllModals() {
+    Object.values(modals).forEach(modal => modal.classList.remove('show'));
+}
+
+function closeAllModals() {
+    hideAllModals();
+    currentLesson = null;
+    selectedStudents = new Set();
+    const searchResults = document.getElementById('searchResults');
+    if (searchResults) {
+        searchResults.classList.add('hidden');
+    }
+}
+
 function showAlert(message, isSuccess) {
-    alertMessage.textContent = message ?? '';
-    alertMessage.className = `alert alert-${isSuccess ? 'success' : 'error'} show`;
+    const alertElement = document.getElementById('alertMessage');
+    alertElement.textContent = message;
+    alertElement.className = `alert alert-${isSuccess ? 'success' : 'error'} show`;
     
     setTimeout(() => {
-        alertMessage.classList.remove('show');
+        alertElement.classList.remove('show');
     }, 3000);
 }
 
-// Function to show lesson details
-function showLessonDetails(lesson) {
-    currentLesson = lesson;
-    const modal = document.getElementById('lessonDetailsModal');
-    
-    // Populate modal with lesson details
-    const startDate = new Date(lesson.startDate);
-    const endDate = new Date(lesson.endDate);
-    
-    modal.querySelector('.date').textContent = startDate.toLocaleDateString();
-    modal.querySelector('.time').textContent = `${formatTimeFromDate(startDate)} - ${formatTimeFromDate(endDate)}`;
-    
-    modal.querySelector('.subject').textContent = lesson.subjectName;
-    modal.querySelector('.location').textContent = lesson.locationName || 'No location';
-    
-    const locationDetails = [];
-    if (lesson.locationAddress) locationDetails.push(lesson.locationAddress);
-    if (lesson.locationDescription) locationDetails.push(lesson.locationDescription);
-    modal.querySelector('.location-details').textContent = locationDetails.join(' | ');
-    
-    // Populate topics
-    const topicsList = modal.querySelector('.topics-list');
-    topicsList.innerHTML = lesson.topics ? lesson.topics.map(topic => 
-        `<span class="topic-tag">${topic.name}</span>`
-    ).join('') : 'No topics assigned';
-    
-    // Show the modal
-    modal.classList.add('show');
-    
-    // Setup event handlers
-    setupModalEventHandlers();
-}
-
-function setupModalEventHandlers() {
-    // Close button
-    lessonDetailsModal.querySelector('.close-button').onclick = () => {
-        lessonDetailsModal.classList.remove('show');
-    };
-    
-    // Action buttons
-    lessonDetailsModal.querySelectorAll('.action-button').forEach(button => {
-        button.onclick = () => handleAction(button.dataset.action);
-    });
-    
-    // Tracking button
-    lessonDetailsModal.querySelector('.tracking-button').onclick = () => {
-        handleTracking();
-    };
-    
-    // Delete and Update buttons
-    lessonDetailsModal.querySelector('[data-action="delete"]').onclick = () => {
-        handleDelete();
-    };
-    
-    lessonDetailsModal.querySelector('[data-action="update"]').onclick = () => {
-        handleUpdate();
-    };
-    
-    // lessonDetailsModal.querySelector('[data-action="repeat"]').onclick = () => {
-    //     handleRepeat()
-    // };
-}
-
-// Handler functions
-function handleAction(action) {
-    switch(action) {
-        case 'topics':
-            // TODO: Implement topics management
-            console.log('Managing topics');
-            break;
-        case 'trackables':
-            // TODO: Implement trackables management
-            console.log('Managing trackables');
-            break;
-        case 'students':
-            // TODO: Implement students management
-            console.log('Managing students');
-            break;
-    }
-}
-
-function handleTracking() {
-    // TODO: Implement tracking functionality
-    console.log('Opening tracking');
-}
-
-function handleDelete() {
-    if (confirm('Are you sure you want to delete this lesson?')) {
-        // TODO: Implement delete functionality
-        console.log('Deleting lesson');
-    }
-}
-
-function handleUpdate() {
-    // TODO: Implement update functionality
-    console.log('Updating lesson');
-}
-
-function handleRepeat() {
-    // TODO: Implement repeat functionality
-    console.log('Setting repeat');
-}
-
 // Make functions available globally
-window.showLessonDetails = showLessonDetails;
-
 window.addLessonMember = function(id, username, email) {
     selectedStudents.add({ id, username, email });
     renderLessonMembers();
@@ -597,6 +852,31 @@ window.addLessonMember = function(id, username, email) {
 window.removeLessonMember = function(id) {
     selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
     renderLessonMembers();
+};
+
+window.showLessonDetails = function(lesson) {
+    currentLesson = lesson;
+    const modal = modals.lessonDetails;
+    
+    const startDate = new Date(lesson.startDate);
+    const endDate = new Date(lesson.endDate);
+    
+    modal.querySelector('.date').textContent = startDate.toLocaleDateString();
+    modal.querySelector('.time').textContent = `${formatTimeFromDate(startDate)} - ${formatTimeFromDate(endDate)}`;
+    modal.querySelector('.subject').textContent = lesson.subjectName;
+    modal.querySelector('.location').textContent = lesson.locationName || 'No location';
+    
+    const locationDetails = [];
+    if (lesson.locationAddress) locationDetails.push(lesson.locationAddress);
+    if (lesson.locationDescription) locationDetails.push(lesson.locationDescription);
+    modal.querySelector('.location-details').textContent = locationDetails.join(' | ');
+    
+    const topicsList = modal.querySelector('.topics-list');
+    topicsList.innerHTML = lesson.topics ? lesson.topics.map(topic => 
+        `<span class="topic-tag">${topic.name}</span>`
+    ).join('') : 'No topics assigned';
+    
+    modal.classList.add('show');
 };
 
 // Initialize the calendar
