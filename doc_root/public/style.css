@@ -1268,14 +1268,13 @@ tr:hover {
 
 /* ===================== Global Button Styles ======================== */
 .action-button {
-    padding: 8px 16px;
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    background: none;
+    border: none;
     cursor: pointer;
+    padding: 5px;
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 4px;
 }
 
 .action-button:hover {
@@ -1321,14 +1320,6 @@ tr:hover {
 
 .control-button:hover {
     background-color: #45a802;
-}
-
-.action-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    color: #ff3b3b;
 }
 
 .action-button.add {
