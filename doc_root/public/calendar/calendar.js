@@ -175,11 +175,9 @@ function showUpdateModal() {
     populateLocationSelect('updateLocation', currentLesson.locationId);
 
     modal.classList.add('show');
-    console.log('Modal is supposed to show');
 }
 
 function populateSubjectSelect(selectId = 'subjectSelect', currentSubjectId = null) {
-    console.log(currentSubjectId)
     const select = document.getElementById(selectId);
     
     // Find current subject if an ID is provided
@@ -216,7 +214,6 @@ function populateSubjectSelect(selectId = 'subjectSelect', currentSubjectId = nu
 }
 
 function populateClassSelect(selectId = 'classSelect', currentClassId = null) {
-    console.log(currentClassId);
     const select = document.getElementById(selectId);
     
     // Find current class if an ID is provided
@@ -253,7 +250,6 @@ function populateClassSelect(selectId = 'classSelect', currentClassId = null) {
 }
 
 function populateLocationSelect(selectId = 'locationSelect', currentLocationId = null) {
-    console.log(currentLocationId);
     const select = document.getElementById(selectId);
     
     // Find current location if an ID is provided

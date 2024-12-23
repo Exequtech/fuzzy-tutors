@@ -319,8 +319,6 @@ async function getClassPage(page = 1, pageSize=10, order="asc", orderBy="id", fi
         await SessionManager.getNewToken();
     }
 
-
-    console.log(response.data.results)
     return response.data.results;
 }
 
