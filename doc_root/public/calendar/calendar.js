@@ -32,70 +32,6 @@ const modals = {
     tracking: document.getElementById('trackingModal')
 };
 
-function renderCalendar() {
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    const prevLastDay = new Date(currentYear, currentMonth, 0);
-    const firstDayIndex = firstDay.getDay();
-    const lastDayIndex = lastDay.getDay();
-    const nextDays = 7 - lastDayIndex - 1;
-
-    const months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-
-    monthDisplay.textContent = `${months[currentMonth]} ${currentYear}`;
-    
-    let days = "";
-
-    // Previous month's days
-    for (let x = firstDayIndex; x > 0; x--) {
-        const day = prevLastDay.getDate() - x + 1;
-        days += createDayElement(day, 'other-month', []);
-    }
-
-    // Current month's days
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-        const today = new Date();
-        const isToday = i === today.getDate() && 
-                        currentMonth === today.getMonth() && 
-                        currentYear === today.getFullYear();
-        
-        const dayLessons = lessons.filter(lesson => {
-            const lessonDate = new Date(lesson.startDate);
-            return lessonDate.getDate() === i;
-        });
-        
-        days += createDayElement(i, isToday ? 'today' : '', dayLessons);
-    }
-
-    // Next month's days
-    for (let j = 1; j <= nextDays; j++) {
-        days += createDayElement(j, 'other-month', []);
-    }
-
-    calendar.innerHTML = days;
-}
-
-function createDayElement(dayNumber, extraClass, dayLessons) {
-    return `
-        <div class="calendar-day ${extraClass}">
-            <div class="day-number">${dayNumber}</div>
-            ${dayLessons.map(lesson => `
-                <div class="lesson-item" data-lesson-id="${lesson.id}" onclick="showLessonDetails(${JSON.stringify(lesson).replace(/"/g, '&quot;')})">
-                    <div class="lesson-time">
-                        ${formatTimeFromDate(new Date(lesson.startDate))} - 
-                        ${formatTimeFromDate(new Date(lesson.endDate))}
-                    </div>
-                    <div class="lesson-subject-name">${lesson.subjectName}</div>
-                    <div class="lesson-location">${lesson.locationName || 'No location'}</div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
 // Initialize
 async function init() {
     try {
@@ -120,21 +56,6 @@ async function loadFormData() {
         populateLocationSelect();
     } catch (error) {
         showAlert('Failed to load form data: ' + error.message, false);
-    }
-}
-
-async function fetchAndRenderLessons() {
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    
-    try {
-        lessons = await getLessons(
-            formatDateForApi(firstDay),
-            formatDateForApi(lastDay)
-        );
-        renderCalendar();
-    } catch (error) {
-        showAlert('Failed to fetch lessons: ' + error.message, false);
     }
 }
 
@@ -168,7 +89,7 @@ function setupEventListeners() {
     });
 
     // Action Buttons in Lesson Details Modal
-    document.querySelectorAll('.action-button, .tracking-button').forEach(button => {
+    document.querySelectorAll('.action-button, .tracking-button, .delete-button, .edit-button').forEach(button => {
         button.addEventListener('click', (e) => handleModalAction(e.target.closest('button').dataset.action));
     });
 
@@ -214,7 +135,7 @@ function closeLessonModal() {
 // Modal Action Handlers
 function handleModalAction(action) {
     hideAllModals();
-    
+
     switch(action) {
         case 'update':
             showUpdateModal();
@@ -234,6 +155,9 @@ function handleModalAction(action) {
         case 'delete':
             handleDeleteLesson();
             break;
+        default:
+            console.error(`${action} (action) does not exist or is not defined in sistem`);
+            break;
     }
 }
 
@@ -248,29 +172,121 @@ function showUpdateModal() {
     document.getElementById('updateEndTime').value = endDate.toTimeString().slice(0,5);
     
     populateSubjectSelect('updateSubject', currentLesson.subjectId);
+    populateLocationSelect('updateLocation', currentLesson.locationId);
+
     modal.classList.add('show');
     console.log('Modal is supposed to show');
 }
 
-function populateSubjectSelect() {
-    const select = document.getElementById('subjectSelect');
-    select.innerHTML = subjects.map(subject => 
-        `<option value="${subject.id}">${subject.name}</option>`
-    ).join('');
+function populateSubjectSelect(selectId = 'subjectSelect', currentSubjectId = null) {
+    console.log(currentSubjectId)
+    const select = document.getElementById(selectId);
+    
+    // Find current subject if an ID is provided
+    const currentSubject = currentSubjectId 
+        ? subjects.find(subject => subject.id === currentSubjectId) 
+        : null;
+    
+    // Build options array starting with appropriate first option
+    let options = [];
+    
+    if (currentSubjectId === null) {
+        // Case 1: If null is provided, add empty option
+        options.push('<option value="">Select a subject</option>');
+    } else if (!currentSubject && currentSubjectId) {
+        // Case 2: If ID provided but not found, add warning option
+        options.push(`<option value="">Subject ID ${currentSubjectId} not found</option>`);
+    } else if (currentSubject) {
+        // Case 3: If current subject exists, make it first option
+        options.push(`<option value="${currentSubject.id}">${currentSubject.name}</option>`);
+    }
+    
+    // Add remaining subjects (excluding current subject to avoid duplication)
+    const remainingSubjects = subjects.filter(subject => 
+        subject.id !== currentSubjectId
+    );
+    
+    options = options.concat(
+        remainingSubjects.map(subject =>
+            `<option value="${subject.id}">${subject.name}</option>`
+        )
+    );
+    
+    select.innerHTML = options.join('');
 }
 
-function populateClassSelect() {
-    const select = document.getElementById('classSelect');
-    select.innerHTML = classes.map(cls => 
-        `<option value="${cls.id}">${cls.name}</option>`
-    ).join('');
+function populateClassSelect(selectId = 'classSelect', currentClassId = null) {
+    console.log(currentClassId);
+    const select = document.getElementById(selectId);
+    
+    // Find current class if an ID is provided
+    const currentClass = currentClassId 
+        ? classes.find(cls => cls.id === currentClassId) 
+        : null;
+    
+    // Build options array starting with appropriate first option
+    let options = [];
+    
+    if (currentClassId === null) {
+        // Case 1: If null is provided, add empty option
+        options.push('<option value="">Select a class</option>');
+    } else if (!currentClass && currentClassId) {
+        // Case 2: If ID provided but not found, add warning option
+        options.push(`<option value="">Class ID ${currentClassId} not found</option>`);
+    } else if (currentClass) {
+        // Case 3: If current class exists, make it first option
+        options.push(`<option value="${currentClass.id}">${currentClass.name}</option>`);
+    }
+    
+    // Add remaining classes (excluding current class to avoid duplication)
+    const remainingClasses = classes.filter(cls => 
+        cls.id !== currentClassId
+    );
+    
+    options = options.concat(
+        remainingClasses.map(cls =>
+            `<option value="${cls.id}">${cls.name}</option>`
+        )
+    );
+    
+    select.innerHTML = options.join('');
 }
 
-function populateLocationSelect() {
-    const select = document.getElementById('locationSelect');
-    select.innerHTML = locations.map(location => 
-        `<option value="${location.id}">${location.name}</option>`
-    ).join('');
+function populateLocationSelect(selectId = 'locationSelect', currentLocationId = null) {
+    console.log(currentLocationId);
+    const select = document.getElementById(selectId);
+    
+    // Find current location if an ID is provided
+    const currentLocation = currentLocationId 
+        ? locations.find(location => location.id === currentLocationId) 
+        : null;
+    
+    // Build options array starting with appropriate first option
+    let options = [];
+    
+    if (currentLocationId === null) {
+        // Case 1: If null is provided, add empty option
+        options.push('<option value="">Select a location</option>');
+    } else if (!currentLocation && currentLocationId) {
+        // Case 2: If ID provided but not found, add warning option
+        options.push(`<option value="">Location ID ${currentLocationId} not found</option>`);
+    } else if (currentLocation) {
+        // Case 3: If current location exists, make it first option
+        options.push(`<option value="${currentLocation.id}">${currentLocation.name}</option>`);
+    }
+    
+    // Add remaining locations (excluding current location to avoid duplication)
+    const remainingLocations = locations.filter(location => 
+        location.id !== currentLocationId
+    );
+    
+    options = options.concat(
+        remainingLocations.map(location =>
+            `<option value="${location.id}">${location.name}</option>`
+        )
+    );
+    
+    select.innerHTML = options.join('');
 }
 
 async function showTopicsModal() {
@@ -564,6 +580,86 @@ async function handleDeleteLesson() {
 }
 
 // Render Functions
+// Render Functions
+function renderCalendar() {
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const prevLastDay = new Date(currentYear, currentMonth, 0);
+    const firstDayIndex = firstDay.getDay();
+    const lastDayIndex = lastDay.getDay();
+    const nextDays = 7 - lastDayIndex - 1;
+
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    monthDisplay.textContent = `${months[currentMonth]} ${currentYear}`;
+    
+    let days = "";
+
+    // Previous month's days
+    for (let x = firstDayIndex; x > 0; x--) {
+        const day = prevLastDay.getDate() - x + 1;
+        days += createDayElement(day, 'other-month', []);
+    }
+
+    // Current month's days
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+        const today = new Date();
+        const isToday = i === today.getDate() && 
+                        currentMonth === today.getMonth() && 
+                        currentYear === today.getFullYear();
+        
+        const dayLessons = lessons.filter(lesson => {
+            const lessonDate = new Date(lesson.startDate);
+            return lessonDate.getDate() === i;
+        });
+        
+        days += createDayElement(i, isToday ? 'today' : '', dayLessons);
+    }
+
+    // Next month's days
+    for (let j = 1; j <= nextDays; j++) {
+        days += createDayElement(j, 'other-month', []);
+    }
+
+    calendar.innerHTML = days;
+}
+
+function createDayElement(dayNumber, extraClass, dayLessons) {
+    return `
+        <div class="calendar-day ${extraClass}">
+            <div class="day-number">${dayNumber}</div>
+            ${dayLessons.map(lesson => `
+                <div class="lesson-item" data-lesson-id="${lesson.id}" onclick="showLessonDetails(${JSON.stringify(lesson).replace(/"/g, '&quot;')})">
+                    <div class="lesson-time">
+                        ${formatTimeFromDate(new Date(lesson.startDate))} - 
+                        ${formatTimeFromDate(new Date(lesson.endDate))}
+                    </div>
+                    <div class="lesson-subject-name">${lesson.subjectName}</div>
+                    <div class="lesson-location">${lesson.locationName || 'No location'}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+async function fetchAndRenderLessons() {
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    
+    try {
+        lessons = await getLessons(
+            formatDateForApi(firstDay),
+            formatDateForApi(lastDay)
+        );
+        renderCalendar();
+    } catch (error) {
+        showAlert('Failed to fetch lessons: ' + error.message, false);
+    }
+}
+
 function renderTopicLists(availableTopics, selectedTopics) {
     const availableList = document.getElementById('availableTopicsList');
     const selectedList = document.getElementById('selectedTopicsList');
@@ -711,55 +807,7 @@ function handleDrop(e) {
     setupTrackableDragAndDrop();
 }
 
-// Student Management
-function setupStudentManagement() {
-    const searchInput = document.getElementById('studentSearchInput');
-    const searchResults = document.getElementById('searchResults');
 
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const searchTerm = e.target.value.trim();
-        
-        if (searchTerm.length === 0) {
-            searchResults.classList.add('hidden');
-            return;
-        }
-
-        searchTimeout = setTimeout(async () => {
-            try {
-                const students = await getStudentPage(1, 5, "asc", "username", {
-                    username: searchTerm
-                });
-                renderSearchResults(students, searchResults);
-            } catch (error) {
-                showAlert('Search failed: ' + error.message, false);
-            }
-        }, 300);
-    });
-
-    // Hide search results when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!searchResults.contains(e.target) && e.target !== searchInput) {
-            searchResults.classList.add('hidden');
-        }
-    });
-}
-
-function toggleStudentSelectionType(e) {
-    const classSelection = document.getElementById('classSelection');
-    const studentSelection = document.getElementById('studentSelection');
-    
-    if (e.target.value === 'class') {
-        classSelection.classList.remove('hidden');
-        studentSelection.classList.add('hidden');
-    } else {
-        classSelection.classList.add('hidden');
-        studentSelection.classList.remove('hidden');
-        setupStudentManagement();
-    }
-}
-
-// Render Functions
 function renderSearchResults(students, searchResults) {
     const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
     const results = students.filter(student => !existingIds.has(student.id));
@@ -828,6 +876,55 @@ function closeAllModals() {
     const searchResults = document.getElementById('searchResults');
     if (searchResults) {
         searchResults.classList.add('hidden');
+    }
+}
+
+
+// Student Management
+function setupStudentManagement() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+        
+        if (searchTerm.length === 0) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const students = await getStudentPage(1, 5, "asc", "username", {
+                    username: searchTerm
+                });
+                renderSearchResults(students, searchResults);
+            } catch (error) {
+                showAlert('Search failed: ' + error.message, false);
+            }
+        }, 300);
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+        }
+    });
+}
+
+function toggleStudentSelectionType(e) {
+    const classSelection = document.getElementById('classSelection');
+    const studentSelection = document.getElementById('studentSelection');
+    
+    if (e.target.value === 'class') {
+        classSelection.classList.remove('hidden');
+        studentSelection.classList.add('hidden');
+    } else {
+        classSelection.classList.add('hidden');
+        studentSelection.classList.remove('hidden');
+        setupStudentManagement();
     }
 }
 

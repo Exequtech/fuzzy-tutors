@@ -163,7 +163,7 @@
                             Repeat
                         </button> -->
                     </div>
-                    <button class="tracking-button">
+                    <button class="tracking-button" data-action="tracking">
                         <i class="fas fa-clipboard-check"></i>
                         Tracking
                     </button>
@@ -195,10 +195,19 @@
                     <input type="time" id="updateEndTime" required>
                 </div>
             </div>
+            <!-- Subject and Location Row -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="updateSubject">Subject:</label>
-                    <select id="updateSubject" required></select>
+                    <select id="updateSubject" required>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="updateLocation">Location:</label>
+                    <select id="updateLocation" required>
+                        <!-- Will be populated dynamically -->
+                    </select>
                 </div>
             </div>
             <div class="form-buttons">
