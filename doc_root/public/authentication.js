@@ -1,4 +1,4 @@
-import { registerUser, loginUser, SessionManager } from './DataHandler.js';
+import { services } from './dataHandler.js';
 import { FormValidator } from './FormValidator.js';
 import {DisplayLibrary} from './DisplayLibrary.js';
 
@@ -61,7 +61,7 @@ loginBtn.addEventListener('click', async (e)=>{
 
     let formValidation = FormValidator.validateLoginCredentials(loginUsernameTxt.value, loginPasswordTxt.value);
     if (formValidation.isValid) {
-        let loginResult = await loginUser(loginUsernameTxt.value, formValidation.isEmail, loginPasswordTxt.value);
+        let loginResult = await services.auth.login(loginUsernameTxt.value, formValidation.isEmail, loginPasswordTxt.value);
         alert(loginResult.message);
     } else {
         alert(formValidation.message);
