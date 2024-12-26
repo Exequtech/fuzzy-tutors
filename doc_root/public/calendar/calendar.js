@@ -1,11 +1,5 @@
 import { 
-    getLessons, 
-    addNewLessonRecord, 
-    getStudentPage, 
-    getSubjectsPage, 
-    getClassPage, 
-    getTrackables, 
-    getLocationPage
+    services
 } from '../dataHandler.js';
 
 // State Management
@@ -46,10 +40,10 @@ async function init() {
 
 async function loadFormData() {
     try {
-        subjects = await getSubjectsPage();
-        classes = await getClassPage();
-        locations = await getLocationPage();
-        trackables = await getTrackables();
+        subjects = await services.topic.getPage();
+        classes = await services.class.getPage();
+        locations = await services.location.getPage();
+        trackables = await services.trackable.getAll();
 
         populateSubjectSelect();
         populateClassSelect();
@@ -362,8 +356,7 @@ async function handleLessonSubmit(e) {
             return;
         }
 
-        // Make API call to create lesson
-        const response = await addNewLessonRecord(
+        const lessonData = {
             subjectId,
             classId,
             students,
@@ -372,7 +365,10 @@ async function handleLessonSubmit(e) {
             selectedTrackables,
             topics,
             locationId
-        );
+        };
+
+        // Make API call to create lesson
+        const response = await services.lesson.createLesson(lessonData);
 
         if (response.isSuccessful) {
             showAlert('Lesson scheduled successfully!', true);
@@ -646,7 +642,7 @@ async function fetchAndRenderLessons() {
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     
     try {
-        lessons = await getLessons(
+        lessons = await services.lesson.getLessonsBetweenDates(
             formatDateForApi(firstDay),
             formatDateForApi(lastDay)
         );

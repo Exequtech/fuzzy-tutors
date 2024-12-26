@@ -1,4 +1,6 @@
 import {API_CONFIG} from '/config/apiConfig.js';
+import {ApiService} from '/services/ApiService.js';
+import { SessionManager } from '/services/SessionManager.js';
 
 class ResourceService {
     constructor(resourceType) {

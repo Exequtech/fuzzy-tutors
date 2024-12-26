@@ -2,6 +2,8 @@ import {ApiResponse} from '/utils/ApiResponse.js';
 import {SessionManager} from '/services/SessionManager.js'
 import { ResourceService } from './services/ResourceService.js';
 import { AuthService } from '/services/AuthService.js';
+import {ApiService} from '/services/ApiService.js';
+import {API_CONFIG} from '/config/apiConfig.js';
 
 class StudentService extends ResourceService {
     constructor() {
