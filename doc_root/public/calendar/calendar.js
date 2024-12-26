@@ -40,9 +40,9 @@ async function init() {
 
 async function loadFormData() {
     try {
-        subjects = await services.topic.getPage();
+        subjects = await services.subject.getPage();
         classes = await services.class.getPage();
-        locations = await services.location.getPage();
+        locations = await services.location.getAll();
         trackables = await services.trackable.getAll();
 
         populateSubjectSelect();
@@ -555,7 +555,7 @@ async function handleDeleteLesson() {
     if (confirm('Are you sure you want to delete this lesson?')) {
         try {
             // todo
-            // const response = await deleteLessonRecord(currentLesson.id);
+            // const response = await services.lesson.delete(currentLesson.id);
             
             let response = {isSuccessful: false}
             if (response.isSuccessful) {
@@ -888,7 +888,7 @@ function setupStudentManagement() {
 
         searchTimeout = setTimeout(async () => {
             try {
-                const students = await getStudentPage(1, 5, "asc", "username", {
+                const students = await services.student.getPage(1, 5, "asc", "username", {
                     username: searchTerm
                 });
                 renderSearchResults(students, searchResults);

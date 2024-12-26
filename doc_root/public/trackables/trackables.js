@@ -1,4 +1,4 @@
-import { SessionManager, addNewTrackableRecord, deleteTrackableRecord, getTrackableDetails, getTrackables, updateTrackableRecord } from '../DataHandler.js';
+import { addNewTrackableRecord, updateTrackableRecord, services } from '/dataHandler.js';
 
 // DOM Elements
 const configBtn = document.getElementById('configTrackablesBtn');
@@ -62,7 +62,7 @@ async function loadTrackables() {
         //     {name: 'Participation', description: 'Class participation tracking' }
         // ];
 
-        const trackables = await getTrackables();
+        const trackables = await services.trackable.getAll();
         renderTrackablesList(trackables);
         populateTrackableSelect(trackables);
     } catch (error) {
@@ -218,7 +218,7 @@ function showAlert(message, isSuccess) {
 // Make functions available globally
 window.editTrackable = async function(name) {
     // Fetch trackable data and open form modal
-    const trackableData = await getTrackableDetails(name);
+    const trackableData = await services.trackable.getDetails(name);
     console.log(trackableData);
     openFormModal(trackableData);
 };
@@ -226,7 +226,7 @@ window.editTrackable = async function(name) {
 window.deleteTrackable = async function(name) {
     if (confirm('Are you sure you want to delete this trackable?')) {
         try {
-            let apiResponse = await deleteTrackableRecord(name);
+            let apiResponse = await services.trackable.delete(name);
             showAlert(apiResponse.message, apiResponse.isSuccessful);
             await loadTrackables();
         } catch (error) {

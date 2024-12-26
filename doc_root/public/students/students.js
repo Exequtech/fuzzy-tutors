@@ -1,6 +1,6 @@
-import { getStudentPage, deleteStudentRecord, addNewStudentRecord, updateStudentRecord, SessionManager } from '../DataHandler.js';
+import { services, addNewStudentRecord, updateStudentRecord } from '../dataHandler.js';
 
-let students = await getStudentPage();
+let students = await services.student.getPage();
 
 window.confirmDelete = confirmDelete;
 window.editStudent = editStudent;
@@ -143,7 +143,7 @@ async function handleFormSubmit() {
         showAlert(apiResponse.message, apiResponse.isSuccessful);
     }
 
-    renderStudents(await getStudentPage());
+    renderStudents(await services.student.getPage());
     closeModal();
 }
 
@@ -160,9 +160,9 @@ function confirmDelete(id) {
 }
 
 async function deleteStudent(id) {
-    let apiResponse = await deleteStudentRecord(id);
+    let apiResponse = await services.student.delete(id);
     showAlert(apiResponse.message, apiResponse.isSuccessful);
-    renderStudents(await getStudentPage());
+    renderStudents(await services.student.getPage());
 }
 
 // Utility Functions

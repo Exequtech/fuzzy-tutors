@@ -23,9 +23,34 @@ class TopicService extends ResourceService {
     }
 }
 
+class SubjectService extends ResourceService {
+    constructor() {
+        super('subject');
+    }
+}
+
 class TrackableService extends ResourceService {
     constructor() {
         super('trackable');
+    }
+
+    async getAll(order = "asc", filter = {}) {
+        const params = { order, ...filter };
+        const response = await ApiService.withRetry(() => 
+            ApiService.makeApiCall(this.endpoint, 'GET', params)
+        );
+
+        if (response.isSuccessful) {
+            await SessionManager.getNewToken();
+        }
+
+        return response.data.results;
+    }
+}
+
+class LocationService extends ResourceService {
+    constructor() {
+        super('location');
     }
 
     async getAll(order = "asc", filter = {}) {
@@ -77,6 +102,8 @@ const services = {
     topic: new TopicService(),
     trackable: new TrackableService(),
     lesson: new LessonService(),
+    subject: new SubjectService(),
+    location: new LocationService()
 };
 
 export { services, ApiResponse, SessionManager };

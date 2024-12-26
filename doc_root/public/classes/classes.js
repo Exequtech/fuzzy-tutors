@@ -1,5 +1,5 @@
 // classes.js
-import { getStudentPage, getClassPage, addNewClassRecord, deleteClassRecord, updateClassRecord, getClassDetails, SessionManager } from '../DataHandler.js';
+import { addNewClassRecord, updateClassRecord, services } from '../dataHandler.js';
 
 // DOM Elements
 const classesGrid = document.getElementById('classesGrid');
@@ -19,7 +19,7 @@ let searchTimeout = null;
 async function init() {
     try {
         // Load initial data
-        classes = await getClassPage();
+        classes = await services.class.getPage();
         renderClasses();
     } catch (error) {
         showAlert('Failed to load data: ' + error.message, false);
@@ -34,7 +34,7 @@ searchInput.addEventListener('input', async (e) => {
     const searchTerm = e.target.value.toLowerCase();
     try {
         // Use the API's filter capability
-        const filteredClasses = await getClassPage(1, 10, "asc", "id", {
+        const filteredClasses = await services.class.getPage(1, 10, "asc", "id", {
             name: searchTerm
         });
         renderClasses(filteredClasses);
@@ -88,7 +88,7 @@ function setupMemberManagement() {
 
         searchTimeout = setTimeout(async () => {
             try {
-                const students = await getStudentPage(1, 5, "asc", "username", {
+                const students = await services.student.getPage(1, 5, "asc", "username", {
                     username: searchTerm
                 });
                 renderSearchResults(students, searchResults);
@@ -240,7 +240,7 @@ async function handleFormSubmit() {
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
             // Refresh the class list
-            classes = await getClassPage();
+            classes = await services.class.getPage();
             renderClasses();
             closeModal();
         } else {
@@ -258,7 +258,7 @@ async function handleFormSubmit() {
 async function editClass(id) {
     try {
         // Fetch the latest data for the class
-        const classData = await getClassDetails(id);
+        const classData = await services.class.getDetails(id);
         if (classData) {
             openModal(classData);
         }
@@ -274,12 +274,12 @@ function confirmDelete(id) {
 
 async function deleteClass(id) {
     try {
-        const apiResponse = await deleteClassRecord(id);
+        const apiResponse = await services.class.delete(id);
         
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
             // Refresh the class list
-            classes = await getClassPage();
+            classes = await services.class.getPage();
             renderClasses();
         } else {
             showAlert(apiResponse.message, false);

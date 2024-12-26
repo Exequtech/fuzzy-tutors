@@ -1,4 +1,4 @@
-import { getSubjectsPage, addNewTopicRecord, updateTopicRecord, deleteTopicRecord } from '../DataHandler.js';
+import {addNewTopicRecord, updateTopicRecord, services} from '/dataHandler.js';
 
 // DOM Elements
 const subjectsGrid = document.getElementById('subjectsGrid');
@@ -19,7 +19,7 @@ let subjects = [];
 async function initSubjects() {
     try {
         console.log('start')
-        subjects = await getSubjectsPage();
+        subjects = await services.subject.getPage();
         renderSubjects();
     } catch (error) {
         showAlert('Failed to load data: ' + error.message, false);
@@ -32,7 +32,7 @@ addSubjectBtn.addEventListener('click', () => openSubjectModal());
 searchInput.addEventListener('input', async (e) => {
     const searchTerm = e.target.value.toLowerCase();
     try {
-        const filteredSubjects = await getSubjectsPage(1, 10, "asc", "id", {
+        const filteredSubjects = await services.subject.getPage(1, 10, "asc", "id", {
             name: searchTerm
         });
         renderSubjects(filteredSubjects);
@@ -126,7 +126,7 @@ async function handleSubjectFormSubmit(e) {
 
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
-            subjects = await getSubjectsPage();
+            subjects = await services.subject.getPage();
             renderSubjects();
             closeAllModals();
         } else {
@@ -152,7 +152,7 @@ async function handleTopicFormSubmit(e) {
 
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
-            subjects = await getSubjectsPage();
+            subjects = await services.subject.getPage();
             renderSubjects();
             closeAllModals();
         } else {
@@ -228,10 +228,10 @@ function editTopic(topicId, subjectId) {
 
 async function deleteTopic(topicId) {
     try {
-        const response = await deleteTopicRecord(topicId);
+        const response = await services.topic.delete(topicId);
         if (response.isSuccessful) {
             showAlert('Topic deleted successfully', true);
-            subjects = await getSubjectsPage();
+            subjects = await services.subject.getPage();
             renderSubjects();
         } else {
             showAlert(response.message, false);

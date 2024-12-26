@@ -1,4 +1,4 @@
-import { deleteLocationRecord, getLocationDetails, getLocationPage, SessionManager, updateLocationRecord, addNewLocationRecord } from '../dataHandler.js';
+import { services, updateLocationRecord, addNewLocationRecord } from '../dataHandler.js';
 
 // DOM Elements
 const configBtn = document.getElementById('configLocationsBtn');
@@ -62,7 +62,7 @@ async function loadLocations() {
         //     { id: 2, name: 'Library Study Room', address: '456 Library Ave', description: 'Quiet study space' }
         // ];
 
-        const locations = await getLocationPage();
+        const locations = await services.location.getAll();
 
         renderLocationsList(locations);
         populateLocationSelect(locations);
@@ -230,14 +230,14 @@ function showAlert(message, isSuccess) {
 // Make functions available globally
 window.editLocation = async function(id) {
     // Fetch location data and open form modal
-    const locationData = await getLocationDetails(id);
+    const locationData = await services.location.getDetails(id);
     openFormModal(locationData);
 };
 
 window.deleteLocation = async function(id) {
     if (confirm('Are you sure you want to delete this location?')) {
         try {
-            let apiResponse = await deleteLocationRecord(id)
+            let apiResponse = await services.location.delete(id)
             showAlert(apiResponse.message, apiResponse.isSuccessful);
             await loadLocations();
         } catch (error) {
