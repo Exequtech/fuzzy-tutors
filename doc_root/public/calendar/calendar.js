@@ -282,8 +282,11 @@ function populateLocationSelect(selectId = 'locationSelect', currentLocationId =
 async function showTopicsModal() {
     const modal = modals.topics;
     const subject = subjects.find(s => s.id === currentLesson.subjectId);
+
+    console.log("Test to see if contains topic IDs and names:" + subject);
     
     if (subject && subject.topics) {
+        console.log("Test: Decision construct runs that calls renderTopicLists()");
         renderTopicLists(subject.topics, currentLesson.topics || []);
     }
     
@@ -371,8 +374,6 @@ async function handleLessonSubmit(e) {
             lessonData.classId = classId;
         }
 
-        console.log(lessonData);
-
         // Make API call to create lesson
         const response = await services.lesson.createLesson(lessonData);
 
@@ -392,17 +393,29 @@ async function handleLessonSubmit(e) {
 async function handleUpdateLessonSubmit(e) {
     e.preventDefault();
     try {
+<<<<<<< HEAD
         let startTime = document.getElementById('updateStartTime').value;
         let endTime = document.getElementById('updateEndTime').value;
         let date = document.getElementById('updateDate').value;
+=======
+        const date = document.getElementById('updateDate').value;
+        const startTime = document.getElementById('updateStartTime').value;
+        const endTime = document.getElementById('updateEndTime').value;
+>>>>>>> a73dd40ba03c98f0a862617439d822df5ab46ec7
 
         const startDate = new Date(`${date}T${startTime}`);
         const endDate = new Date(`${date}T${endTime}`);
 
         const formData = {
+<<<<<<< HEAD
             startDate: startDate,
             endDate: endDate,
             subjectId: parseInt(document.getElementById('updateSubject').value)
+=======
+            subjectId: parseInt(document.getElementById('updateSubject').value),
+            startDate: startDate,
+            endDate: endDate
+>>>>>>> a73dd40ba03c98f0a862617439d822df5ab46ec7
         };
         
         if (endDate <= startDate) {
@@ -410,9 +423,14 @@ async function handleUpdateLessonSubmit(e) {
             return;
         }
         
+<<<<<<< HEAD
         todo
         const response = await services.lesson.update(currentLesson.id, formData);
         
+=======
+        const response = await services.lesson.update(currentLesson.id, formData);
+
+>>>>>>> a73dd40ba03c98f0a862617439d822df5ab46ec7
         if (response.isSuccessful) {
             showAlert('Lesson updated successfully!', true);
             await fetchAndRenderLessons();
@@ -512,7 +530,7 @@ async function handleSaveStudents() {
     }
 }
 
-// Tracking table saving
+// Tracking table saving (todo)
 async function handleSaveTracking() {
     try {
         const trackingData = Array.from(
@@ -567,7 +585,6 @@ async function handleDeleteLesson() {
     }
 }
 
-// Render Functions
 // Render Functions
 function renderCalendar() {
     const firstDay = new Date(currentYear, currentMonth, 1);
@@ -941,6 +958,7 @@ window.removeLessonMember = function(id) {
 
 window.showLessonDetails = function(lesson) {
     currentLesson = lesson;
+    console.log("Test (checking contents of lesson object): " + lesson)
     const modal = modals.lessonDetails;
     
     const startDate = new Date(lesson.startDate);
