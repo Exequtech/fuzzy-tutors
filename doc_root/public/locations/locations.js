@@ -1,4 +1,4 @@
-import { services, updateLocationRecord, addNewLocationRecord } from '../dataHandler.js';
+import { services } from '../dataHandler.js';
 
 // DOM Elements
 const configBtn = document.getElementById('configLocationsBtn');
@@ -131,11 +131,23 @@ async function handleFormSubmit(e) {
     try {
         if (currentLocationId) {
             // Update existing location
-            apiResponse = await updateLocationRecord(currentLocationId, formData.name, formData.address, formData.description);
+            const data = {
+                name: formData.name,
+                address: formData.address,
+                description: formData.description
+            }
+
+            apiResponse = await services.location.update(currentLocationId, data);
             showAlert(apiResponse.message, apiResponse.isSuccessful);
         } else {
             // Add new location
-            apiResponse = await addNewLocationRecord(formData.name, formData.address, formData.description);
+            const data = {
+                name: formData.name,
+                address: formData.address,
+                description: formData.description
+            }
+
+            apiResponse = await services.location.create(data);
             showAlert(apiResponse.message, apiResponse.isSuccessful);
         }
 

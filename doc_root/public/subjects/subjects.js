@@ -1,4 +1,4 @@
-import {addNewTopicRecord, updateTopicRecord, services} from '/dataHandler.js';
+import { services} from '/dataHandler.js';
 
 // DOM Elements
 const subjectsGrid = document.getElementById('subjectsGrid');
@@ -113,15 +113,20 @@ function renderSubjects(subjectsToRender = subjects) {
 async function handleSubjectFormSubmit(e) {
     e.preventDefault();
     try {
-        const subjectName = document.getElementById('subjectName').value;
-        let description = document.getElementById('subjectDescription').value;
-        description = description == '' ? null : description;
+        const formData = {
+            name: document.getElementById('subjectName').value,
+            description: document.getElementById('subjectDescription').value
+        }
+        
+        // description = description == '' ? null : description;
         
         let apiResponse;
         if (currentSubjectId) {
-            apiResponse = await updateTopicRecord(currentSubjectId, subjectName, description);
+            apiResponse = await services.topic.update(currentSubjectId, formData);
         } else {
-            apiResponse = await addNewTopicRecord(null, subjectName, description); // null parent_id indicates this is a subject
+            formData.subjectId = null;
+            console.log(formData); // todo
+            apiResponse = await services.topic.create(formData); // null parent_id indicates this is a subject
         }
 
         if (apiResponse.isSuccessful) {
@@ -140,14 +145,17 @@ async function handleSubjectFormSubmit(e) {
 async function handleTopicFormSubmit(e) {
     e.preventDefault();
     try {
-        const topicName = document.getElementById('topicName').value;
-        const topicDescription = document.getElementById('topicDescription').value;
+        const formData = {
+            name: document.getElementById('topicName').value,
+            description: document.getElementById('topicDescription').value
+        }
         
         let apiResponse;
         if (currentTopicId) {
-            apiResponse = await updateTopicRecord(currentTopicId, topicName, topicDescription);
+            apiResponse = await services.topic.update(currentTopicId, formData);
         } else {
-            apiResponse = await addNewTopicRecord(currentSubjectId, topicName, topicDescription);
+            formData.subjectId = currentSubjectId;
+            apiResponse = await services.topic.create(formData);
         }
 
         if (apiResponse.isSuccessful) {

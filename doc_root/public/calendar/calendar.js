@@ -358,14 +358,20 @@ async function handleLessonSubmit(e) {
 
         const lessonData = {
             subjectId,
-            classId,
-            students,
             startDate,
             endDate,
-            selectedTrackables,
+            trackables: [],
             topics,
             locationId
         };
+
+        if (classId == null) {
+            lessonData.students = students;
+        } else {
+            lessonData.classId = classId;
+        }
+
+        console.log(lessonData);
 
         // Make API call to create lesson
         const response = await services.lesson.createLesson(lessonData);
@@ -554,10 +560,8 @@ async function handleSaveTracking() {
 async function handleDeleteLesson() {
     if (confirm('Are you sure you want to delete this lesson?')) {
         try {
-            // todo
-            // const response = await services.lesson.delete(currentLesson.id);
+            const response = await services.lesson.delete(currentLesson.id);
             
-            let response = {isSuccessful: false}
             if (response.isSuccessful) {
                 showAlert('Lesson deleted successfully!', true);
                 await fetchAndRenderLessons();

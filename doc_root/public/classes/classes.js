@@ -1,5 +1,5 @@
 // classes.js
-import { addNewClassRecord, updateClassRecord, services } from '../dataHandler.js';
+import { services } from '../dataHandler.js';
 
 // DOM Elements
 const classesGrid = document.getElementById('classesGrid');
@@ -227,14 +227,16 @@ function closeDeleteModal() {
 
 async function handleFormSubmit() {
     try {
-        const selectedStudentIds = Array.from(selectedStudents).map(student => student.id);
-        const className = document.getElementById('className').value;
+        const formData = {
+            students: Array.from(selectedStudents).map(student => student.id),
+            name: document.getElementById('className').value
+        }
 
         let apiResponse;
         if (currentClassId) {
-            apiResponse = await updateClassRecord(currentClassId, className, selectedStudentIds);
+            apiResponse = await services.class.update(currentClassId, formData);
         } else {
-            apiResponse = await addNewClassRecord(className, selectedStudentIds);
+            apiResponse = await services.class.create(formData);
         }
 
         if (apiResponse.isSuccessful) {

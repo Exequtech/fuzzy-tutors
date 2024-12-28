@@ -1,4 +1,4 @@
-import { services, addNewStudentRecord, updateStudentRecord } from '../dataHandler.js';
+import { services  } from '../dataHandler.js';
 
 let students = await services.student.getPage();
 
@@ -99,7 +99,8 @@ function openModal(student = null) {
         // Fill form with student data
         document.getElementById('username').value = student.username;
         document.getElementById('email').value = student.email;
-        document.getElementById('status').value = student.authorized ? 'Authorized' : 'Pending';
+        document.getElementById('status').value = student.authorized ? 'true' : 'false';
+        console.log(student);
     } else {
         modalTitle.textContent = 'Add New Student';
         submitButton.textContent = 'Add Student';
@@ -135,11 +136,11 @@ async function handleFormSubmit() {
 
     if (currentStudentId) {
         // Update
-        let apiResponse = await updateStudentRecord(currentStudentId, formData.username, formData.email, formData.authorized);
+        let apiResponse = await services.student.create(currentStudentId, formData);
         showAlert(apiResponse.message, apiResponse.isSuccessful);
     } else {
         // Add
-        let apiResponse = await addNewStudentRecord(formData.username, formData.email, formData.authorized)
+        let apiResponse = await services.student.create(formData);
         showAlert(apiResponse.message, apiResponse.isSuccessful);
     }
 

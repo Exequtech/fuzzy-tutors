@@ -1,4 +1,4 @@
-import { addNewTrackableRecord, updateTrackableRecord, services } from '/dataHandler.js';
+import { services } from '/dataHandler.js';
 
 // DOM Elements
 const configBtn = document.getElementById('configTrackablesBtn');
@@ -126,12 +126,23 @@ async function handleFormSubmit(e) {
     let apiResponse;
 
     try {
+
         if (currentTrackableId) {
-            apiResponse = await updateTrackableRecord(currentTrackableId, formData.name, formData.description);
+            const data = {
+                name: formData.name,
+                description: formData.description
+            }
+
+            apiResponse = await services.trackable.update(currentTrackableId, data);
             showAlert(apiResponse.message, apiResponse.isSuccessful);
         } else {
             // Add new trackable
-            apiResponse = await addNewTrackableRecord(formData.name, formData.description);
+            const data = {
+                name: formData.name,
+                description: formData.description
+            }
+
+            apiResponse = await services.trackable.create(data);
             showAlert(apiResponse.message, apiResponse.isSuccessful);
         }
 
