@@ -434,13 +434,11 @@ async function handleSaveTopics() {
             document.querySelectorAll('#selectedTopicsList .topic-item')
         ).map(item => parseInt(item.dataset.id));
         
-        const response = await updateLessonRecord(
-            currentLesson.id,
-            currentLesson.subjectId,
-            currentLesson.startDate,
-            currentLesson.endDate,
-            selectedTopics
-        );
+        const data = {
+            topics: selectedTopics
+        }
+
+        const response = await services.lesson.update(currentLesson.id, data);
         
         if (response.isSuccessful) {
             showAlert('Topics updated successfully!', true);
@@ -460,14 +458,11 @@ async function handleSaveTrackables() {
             document.querySelectorAll('#selectedTrackablesList .trackable-item')
         ).map(item => item.dataset.name);
         
-        const response = await updateLessonRecord(
-            currentLesson.id,
-            currentLesson.subjectId,
-            currentLesson.startDate,
-            currentLesson.endDate,
-            undefined,
-            selectedTrackables
-        );
+        const data = {
+            trackables: selectedTrackables
+        }
+
+        const response = await services.lesson.update(currentLesson.id, data);
         
         if (response.isSuccessful) {
             showAlert('Trackables updated successfully!', true);
@@ -497,17 +492,16 @@ async function handleSaveStudents() {
             showAlert('Please select either a class or at least one student', false);
             return;
         }
+
+        const data = {};
+
+        if (classId === null) {
+            data.students = students;
+        } else {
+            data.classId = classId;
+        }
         
-        const response = await updateLessonRecord(
-            currentLesson.id,
-            currentLesson.subjectId,
-            currentLesson.startDate,
-            currentLesson.endDate,
-            undefined,
-            undefined,
-            classId,
-            students
-        );
+        const response = await services.lesson.update(currentLesson.id, data);
         
         if (response.isSuccessful) {
             showAlert('Students updated successfully!', true);
@@ -521,6 +515,7 @@ async function handleSaveStudents() {
     }
 }
 
+// Tracking table saving
 async function handleSaveTracking() {
     try {
         const trackingData = Array.from(
