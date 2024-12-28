@@ -392,30 +392,27 @@ async function handleLessonSubmit(e) {
 async function handleUpdateLessonSubmit(e) {
     e.preventDefault();
     try {
+        let startTime = document.getElementById('updateStartTime').value;
+        let endTime = document.getElementById('updateEndTime').value;
+        let date = document.getElementById('updateDate').value;
+
+        const startDate = new Date(`${date}T${startTime}`);
+        const endDate = new Date(`${date}T${endTime}`);
+
         const formData = {
-            date: document.getElementById('updateDate').value,
-            startTime: document.getElementById('updateStartTime').value,
-            endTime: document.getElementById('updateEndTime').value,
+            startDate: startDate,
+            endDate: endDate,
             subjectId: parseInt(document.getElementById('updateSubject').value)
         };
-        
-        const startDate = new Date(`${formData.date}T${formData.startTime}`);
-        const endDate = new Date(`${formData.date}T${formData.endTime}`);
         
         if (endDate <= startDate) {
             showAlert('End time must be after start time', false);
             return;
         }
         
-        // todo
-        // const response = await updateLessonRecord(
-        //     currentLesson.id,
-        //     formData.subjectId,
-        //     formatDateForApi(startDate),
-        //     formatDateForApi(endDate)
-        // );
+        todo
+        const response = await services.lesson.update(currentLesson.id, formData);
         
-        let response = {isSuccessful: false}
         if (response.isSuccessful) {
             showAlert('Lesson updated successfully!', true);
             await fetchAndRenderLessons();
@@ -500,7 +497,7 @@ async function handleSaveStudents() {
         } else {
             data.classId = classId;
         }
-        
+
         const response = await services.lesson.update(currentLesson.id, data);
         
         if (response.isSuccessful) {
