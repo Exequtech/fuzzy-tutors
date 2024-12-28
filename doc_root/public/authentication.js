@@ -75,7 +75,7 @@ registerBtn.addEventListener('click', async (e) => {
 
     let formValidation = FormValidator.validateRegistrationCredentials(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value, passwordConfirmationTxt.value);
     if (formValidation.isValid) {
-        let registrationResult = await registerUser(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value);
+        let registrationResult = await services.auth.register(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value);
         alert(registrationResult.message);
     } else {
         alert(formValidation.message);
