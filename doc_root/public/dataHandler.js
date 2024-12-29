@@ -86,9 +86,6 @@ class LessonService extends ResourceService {
     }
 
     async createLesson(lessonData) {
-        // if (lessonData.classId !== null && lessonData.students !== null) {
-        //     return ApiResponse.error('You can only select a class or students, NOT BOTH!');
-        // }
 
         return await this.create(lessonData);
     }

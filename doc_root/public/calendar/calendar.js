@@ -619,7 +619,8 @@ function createDayElement(dayNumber, extraClass, dayLessons) {
         <div class="calendar-day ${extraClass}">
             <div class="day-number">${dayNumber}</div>
             ${dayLessons.map(lesson => `
-                <div class="lesson-item" data-lesson-id="${lesson.id}" onclick="showLessonDetails(${JSON.stringify(lesson).replace(/"/g, '&quot;')})">
+                <!-- Params: JSON.stringify(lesson).replace(/"/g, '&quot;') -->
+                <div class="lesson-item" data-lesson-id="${lesson.id}" onclick="showLessonDetails(${lesson.id})">
                     <div class="lesson-time">
                         ${formatTimeFromDate(new Date(lesson.startDate))} - 
                         ${formatTimeFromDate(new Date(lesson.endDate))}
@@ -938,26 +939,26 @@ window.removeLessonMember = function(id) {
     renderLessonMembers();
 };
 
-window.showLessonDetails = function(lesson) {
-    currentLesson = lesson;
-    console.log(lesson)
+window.showLessonDetails = async function(lessonId) {
+    currentLesson = await services.lesson.getDetails(lessonId);
+    console.log(currentLesson)
     const modal = modals.lessonDetails;
     
-    const startDate = new Date(lesson.startDate);
-    const endDate = new Date(lesson.endDate);
+    const startDate = new Date(currentLesson.startDate);
+    const endDate = new Date(currentLesson.endDate);
     
     modal.querySelector('.date').textContent = startDate.toLocaleDateString();
     modal.querySelector('.time').textContent = `${formatTimeFromDate(startDate)} - ${formatTimeFromDate(endDate)}`;
-    modal.querySelector('.subject').textContent = lesson.subjectName;
-    modal.querySelector('.location').textContent = lesson.locationName || 'No location';
+    modal.querySelector('.subject').textContent = currentLesson.subjectName;
+    modal.querySelector('.location').textContent = currentLesson.locationName || 'No location';
     
     const locationDetails = [];
-    if (lesson.locationAddress) locationDetails.push(lesson.locationAddress);
-    if (lesson.locationDescription) locationDetails.push(lesson.locationDescription);
+    if (currentLesson.locationAddress) locationDetails.push(currentLesson.locationAddress);
+    if (currentLesson.locationDescription) locationDetails.push(currentLesson.locationDescription);
     modal.querySelector('.location-details').textContent = locationDetails.join(' | ');
     
     const topicsList = modal.querySelector('.topics-list');
-    topicsList.innerHTML = lesson.topics ? lesson.topics.map(topic => 
+    topicsList.innerHTML = currentLesson.topics ? currentLesson.topics.map(topic => 
         `<span class="topic-tag">${topic.name}</span>`
     ).join('') : 'No topics assigned';
     
