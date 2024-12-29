@@ -247,4 +247,6 @@ window.deleteTrackable = async function(name) {
 };
 
 // Initialize the page
-initTrackables();
+// initTrackables();
+
+export {initTrackables}

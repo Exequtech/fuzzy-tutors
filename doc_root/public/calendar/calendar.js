@@ -27,7 +27,7 @@ const modals = {
 };
 
 // Initialize
-async function init() {
+async function initCalendar() {
     try {
         await fetchAndRenderLessons();
         await loadFormData();
@@ -515,28 +515,32 @@ async function handleSaveStudents() {
 // Tracking table saving (todo)
 async function handleSaveTracking() {
     try {
-        const trackingData = Array.from(
-            document.querySelectorAll('#trackingTable tbody tr')
-        ).map(row => ({
-            studentId: parseInt(row.dataset.studentId),
-            attendance: row.querySelector('.attendance-checkbox').checked,
-            trackables: Array.from(row.querySelectorAll('.trackable-checkbox')).map(checkbox => ({
-                name: checkbox.dataset.trackable,
-                value: checkbox.checked
-            }))
-        }));
+        const studentOverrides = {}
+        document.querySelectorAll('#trackingTable tbody tr').forEach(row => {
+            const student = {}
+            student.attended = row.querySelector('.attendance-checkbox').checked;
+            student.trackables = {};
+            row.querySelectorAll('.trackable-checkbox').forEach(chkbox => {
+                student.trackables[chkbox.dataset.trackable] = chkbox.checked;
+            })
+            studentOverrides[parseInt(row.dataset.studentId)] = student
+        })
+        // const trackingData = Array.from(
+        //     document.querySelectorAll('#trackingTable tbody tr')
+        // ).map(row => ({
+        //     studentId: parseInt(row.dataset.studentId),
+        //     attendance: row.querySelector('.attendance-checkbox').checked,
+        //     trackables: Array.from(row.querySelectorAll('.trackable-checkbox')).map(checkbox => ({
+        //         name: checkbox.dataset.trackable,
+        //         value: checkbox.checked
+        //     }))
+        // }));
+
+        const data = {
+            studentOverrides
+        }
         
-        const response = await updateLessonRecord(
-            currentLesson.id,
-            currentLesson.subjectId,
-            currentLesson.startDate,
-            currentLesson.endDate,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            trackingData
-        );
+        const response = await services.lesson.update(currentLesson.id, data);
         
         if (response.isSuccessful) {
             showAlert('Tracking data saved successfully!', true);
@@ -966,4 +970,8 @@ window.showLessonDetails = async function(lessonId) {
 };
 
 // Initialize the calendar
-init();
+// initCalendar();
+
+export {
+    initCalendar
+}

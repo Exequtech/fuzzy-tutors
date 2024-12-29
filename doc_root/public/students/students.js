@@ -16,6 +16,10 @@ const addStudentBtn = document.getElementById('addStudentBtn');
 
 let currentStudentId = null;
 
+function initStudents() {
+    renderStudents();
+}
+
 /* ============================= Setup Event Listeners ================================= */
 // Add Student Button
 addStudentBtn.addEventListener('click', () => {
@@ -182,4 +186,6 @@ function showAlert(message, isSuccessful) {
     }, 3000);
 }
 
-renderStudents();
+// initStudents();
+
+export {initStudents}

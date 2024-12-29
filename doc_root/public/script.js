@@ -1,3 +1,11 @@
+
+import {initCalendar} from '/calendar/calendar.js'
+// import {initClasses} from '/classes/classes.js'
+// import { initStudents } from '/students/students.js';
+// import {initSubjects} from '/subjects/subjects.js';
+// import { initLocations } from '/locations/locations.js';
+// import { initTrackables } from '/trackables/trackables.js';
+
 const toggleBtn = document.querySelector('.toggle-btn');
 const sidebar = document.querySelector('.sidebar');
 const mainContent = document.getElementById('mainContent');
@@ -65,11 +73,39 @@ async function loadPageScript(page) {
         // After script is loaded, ensure any cleanup of previous state is done
         if (typeof window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
             window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`]();
+            console.log(`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`)
         }
         // Initialize the page
         if (typeof window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
             await window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`]();
+            console.log(`init${page.charAt(0).toUpperCase() + page.slice(1)}`)
         }
+
+        console.log(page)
+        switch (page) {
+            case 'calendar':
+                initCalendar();
+                break;
+            case 'subjects':
+                initSubjects();
+                break;
+            case 'locations':
+                initLocations();
+                break;
+            case 'students':
+                initStudents();
+                break;
+            case 'trackables':
+                initTrackables()
+                break;
+            case 'classes':
+                initClasses();
+                break;
+            default:
+                console.error("Script initialization function not set up in app shell")
+                break;
+        }
+
     } catch (error) {
         console.error('Error loading page script:', error);
     }
