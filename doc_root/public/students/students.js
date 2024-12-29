@@ -136,7 +136,7 @@ async function handleFormSubmit() {
 
     if (currentStudentId) {
         // Update
-        let apiResponse = await services.student.create(currentStudentId, formData);
+        let apiResponse = await services.student.update(currentStudentId, formData);
         showAlert(apiResponse.message, apiResponse.isSuccessful);
     } else {
         // Add
