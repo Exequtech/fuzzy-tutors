@@ -259,4 +259,6 @@ window.deleteLocation = async function(id) {
 };
 
 // Initialize the page
-initLocations();
+// initLocations();
+
+export {initLocations}

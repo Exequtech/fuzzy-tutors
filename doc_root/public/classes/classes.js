@@ -16,7 +16,7 @@ let selectedStudents = new Set();
 let searchTimeout = null;
 
 // Initialize
-async function init() {
+async function initClasses() {
     try {
         // Load initial data
         classes = await services.class.getPage();
@@ -307,4 +307,6 @@ window.addClassMember = addClassMember;
 window.removeClassMember = removeClassMember;
 
 // Initialize the page
-init();
+// initClasses();
+
+export {initClasses}

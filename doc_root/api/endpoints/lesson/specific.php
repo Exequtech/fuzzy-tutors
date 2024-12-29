@@ -373,13 +373,16 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                     $deleteDiffs = array_diff($linked, $request->trackables);
                     if(!empty($createDiffs))
                     {
-                        $query = "REPLACE INTO `TrackableValue`(`AttendanceID`, `TrackableName`, `Value`)"
-                                ." SELECT `Attendance`.`AttendanceID`, `Trackable`.`TrackableName`, 0 FROM"
-                                ." `Attendance` JOIN `Trackable` WHERE `Attendance`.`LessonID` = ?"
-                                ." AND `Attendance`.`StudentID` IN (" . implode(',', $priorStudents) . ")"
-                                ." AND `Trackable`.`TrackableName` IN (" . implode(',', array_fill(0, count($createDiffs), '?')) . ");";
-                        BindedQuery($conn, $query, 'i' . str_repeat('s', count($createDiffs)), [$id, ...$createDiffs], true,
-                            "Failed to insert trackablevalues (specific lesson PATCH)");
+                        if(!empty($priorStudents))
+                        {
+                            $query = "REPLACE INTO `TrackableValue`(`AttendanceID`, `TrackableName`, `Value`)"
+                            ." SELECT `Attendance`.`AttendanceID`, `Trackable`.`TrackableName`, 0 FROM"
+                            ." `Attendance` JOIN `Trackable` WHERE `Attendance`.`LessonID` = ?"
+                            ." AND `Attendance`.`StudentID` IN (" . implode(',', $priorStudents) . ")"
+                            ." AND `Trackable`.`TrackableName` IN (" . implode(',', array_fill(0, count($createDiffs), '?')) . ");";
+                    BindedQuery($conn, $query, 'i' . str_repeat('s', count($createDiffs)), [$id, ...$createDiffs], true,
+                        "Failed to insert trackablevalues (specific lesson PATCH)");
+                        }
                         $query = "INSERT INTO `LessonTrackable`(`LessonID`, `TrackableName`)"
                                 ." SELECT ?, `TrackableName` FROM `Trackable` WHERE `TrackableName` IN (" . implode(',',array_fill(0, count($createDiffs), '?')) . ");";
                         BindedQuery($conn, $query, 'i' . str_repeat('s', count($createDiffs)), [$id,...$createDiffs], true,

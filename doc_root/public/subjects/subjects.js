@@ -286,3 +286,7 @@ window.deleteTopic = deleteTopic;
 
 // Initialize the page
 initSubjects();
+
+export {
+    initSubjects
+}
