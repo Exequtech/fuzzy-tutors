@@ -16,7 +16,7 @@ let currentLesson = null;
 let searchTimeout = null;
 
 // Modal Management
-const modals = {
+let modals = {
     lesson: document.getElementById('lessonModal'),
     lessonDetails: document.getElementById('lessonDetailsModal'),
     update: document.getElementById('updateLessonModal'),
@@ -29,6 +29,28 @@ const modals = {
 // Initialize
 async function initCalendar() {
     try {
+        currentDate = new Date();
+        currentMonth = currentDate.getMonth();
+        currentYear = currentDate.getFullYear();
+        lessons = [];
+        subjects = [];
+        classes = [];
+        locations = [];
+        trackables = [];
+        selectedStudents = new Set();
+        currentLesson = null;
+        searchTimeout = null;
+
+        modals = {
+            lesson: document.getElementById('lessonModal'),
+            lessonDetails: document.getElementById('lessonDetailsModal'),
+            update: document.getElementById('updateLessonModal'),
+            topics: document.getElementById('manageTopicsModal'),
+            trackables: document.getElementById('manageTrackablesModal'),
+            students: document.getElementById('manageStudentsModal'),
+            tracking: document.getElementById('trackingModal')
+        };
+
         await fetchAndRenderLessons();
         await loadFormData();
         setupEventListeners();
