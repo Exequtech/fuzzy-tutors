@@ -61,7 +61,7 @@ $endpoints['/^student\/([\d]+)\/?$/'] = [
                     $types[] = 's';
                     $values[] = $request->email;
                 }
-                if(isset($request->authorized) && $request->authorized === ($student['Authorized'] === 1))
+                if(isset($request->authorized) && $request->authorized !== ($student['Authorized'] === 1))
                 {
                     $sets[] = ' `Authorized` = ?';
                     $types[] = 'i';
