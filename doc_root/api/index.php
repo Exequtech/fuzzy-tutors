@@ -31,7 +31,7 @@ foreach($endpoints as $key => $value)
         $request_body = file_get_contents('php://input');
         if($request_body !== "")
         {
-            $data = json_decode(file_get_contents('php://input'), false);
+            $data = json_decode($request_body, false);
             if($data === null)
                 MessageResponse(HTTP_BAD_REQUEST, "Malformed JSON");
         }
