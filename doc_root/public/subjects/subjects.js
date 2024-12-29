@@ -1,15 +1,15 @@
 import { services} from '/dataHandler.js';
 
 // DOM Elements
-const subjectsGrid = document.getElementById('subjectsGrid');
-const subjectModal = document.getElementById('subjectModal');
-const topicModal = document.getElementById('topicModal');
-const deleteModal = document.getElementById('deleteModal');
-const subjectForm = document.getElementById('subjectForm');
-const topicForm = document.getElementById('topicForm');
-const searchInput = document.getElementById('searchInput');
-const alertMessage = document.getElementById('alertMessage');
-const addSubjectBtn = document.getElementById('addSubjectBtn');
+let subjectsGrid = document.getElementById('subjectsGrid');
+let subjectModal = document.getElementById('subjectModal');
+let topicModal = document.getElementById('topicModal');
+let deleteModal = document.getElementById('deleteModal');
+let subjectForm = document.getElementById('subjectForm');
+let topicForm = document.getElementById('topicForm');
+let searchInput = document.getElementById('searchInput');
+let alertMessage = document.getElementById('alertMessage');
+let addSubjectBtn = document.getElementById('addSubjectBtn');
 
 let currentSubjectId = null;
 let currentTopicId = null;
@@ -18,6 +18,16 @@ let subjects = [];
 // Initialize
 async function initSubjects() {
     try {
+        subjectsGrid = document.getElementById('subjectsGrid');
+        subjectModal = document.getElementById('subjectModal');
+        topicModal = document.getElementById('topicModal');
+        deleteModal = document.getElementById('deleteModal');
+        subjectForm = document.getElementById('subjectForm');
+        topicForm = document.getElementById('topicForm');
+        searchInput = document.getElementById('searchInput');
+        alertMessage = document.getElementById('alertMessage');
+        addSubjectBtn = document.getElementById('addSubjectBtn');
+        initializeEventListeners()
         console.log('start')
         subjects = await services.subject.getPage();
         renderSubjects();
@@ -26,46 +36,48 @@ async function initSubjects() {
     }
 }
 
-addSubjectBtn.addEventListener('click', () => openSubjectModal());
+function initializeEventListeners() {
+    addSubjectBtn.addEventListener('click', () => openSubjectModal());
 
-// Search Input
-searchInput.addEventListener('input', async (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    try {
-        const filteredSubjects = await services.subject.getPage(1, 10, "asc", "id", {
-            name: searchTerm
+    // Search Input
+    searchInput.addEventListener('input', async (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        try {
+            const filteredSubjects = await services.subject.getPage(1, 10, "asc", "id", {
+                name: searchTerm
+            });
+            renderSubjects(filteredSubjects);
+        } catch (error) {
+            showAlert('Search failed: ' + error.message, false);
+        }
+    });
+
+    // Form Submissions
+    subjectForm.addEventListener('submit', handleSubjectFormSubmit);
+    topicForm.addEventListener('submit', handleTopicFormSubmit);
+
+    // Close Modal Buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeAllModals();
         });
-        renderSubjects(filteredSubjects);
-    } catch (error) {
-        showAlert('Search failed: ' + error.message, false);
-    }
-});
+    });
 
-// Form Submissions
-subjectForm.addEventListener('submit', handleSubjectFormSubmit);
-topicForm.addEventListener('submit', handleTopicFormSubmit);
+    // Cancel Buttons
+    document.querySelectorAll('.cancel-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeAllModals();
+        });
+    });
 
-// Close Modal Buttons
-document.querySelectorAll('.close-button').forEach(button => {
-    button.addEventListener('click', () => {
+    // Delete Confirmation
+    deleteModal.querySelector('.delete-button').addEventListener('click', async () => {
+        if (currentTopicId) {
+            await deleteTopic(currentTopicId);
+        }
         closeAllModals();
     });
-});
-
-// Cancel Buttons
-document.querySelectorAll('.cancel-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeAllModals();
-    });
-});
-
-// Delete Confirmation
-deleteModal.querySelector('.delete-button').addEventListener('click', async () => {
-    if (currentTopicId) {
-        await deleteTopic(currentTopicId);
-    }
-    closeAllModals();
-});
+}
 
 function renderSubjects(subjectsToRender = subjects) {
     subjectsGrid.innerHTML = subjectsToRender.map(subject => `
@@ -285,7 +297,7 @@ window.editTopic = editTopic;
 window.deleteTopic = deleteTopic;
 
 // Initialize the page
-initSubjects();
+// initSubjects();
 
 export {
     initSubjects

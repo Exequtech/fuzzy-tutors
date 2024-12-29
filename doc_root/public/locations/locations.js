@@ -1,22 +1,32 @@
 import { services } from '../dataHandler.js';
 
 // DOM Elements
-const configBtn = document.getElementById('configLocationsBtn');
-const configModal = document.getElementById('locationConfigModal');
-const formModal = document.getElementById('locationFormModal');
-const locationForm = document.getElementById('locationForm');
-const locationsList = document.getElementById('locationsList');
-const alertMessage = document.getElementById('alertMessage');
-const startDate = document.getElementById('startDate');
-const endDate = document.getElementById('endDate');
-const locationSelect = document.getElementById('locationSelect');
-const addLocationBtn = document.getElementById('addLocationBtn');
+let configBtn = document.getElementById('configLocationsBtn');
+let configModal = document.getElementById('locationConfigModal');
+let formModal = document.getElementById('locationFormModal');
+let locationForm = document.getElementById('locationForm');
+let locationsList = document.getElementById('locationsList');
+let alertMessage = document.getElementById('alertMessage');
+let startDate = document.getElementById('startDate');
+let endDate = document.getElementById('endDate');
+let locationSelect = document.getElementById('locationSelect');
+let addLocationBtn = document.getElementById('addLocationBtn');
 
 let currentLocationId = null;
 
 // Initialize
 async function initLocations() {
     try {
+        configBtn = document.getElementById('configLocationsBtn');
+        configModal = document.getElementById('locationConfigModal');
+        formModal = document.getElementById('locationFormModal');
+        locationForm = document.getElementById('locationForm');
+        locationsList = document.getElementById('locationsList');
+        alertMessage = document.getElementById('alertMessage');
+        startDate = document.getElementById('startDate');
+        endDate = document.getElementById('endDate');
+        locationSelect = document.getElementById('locationSelect');
+        addLocationBtn = document.getElementById('addLocationBtn');
         await loadLocations();
         setupEventListeners();
         setupChart();

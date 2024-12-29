@@ -2,13 +2,13 @@
 import { services } from '../dataHandler.js';
 
 // DOM Elements
-const classesGrid = document.getElementById('classesGrid');
-const classModal = document.getElementById('classModal');
-const deleteModal = document.getElementById('deleteModal');
-const classForm = document.getElementById('classForm');
-const searchInput = document.getElementById('searchInput');
-const alertMessage = document.getElementById('alertMessage');
-const addClassBtn = document.getElementById('addClassBtn');
+let classesGrid = null;
+let classModal  = null;
+let deleteModal = null;
+let classForm   = null;
+let searchInput = null;
+let alertMessage= null;
+let addClassBtn = null;
 
 let currentClassId = null;
 let classes = [];
@@ -18,6 +18,13 @@ let searchTimeout = null;
 // Initialize
 async function initClasses() {
     try {
+        classesGrid = document.getElementById('classesGrid');
+        classModal  = document.getElementById('classModal');
+        deleteModal = document.getElementById('deleteModal');
+        classForm   = document.getElementById('classForm');
+        searchInput = document.getElementById('searchInput');
+        alertMessage= document.getElementById('alertMessage');
+        addClassBtn = document.getElementById('addClassBtn');
         // Load initial data
         classes = await services.class.getPage();
         renderClasses();

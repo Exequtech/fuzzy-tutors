@@ -6,66 +6,78 @@ window.confirmDelete = confirmDelete;
 window.editStudent = editStudent;
 
 // DOM Elements
-const studentsTable = document.getElementById('studentsList');
-const studentModal = document.getElementById('studentModal');
-const deleteModal = document.getElementById('deleteModal');
-const studentForm = document.getElementById('studentForm');
-const searchInput = document.getElementById('searchInput');
-const alertMessage = document.getElementById('alertMessage');
-const addStudentBtn = document.getElementById('addStudentBtn');
+let studentsTable = document.getElementById('studentsList');
+let studentModal = document.getElementById('studentModal');
+let deleteModal = document.getElementById('deleteModal');
+let studentForm = document.getElementById('studentForm');
+let searchInput = document.getElementById('searchInput');
+let alertMessage = document.getElementById('alertMessage');
+let addStudentBtn = document.getElementById('addStudentBtn');
 
 let currentStudentId = null;
 
-function initStudents() {
+async function initStudents() {
+    students = await services.student.getPage();
+
+    studentsTable = document.getElementById('studentsList');
+    studentModal = document.getElementById('studentModal');
+    deleteModal = document.getElementById('deleteModal');
+    studentForm = document.getElementById('studentForm');
+    searchInput = document.getElementById('searchInput');
+    alertMessage = document.getElementById('alertMessage');
+    addStudentBtn = document.getElementById('addStudentBtn');
+    initEventListeners()
     renderStudents();
 }
 
-/* ============================= Setup Event Listeners ================================= */
-// Add Student Button
-addStudentBtn.addEventListener('click', () => {
-    openModal();
-});
-
-// Search Input
-searchInput.addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const filteredStudents = students.filter(student => 
-        student.username.toLowerCase().includes(searchTerm) ||
-        student.email.toLowerCase().includes(searchTerm)
-    );
-    renderStudents(filteredStudents);
-});
-
-// Form Submit
-studentForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    handleFormSubmit();
-});
-
-// Close Modal Buttons
-document.querySelectorAll('.close-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeModal();
-        closeDeleteModal();
+function initEventListeners() {
+    /* ============================= Setup Event Listeners ================================= */
+    // Add Student Button
+    addStudentBtn.addEventListener('click', () => {
+        openModal();
     });
-});
 
-// Cancel Buttons
-document.querySelectorAll('.cancel-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeModal();
-        closeDeleteModal();
+    // Search Input
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredStudents = students.filter(student => 
+            student.username.toLowerCase().includes(searchTerm) ||
+            student.email.toLowerCase().includes(searchTerm)
+        );
+        renderStudents(filteredStudents);
     });
-});
 
-// Delete Confirmation
-deleteModal.querySelector('.delete-button').addEventListener('click', () => {
-    if (currentStudentId) {
-        deleteStudent(currentStudentId);
-        closeDeleteModal();
-    }
-});
-// }
+    // Form Submit
+    studentForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleFormSubmit();
+    });
+
+    // Close Modal Buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeModal();
+            closeDeleteModal();
+        });
+    });
+
+    // Cancel Buttons
+    document.querySelectorAll('.cancel-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeModal();
+            closeDeleteModal();
+        });
+    });
+
+    // Delete Confirmation
+    deleteModal.querySelector('.delete-button').addEventListener('click', () => {
+        if (currentStudentId) {
+            deleteStudent(currentStudentId);
+            closeDeleteModal();
+        }
+    });
+}
+
 
 // Render Students Table
 function renderStudents(studentsToRender = students) {

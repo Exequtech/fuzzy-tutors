@@ -1,22 +1,32 @@
 import { services } from '/dataHandler.js';
 
 // DOM Elements
-const configBtn = document.getElementById('configTrackablesBtn');
-const configModal = document.getElementById('trackableConfigModal');
-const formModal = document.getElementById('trackableFormModal');
-const trackableForm = document.getElementById('trackableForm');
-const trackablesList = document.getElementById('trackablesList');
-const alertMessage = document.getElementById('alertMessage');
-const startDate = document.getElementById('startDate');
-const endDate = document.getElementById('endDate');
-const trackableSelect = document.getElementById('trackableSelect');
-const addTrackableBtn = document.getElementById('addTrackableBtn');
+let configBtn = document.getElementById('configTrackablesBtn');
+let configModal = document.getElementById('trackableConfigModal');
+let formModal = document.getElementById('trackableFormModal');
+let trackableForm = document.getElementById('trackableForm');
+let trackablesList = document.getElementById('trackablesList');
+let alertMessage = document.getElementById('alertMessage');
+let startDate = document.getElementById('startDate');
+let endDate = document.getElementById('endDate');
+let trackableSelect = document.getElementById('trackableSelect');
+let addTrackableBtn = document.getElementById('addTrackableBtn');
 
 let currentTrackableId = null;
 
 // Initialize
 async function initTrackables() {
     try {
+        configBtn = document.getElementById('configTrackablesBtn');
+        configModal = document.getElementById('trackableConfigModal');
+        formModal = document.getElementById('trackableFormModal');
+        trackableForm = document.getElementById('trackableForm');
+        trackablesList = document.getElementById('trackablesList');
+        alertMessage = document.getElementById('alertMessage');
+        startDate = document.getElementById('startDate');
+        endDate = document.getElementById('endDate');
+        trackableSelect = document.getElementById('trackableSelect');
+        addTrackableBtn = document.getElementById('addTrackableBtn');
         await loadTrackables();
         setupEventListeners();
         setupChart();
