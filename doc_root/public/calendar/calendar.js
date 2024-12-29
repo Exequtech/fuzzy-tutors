@@ -393,29 +393,17 @@ async function handleLessonSubmit(e) {
 async function handleUpdateLessonSubmit(e) {
     e.preventDefault();
     try {
-<<<<<<< HEAD
-        let startTime = document.getElementById('updateStartTime').value;
-        let endTime = document.getElementById('updateEndTime').value;
-        let date = document.getElementById('updateDate').value;
-=======
         const date = document.getElementById('updateDate').value;
         const startTime = document.getElementById('updateStartTime').value;
         const endTime = document.getElementById('updateEndTime').value;
->>>>>>> a73dd40ba03c98f0a862617439d822df5ab46ec7
 
         const startDate = new Date(`${date}T${startTime}`);
         const endDate = new Date(`${date}T${endTime}`);
 
         const formData = {
-<<<<<<< HEAD
-            startDate: startDate,
-            endDate: endDate,
-            subjectId: parseInt(document.getElementById('updateSubject').value)
-=======
             subjectId: parseInt(document.getElementById('updateSubject').value),
             startDate: startDate,
             endDate: endDate
->>>>>>> a73dd40ba03c98f0a862617439d822df5ab46ec7
         };
         
         if (endDate <= startDate) {
@@ -423,14 +411,8 @@ async function handleUpdateLessonSubmit(e) {
             return;
         }
         
-<<<<<<< HEAD
-        todo
-        const response = await services.lesson.update(currentLesson.id, formData);
-        
-=======
         const response = await services.lesson.update(currentLesson.id, formData);
 
->>>>>>> a73dd40ba03c98f0a862617439d822df5ab46ec7
         if (response.isSuccessful) {
             showAlert('Lesson updated successfully!', true);
             await fetchAndRenderLessons();
@@ -958,7 +940,7 @@ window.removeLessonMember = function(id) {
 
 window.showLessonDetails = function(lesson) {
     currentLesson = lesson;
-    console.log("Test (checking contents of lesson object): " + lesson)
+    console.log(lesson)
     const modal = modals.lessonDetails;
     
     const startDate = new Date(lesson.startDate);
