@@ -1,7 +1,7 @@
 
 import {initCalendar} from '/calendar/calendar.js'
-// import {initClasses} from '/classes/classes.js'
-// import { initStudents } from './students/students.js';
+import {initClasses} from './classes/classes.js'
+import { initStudents } from './students/students.js';
 import {initSubjects} from './subjects/subjects.js';
 import { initLocations } from './locations/locations.js';
 import { initTrackables } from './trackables/trackables.js';

@@ -1,8 +1,8 @@
 import { services  } from '../dataHandler.js';
 
-let students = await services.student.getPage();
+let students = null;
 
-window.confirmDelete = confirmDelete;
+// window.confirmDelete = confirmDelete;
 window.editStudent = editStudent;
 
 // DOM Elements

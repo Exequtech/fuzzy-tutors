@@ -292,7 +292,7 @@ function showAlert(message, isSuccess) {
 // Make functions available globally
 window.editSubject = editSubject;
 window.addTopicToSubject = addTopicToSubject;
-window.confirmDelete = confirmDelete;
+// window.confirmDelete = confirmDelete;
 window.editTopic = editTopic;
 window.deleteTopic = deleteTopic;
 

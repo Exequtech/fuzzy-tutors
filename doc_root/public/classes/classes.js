@@ -27,58 +27,62 @@ async function initClasses() {
         addClassBtn = document.getElementById('addClassBtn');
         // Load initial data
         classes = await services.class.getPage();
+        initEventListeners();
         renderClasses();
     } catch (error) {
         showAlert('Failed to load data: ' + error.message, false);
     }
 }
 
-// Add Class Button
-addClassBtn.addEventListener('click', () => openModal());
+function initEventListeners() {
+    // Add Class Button
+    addClassBtn.addEventListener('click', () => openModal());
 
-// Search Input
-searchInput.addEventListener('input', async (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    try {
-        // Use the API's filter capability
-        const filteredClasses = await services.class.getPage(1, 10, "asc", "id", {
-            name: searchTerm
+    // Search Input
+    searchInput.addEventListener('input', async (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        try {
+            // Use the API's filter capability
+            const filteredClasses = await services.class.getPage(1, 10, "asc", "id", {
+                name: searchTerm
+            });
+            renderClasses(filteredClasses);
+        } catch (error) {
+            showAlert('Search failed: ' + error.message, false);
+        }
+    });
+
+    // Form Submit
+    classForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleFormSubmit();
+    });
+
+    // Close Modal Buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeModal();
+            closeDeleteModal();
         });
-        renderClasses(filteredClasses);
-    } catch (error) {
-        showAlert('Search failed: ' + error.message, false);
-    }
-});
-
-// Form Submit
-classForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    handleFormSubmit();
-});
-
-// Close Modal Buttons
-document.querySelectorAll('.close-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeModal();
-        closeDeleteModal();
     });
-});
 
-// Cancel Buttons
-document.querySelectorAll('.cancel-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeModal();
-        closeDeleteModal();
+    // Cancel Buttons
+    document.querySelectorAll('.cancel-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeModal();
+            closeDeleteModal();
+        });
     });
-});
 
-// Delete Confirmation
-deleteModal.querySelector('.delete-button').addEventListener('click', async () => {
-    if (currentClassId) {
-        await deleteClass(currentClassId);
-        closeDeleteModal();
-    }
-});
+    // Delete Confirmation
+    deleteModal.querySelector('.delete-button').addEventListener('click', async () => {
+        if (currentClassId) {
+            await deleteClass(currentClassId);
+            closeDeleteModal();
+        }
+    });
+
+}
 
 function setupMemberManagement() {
     const searchInput = document.getElementById('studentSearchInput');
