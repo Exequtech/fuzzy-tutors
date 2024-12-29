@@ -117,6 +117,12 @@ $endpoints['/^lesson\/?$/'] = [
 
                 $lessonRecords = BindedQuery($conn, $mainQuery, implode($types), $values, true,
                     "Failed to fetch lessons (toplevel lesson GET)");
+
+                if(empty($lessonRecords))
+                {
+                    $conn->rollback();
+                    MessageResponse(HTTP_OK, null, ['results' => []]);
+                }
                 
                 $lessons = [];
                 foreach($lessonRecords as $record)
@@ -139,7 +145,7 @@ $endpoints['/^lesson\/?$/'] = [
 
                 $lessonIDs = array_map(function($record){return $record['LessonID'];}, $lessonRecords);
                 
-                $studentQuery = "SELECT `StudentID`, `LessonID`, `Attended`, `TrackableName`, `Value` FROM `Attendance` LEFT JOIN `TrackableValue` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID`"
+                $studentQuery = "SELECT `Username`, `StudentID`, `LessonID`, `Attended`, `TrackableName`, `Value` FROM `Attendance` LEFT JOIN `TrackableValue` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID` LEFT JOIN `User` ON `StudentID` = `UserID`"
                         ." WHERE `LessonID` IN (" . implode(',', $lessonIDs) . ");";
                 $students = BindedQuery($conn, $studentQuery, '', [], true,
                     "Failed to fetch attendance (toplevel lesson GET)");
@@ -148,6 +154,7 @@ $endpoints['/^lesson\/?$/'] = [
                     if(!isset($lessons[$record['LessonID']]['students'][$record['StudentID']]))
                     {
                         $obj = [];
+                        $obj['name'] = $record['Username'];
                         $obj['attended'] = $record['Attended'] === 1;
                         $obj['trackables'] = [];
                         $lessons[$record['LessonID']]['students'][$record['StudentID']] = $obj;
@@ -161,10 +168,10 @@ $endpoints['/^lesson\/?$/'] = [
                     $lesson['students'] = array_values($lesson['students']);
                 }
 
-                $topics = BindedQuery($conn, "SELECT `LessonID`, `TopicID` FROM `LessonTopic` WHERE `LessonID` IN (" . implode(',', $lessonIDs) . ");", '', [], true,
+                $topics = BindedQuery($conn, "SELECT `LessonID`, `Topic`.`TopicID`, `TopicName` FROM `LessonTopic` INNER JOIN `Topic` ON `LessonTopic`.`TopicID` = `Topic`.`TopicID` WHERE `LessonID` IN (" . implode(',', $lessonIDs) . ");", '', [], true,
                     "Failed to fetch topics (toplevel lesson GET)");
                 foreach($topics as $record)
-                    $lessons[$record['LessonID']]['topics'][] = $record['TopicID'];
+                    $lessons[$record['LessonID']]['topics'][] = ['name' => $record['TopicName'], 'id' => $record['TopicID']];
 
                 $trackables = BindedQuery($conn, "SELECT `LessonID`, `TrackableName` FROM `LessonTrackable` WHERE `LessonID` IN (" . implode(',',$lessonIDs) . ");", '', [], true,
                     "Failed to fetch trackables (toplevel lesson GET)");
