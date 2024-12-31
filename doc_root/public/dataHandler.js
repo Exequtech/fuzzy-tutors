@@ -46,6 +46,35 @@ class TrackableService extends ResourceService {
 
         return response.data.results;
     }
+
+    async getReport(startDate, endDate, subjects, students, classId, trackables) {
+        const params = { 
+            startDate,
+            endDate
+            // subjects,
+            // trackables 
+        };
+
+        if (classId != null && students != null) {
+            // TODO: Create (One must be null) and return error response
+        } else if (classId != null) {
+            params.classId = classId;
+        } else if (students !=  null) {
+            params.students = students;
+        } else {
+            // TODO: Create (both can't be null) and return error response
+        }
+
+        const response = await ApiService.withRetry(() => 
+            ApiService.makeApiCall(API_CONFIG.endpoints.resources.trackableReport, 'GET', params)
+        );
+
+        if (response.isSuccessful) {
+            await SessionManager.getNewToken();
+        }
+
+        return response.data.results;
+    }
 }
 
 class LocationService extends ResourceService {
@@ -56,7 +85,7 @@ class LocationService extends ResourceService {
     async getAll(order = "asc", filter = {}) {
         const params = { order, ...filter };
         const response = await ApiService.withRetry(() => 
-            ApiService.makeApiCall(this.endpoint, 'GET', params)
+            ApiService.makeApiCall(API_CONFIG.endpoints.resources.calendar, 'GET', params)
         );
 
         if (response.isSuccessful) {

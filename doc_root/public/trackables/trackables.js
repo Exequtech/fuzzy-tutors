@@ -305,19 +305,19 @@ async function generateReport() {
             const classId = classSelect.value;
             if (!classId) {
                 showAlert('Please select a class', false);
+                students = null;
                 return;
             }
-            const classData = await services.class.getDetails(classId);
-            students = classData.students.map(s => s.id);
         } else {
             if (selectedStudents.size === 0) {
                 showAlert('Please select at least one student', false);
+                classId = null;
                 return;
             }
             students = Array.from(selectedStudents).map(s => s.id);
         }
 
-        const reportData = await fetchReportData(startDate, endDate, subjects, students, trackables);
+        const reportData = await fetchReportData(startDate, endDate, subjects, students, classId, trackables);
         renderReport(reportData, trackables);
         
     } catch (error) {
@@ -336,7 +336,7 @@ async function fetchReportData(startDate, endDate, subjects, students, trackable
     };
     
     try {
-        const response = await services.trackable.getReport(params);
+        const response = await services.trackable.getReport(startDate, endDate, subjects, students, trackables);
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch report data: ' + error.message);

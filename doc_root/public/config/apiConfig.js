@@ -14,7 +14,8 @@ const API_CONFIG = {
             calendar: '/calendar/lesson',
             lesson: '/lesson',
             trackable: '/trackable',
-            location: '/location'
+            location: '/location',
+            trackableReport: '/stats/trackables'
         }
     }
 };
