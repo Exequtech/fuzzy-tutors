@@ -1,21 +1,30 @@
 import { services } from '/dataHandler.js';
 
 // DOM Elements
-let configBtn = document.getElementById('configTrackablesBtn');
-let configModal = document.getElementById('trackableConfigModal');
-let formModal = document.getElementById('trackableFormModal');
-let trackableForm = document.getElementById('trackableForm');
-let trackablesList = document.getElementById('trackablesList');
-let alertMessage = document.getElementById('alertMessage');
-let startDate = document.getElementById('startDate');
-let endDate = document.getElementById('endDate');
-let addTrackableBtn = document.getElementById('addTrackableBtn');
+let configBtn = null;
+let configModal = null;
+let formModal = null;
+let trackableForm = null;
+let trackablesList = null;
+let alertMessage = null;
+let startDate = null;
+let endDate = null;
+let addTrackableBtn = null;
+let subjectSelect = null;
+let classSelect = null;
+let trackableSelect = null;
+let generateReportBtn = null;
+let reportTable = null;
+let detailModal = null;
 
 let currentTrackableId = null;
+let selectedStudents = new Set();
+let searchTimeout = null;
 
 // Initialize
 async function initTrackables() {
     try {
+        // Initialize basic DOM elements
         configBtn = document.getElementById('configTrackablesBtn');
         configModal = document.getElementById('trackableConfigModal');
         formModal = document.getElementById('trackableFormModal');
@@ -25,9 +34,19 @@ async function initTrackables() {
         startDate = document.getElementById('startDate');
         endDate = document.getElementById('endDate');
         addTrackableBtn = document.getElementById('addTrackableBtn');
+
+        // Initialize report-related DOM elements
+        subjectSelect = document.getElementById('subjectSelect');
+        classSelect = document.getElementById('classSelect');
+        trackableSelect = document.getElementById('trackableSelect');
+        generateReportBtn = document.getElementById('generateReport');
+        reportTable = document.getElementById('reportTable');
+        detailModal = document.getElementById('detailModal');
+
         await loadTrackables();
+        await loadFormData();
         setupEventListeners();
-        await updateReport();
+        setupReportEventListeners();
     } catch (error) {
         showAlert('Failed to initialize: ' + error.message, false);
     }
@@ -54,10 +73,28 @@ function setupEventListeners() {
             formModal.classList.remove('show');
         });
     });
+}
 
-    // Report filters
-    startDate.addEventListener('change', updateReport);
-    endDate.addEventListener('change', updateReport);
+function setupReportEventListeners() {
+    // Student type selection
+    document.querySelectorAll('input[name="studentType"]').forEach(radio => {
+        radio.addEventListener('change', toggleStudentSelectionType);
+    });
+
+    // Generate report button
+    generateReportBtn.addEventListener('click', generateReport);
+
+    // Student search
+    const searchInput = document.getElementById('studentSearchInput');
+    searchInput.addEventListener('input', handleStudentSearch);
+
+    // Report table cell click
+    reportTable.addEventListener('click', handleCellClick);
+
+    // Detail modal close
+    document.querySelector('#detailModal .close-button').addEventListener('click', () => {
+        detailModal.classList.remove('show');
+    });
 }
 
 async function loadTrackables() {
@@ -66,6 +103,32 @@ async function loadTrackables() {
         renderTrackablesList(trackables);
     } catch (error) {
         showAlert('Failed to load trackables: ' + error.message, false);
+    }
+}
+
+async function loadFormData() {
+    try {
+        const subjects = await services.subject.getPage();
+        const classes = await services.class.getPage();
+        const trackables = await services.trackable.getAll();
+
+        // Populate subject select
+        subjectSelect.innerHTML = subjects.map(subject =>
+            `<option value="${subject.id}">${subject.name}</option>`
+        ).join('');
+
+        // Populate class select
+        classSelect.innerHTML = classes.map(cls =>
+            `<option value="${cls.id}">${cls.name}</option>`
+        ).join('');
+
+        // Populate trackable select
+        trackableSelect.innerHTML = trackables.map(trackable =>
+            `<option value="${trackable.name}">${trackable.name}</option>`
+        ).join('');
+
+    } catch (error) {
+        showAlert('Failed to load form data: ' + error.message, false);
     }
 }
 
@@ -116,43 +179,250 @@ async function handleFormSubmit(e) {
         description: document.getElementById('trackableDescription').value
     };
 
-    let apiResponse;
-
     try {
+        let apiResponse;
 
         if (currentTrackableId) {
-            const data = {
-                name: formData.name,
-                description: formData.description
-            }
-
-            apiResponse = await services.trackable.update(currentTrackableId, data);
-            showAlert(apiResponse.message, apiResponse.isSuccessful);
+            apiResponse = await services.trackable.update(currentTrackableId, formData);
         } else {
-            // Add new trackable
-            const data = {
-                name: formData.name,
-                description: formData.description
-            }
-
-            apiResponse = await services.trackable.create(data);
-            showAlert(apiResponse.message, apiResponse.isSuccessful);
+            apiResponse = await services.trackable.create(formData);
         }
 
-        await loadTrackables();
-        formModal.classList.remove('show');
+        showAlert(apiResponse.message, apiResponse.isSuccessful);
+
+        if (apiResponse.isSuccessful) {
+            await loadTrackables();
+            formModal.classList.remove('show');
+        }
     } catch (error) {
         showAlert('Failed to save trackable: ' + error.message, false);
     }
 }
 
-async function updateReport() {
-    try {
-        // TODO: Replace with actual report data
-
-    } catch (error) {
-        showAlert('Failed to update report: ' + error.message, false);
+function toggleStudentSelectionType(e) {
+    const classSelection = document.getElementById('classSelection');
+    const studentSelection = document.getElementById('studentSelection');
+    
+    if (e.target.value === 'class') {
+        classSelection.classList.remove('hidden');
+        studentSelection.classList.add('hidden');
+    } else {
+        classSelection.classList.add('hidden');
+        studentSelection.classList.remove('hidden');
     }
+}
+
+async function handleStudentSearch(e) {
+    clearTimeout(searchTimeout);
+    const searchTerm = e.target.value.trim();
+    const searchResults = document.getElementById('searchResults');
+    
+    if (searchTerm.length === 0) {
+        searchResults.classList.add('hidden');
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+        try {
+            const students = await services.student.getPage(1, 5, "asc", "username", {
+                username: searchTerm
+            });
+            renderSearchResults(students);
+        } catch (error) {
+            showAlert('Search failed: ' + error.message, false);
+        }
+    }, 300);
+}
+
+function renderSearchResults(students) {
+    const searchResults = document.getElementById('searchResults');
+    const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
+    
+    searchResults.innerHTML = students
+        .filter(student => !existingIds.has(student.id))
+        .map(student => `
+            <div class="search-result-item">
+                <div class="student-info">
+                    <div class="student-name">${student.username}</div>
+                    <div class="student-email">${student.email}</div>
+                </div>
+                <button onclick="addSelectedStudent(${student.id}, '${student.username}')"
+                        class="action-button add">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `).join('');
+    
+    searchResults.classList.remove('hidden');
+}
+
+function addSelectedStudent(id, username) {
+    selectedStudents.add({ id, username });
+    renderSelectedStudents();
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('studentSearchInput').value = '';
+}
+
+function removeSelectedStudent(id) {
+    selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
+    renderSelectedStudents();
+}
+
+function renderSelectedStudents() {
+    const studentsList = document.getElementById('selectedStudentsList');
+    studentsList.innerHTML = Array.from(selectedStudents).map(student => `
+        <div class="member-item">
+            <div class="student-info">
+                <div class="student-name">${student.username}</div>
+            </div>
+            <button onclick="removeSelectedStudent(${student.id})" 
+                    class="action-button" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+async function generateReport() {
+    try {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const subjects = Array.from(subjectSelect.selectedOptions).map(option => option.value);
+        const trackables = Array.from(trackableSelect.selectedOptions).map(option => option.value);
+        
+        if (!startDate || !endDate) {
+            showAlert('Please select both start and end dates', false);
+            return;
+        }
+
+        if (trackables.length === 0) {
+            showAlert('Please select at least one trackable', false);
+            return;
+        }
+
+        let students;
+        if (document.querySelector('input[name="studentType"]:checked').value === 'class') {
+            const classId = classSelect.value;
+            if (!classId) {
+                showAlert('Please select a class', false);
+                return;
+            }
+            const classData = await services.class.getDetails(classId);
+            students = classData.students.map(s => s.id);
+        } else {
+            if (selectedStudents.size === 0) {
+                showAlert('Please select at least one student', false);
+                return;
+            }
+            students = Array.from(selectedStudents).map(s => s.id);
+        }
+
+        const reportData = await fetchReportData(startDate, endDate, subjects, students, trackables);
+        renderReport(reportData, trackables);
+        
+    } catch (error) {
+        showAlert('Failed to generate report: ' + error.message, false);
+    }
+}
+
+async function fetchReportData(startDate, endDate, subjects, students, trackables) {
+    // TODO: Connect to your API endpoint
+    const params = {
+        startDate,
+        endDate,
+        subjects,
+        students,
+        trackables
+    };
+    
+    try {
+        const response = await services.trackable.getReport(params);
+        return response.data;
+    } catch (error) {
+        throw new Error('Failed to fetch report data: ' + error.message);
+    }
+}
+
+function renderReport(data, selectedTrackables) {
+    // Set up table header
+    const headerRow = reportTable.querySelector('thead tr');
+    headerRow.innerHTML = `
+        <th>Student Name</th>
+        ${selectedTrackables.map(trackable => 
+            `<th>${trackable}</th>`
+        ).join('')}
+    `;
+
+    // Populate table body
+    const tbody = reportTable.querySelector('tbody');
+    tbody.innerHTML = data.students.map(student => `
+        <tr>
+            <td>${student.username}</td>
+            ${selectedTrackables.map(trackableName => {
+                const trackableData = student.trackables.find(t => t.name === trackableName);
+                if (!trackableData) return '<td>Not Tracked</td>';
+                return `
+                    <td class="trackable-cell" 
+                        data-student="${student.username}"
+                        data-trackable="${trackableName}">
+                        ${trackableData.isTrue}/${trackableData.total}
+                    </td>`;
+            }).join('')}
+        </tr>
+    `).join('');
+}
+
+async function handleCellClick(e) {
+    const cell = e.target.closest('.trackable-cell');
+    if (!cell) return;
+
+    const studentName = cell.dataset.student;
+    const trackableName = cell.dataset.trackable;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    try {
+        const detailData = await fetchDetailData(studentName, trackableName, startDate, endDate);
+        renderDetailModal(detailData, trackableName);
+        detailModal.classList.add('show');
+    } catch (error) {
+        showAlert('Failed to load details: ' + error.message, false);
+    }
+}
+
+async function fetchDetailData(studentName, trackableName, startDate, endDate) {
+    // TODO: Connect to your API endpoint
+    const params = {
+        studentName,
+        trackableName,
+        startDate,
+        endDate
+    };
+    
+    try {
+        const response = await services.trackable.getDetails(params);
+        return response.data;
+    } catch (error) {
+        throw new Error('Failed to fetch detail data: ' + error.message);
+    }
+}
+
+function renderDetailModal(data, trackableName) {
+    const modalTitle = document.querySelector('#detailModal .modal-header h2');
+    modalTitle.textContent = `${trackableName} Details`;
+
+    const tbody = document.querySelector('#detailTable tbody');
+    tbody.innerHTML = data.map(entry => {
+        const date = new Date(entry.DateTime);
+        return `
+            <tr>
+                <td>${date.toLocaleDateString()}</td>
+                <td>${date.toLocaleTimeString()}</td>
+                <td>${entry.subjectName}</td>
+                <td>${entry.isTrue === null ? 'Not Tracked' : entry.isTrue ? 'Yes' : 'No'}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function showAlert(message, isSuccess) {
@@ -166,10 +436,12 @@ function showAlert(message, isSuccess) {
 
 // Make functions available globally
 window.editTrackable = async function(name) {
-    // Fetch trackable data and open form modal
-    const trackableData = await services.trackable.getDetails(name);
-    console.log(trackableData);
-    openFormModal(trackableData);
+    try {
+        const trackableData = await services.trackable.getDetails(name);
+        openFormModal(trackableData);
+    } catch (error) {
+        showAlert('Failed to load trackable details: ' + error.message, false);
+    }
 };
 
 window.deleteTrackable = async function(name) {
@@ -184,4 +456,11 @@ window.deleteTrackable = async function(name) {
     }
 };
 
-export {initTrackables}
+// Make functions available globally
+window.addSelectedStudent = addSelectedStudent;
+window.removeSelectedStudent = removeSelectedStudent;
+
+// Initialize the page
+// initTrackables();
+
+export { initTrackables };
