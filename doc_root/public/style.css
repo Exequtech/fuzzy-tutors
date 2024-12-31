@@ -1091,37 +1091,6 @@ tr:hover {
     margin-top: 20px;
 }
 
-.chart-container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    height: 400px;
-}
-
-.stats-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.stat-card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.stat-card h3 {
-    color: #666;
-    margin-bottom: 10px;
-}
-
-.stat-card p {
-    font-size: 24px;
-    color: #57cc02;
-    font-weight: bold;
-}
-
 /* Configuration Modal Content */
 .config-content {
     padding: 20px;
@@ -1182,11 +1151,6 @@ tr:hover {
 
     .report-container {
         grid-template-columns: 1fr;
-    }
-
-    .stats-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 }
 
