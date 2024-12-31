@@ -20,6 +20,21 @@
 		"classId": {
 			"type": "string",
 			"pattern": "^[\\d]+$"
+		},
+		"trackables": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"uniqueItems": true
+		},
+		"subjects": {
+			"type": "array",
+			"items": {
+				"type": "string",
+				"pattern": "^[\\d]+$"
+			},
+			"uniqueItems": true
 		}
 	},
 	"oneOf": [

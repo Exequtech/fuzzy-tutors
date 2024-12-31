@@ -19,11 +19,28 @@ $endpoints['/^stats\/trackables\/?$/'] = [
 					
 				EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
+				if(isset($request->subjects) && empty($request->subjects))
+					MessageResponse(HTTP_OK, null, ['results' => []]);
 				if(isset($request->students) && empty($request->students))
 					MessageResponse(HTTP_OK, null, ['results' => []]);
 
 				$conn->begin_transaction() || InternalError("Failed to start read transaction (stats trackable GET)");
 
+				if(isset($request->trackables) && !empty($request->trackables)) {
+					$query = "SELECT `TrackableName` FROM `Trackable` WHERE `TrackableName` IN ("
+						.implode(',',array_fill(0, count($request->trackables), '?')) . ") FOR SHARE;";
+					$types = str_repeat('s', count($request->trackables));
+					$values = $request->trackables;
+
+					$matches = BindedQuery($conn, $query, $types, $values, true,
+						"Failed to fetch trackables (stats trackable GET)");
+					if(count($matches) !== count($request->trackables)) {
+						$existingNames = array_column($matches, 'TrackableName');
+						$diffs = array_diff($request->trackables, $existingNames);
+						$conn->rollback();
+						MessageResponse(HTTP_CONFLICT, "Some trackables don't exist", ['invalid_strings' => $diffs]);
+					}
+				}
 				$students = [];
 				$names = [];
 				if(isset($request->students))
@@ -72,23 +89,45 @@ $endpoints['/^stats\/trackables\/?$/'] = [
 				$values = [];
 				$types = '';
 				if(isset($request->startDate)) {
-					$conditions[] = '(`StartDate` >= ? OR `EndDate` >= ?)';
+					$conditions[] = '(`LessonStart` >= ? OR `LessonEnd` >= ?)';
 					$values[] = $request->startDate;
 					$values[] = $request->startDate;
 					$types .= 'ss';
 				}
 				if(isset($request->endDate)) {
-					$conditions[] = '(`StartDate` <= ? OR `EndDate` <= ?)';
+					$conditions[] = '(`LessonStart` <= ? OR `LessonEnd` <= ?)';
 					$values[] = $request->endDate;
 					$values[] = $request->endDate;
 					$types .= 'ss';
+				}
+				if(isset($request->subjects)) {
+					$ids = array_map('intval', $request->subjects);
+					$query = "SELECT `TopicID`, `SubjectID` FROM `Topic` WHERE `TopicID` IN (" . implode(',', $ids) . ") FOR SHARE;";
+					$matches = BindedQuery($conn, $query, '', [], true,
+						"Failed to fetch subjects (stats trackable GET)");
+					$topics = array_filter($matches, function($match){
+						return isset($match['SubjectID']);
+					});
+					if(!empty($topics)) {
+						$topics = array_column($topics, 'TopicID');
+						$conn->rollback();
+						MessageResponse(HTTP_CONFLICT, "Some provided subject ids are topics", ['invalid_ids' => $topics]);
+					}
+					if(count($matches) !== count($ids)) {
+						$existingIDs = array_column($matches, 'TopicID');
+						$diffs = array_diff($ids, $existingIDs);
+						$conn->rollback();
+						MessageResponse(HTTP_CONFLICT, "Some provided subject ids don't exist", ['invalid_ids' => $diffs]);
+					}
+
+					$conditions[] = "`SubjectID` IN (" . implode(',', $ids) . ")";
 				}
 
 				$query = "SELECT `LessonID` FROM `Lesson` "
 					.(empty($conditions) ? '' : ' WHERE ' . implode(' AND ', $conditions)) . " FOR SHARE;";
 				$matches = BindedQuery($conn, $query, $types, $values, true,
 					"Failed to fetch lesson records (stats trackable GET)");
-				
+
 				if(empty($matches))
 				{
 					$conn->rollback();
@@ -97,19 +136,60 @@ $endpoints['/^stats\/trackables\/?$/'] = [
 				$lessonIDs = array_column($matches, 'LessonID');
 
 				// Trackables
-				$query = "SELECT `StudentID`, `TrackableName`, SUM(`TrackableValue`.`Value`) `Truths`, COUNT(*) `Total` FROM `TrackableValue` INNER JOIN `Attendance` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID` WHERE `LessonID` IN (" . implode(',', $lessonIDs) . ") AND `StudentID` IN (" . implode(',', $students) . ") GROUP BY `StudentID`, `TrackableName`;";
-				$matches = BindedQuery($conn, $query, '', [], true,
+				$conditions = ["`LessonID` IN (" . implode(',', $lessonIDs) . ")"];
+				$types = '';
+				$values = [];
+				if(isset($request->trackables)) {
+					if(empty($request->trackables)) {
+						$conditions[] = 'FALSE';
+					} else {
+						$conditions[] = "`TrackableName` IN (" . implode(',', array_fill(0, count($request->trackables), '?')) . ")";
+						$types .= str_repeat('s', count($request->trackables));
+						$values = [...$values, ...$request->trackables];
+					}
+
+				}
+
+				$query = "SELECT `StudentID`, `TrackableName`, SUM(`Value`) `Truths`, COUNT(*) `Total` FROM `Attendance` "
+					."LEFT JOIN `TrackableValue` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID` "
+					."WHERE " . implode(' AND ', $conditions)
+					." GROUP BY `StudentID`, `TrackableName`;";
+				//$query = "SELECT `StudentID`, `TrackableName`, SUM(`TrackableValue`.`Value`) `Truths`, COUNT(*) `Total` FROM `TrackableValue` RIGHT JOIN `Attendance` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID` WHERE `LessonID` IN (" . implode(',', $lessonIDs) . ") AND `StudentID` IN (" . implode(',', $students) . ") GROUP BY `StudentID`, `TrackableName`;";
+				$matches = BindedQuery($conn, $query, $types, $values, true,
 			   		"Failed to fetch trackable records (stats trackable GET)");
 				
 				$trackables = [];
+				// Set students
+				foreach($students as $id) {
+					$studentName = $names[$id];
+					$trackables[$studentName] = [];
+				}
 				foreach($matches as $record) {
 					$studentName = $names[$record['StudentID']];
 					if(!isset($trackables[$studentName]))
 						$trackables[$studentName] = [];
+					if(!isset($record['TrackableName']))
+						continue;
+					if(isset($request->trackables) && !in_array($record['TrackableName'], $request->trackables))
+						continue;
 					$trackables[$studentName][$record['TrackableName']] = [
 						'truths' => $record['Truths'],
 						'total' => $record['Total']
 					];
+				}
+
+				// Set unassigned trackables to zeros
+				if(isset($request->trackables)) {
+					foreach($trackables as $key => $value) {
+						foreach($request->trackables as $name) {
+							if(!isset($value[$name])) {
+								$trackables[$key][$name] = [
+									'truths' => 0,
+									'total' => 0,
+								];
+							}
+						}
+					}
 				}
 				
 				$conn->commit();
