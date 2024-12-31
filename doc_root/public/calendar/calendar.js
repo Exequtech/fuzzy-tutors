@@ -724,11 +724,11 @@ function renderTrackingTable() {
     
     tbody.innerHTML = currentLesson.students.map(student => `
         <tr data-student-id="${student.id}">
-            <td>${student.username}</td>
+            <td>${student.name}</td>
             <td>
                 <input type="checkbox" 
                        class="attendance-checkbox" 
-                       ${student.attendance ? 'checked' : ''}>
+                       ${student.attended ? 'checked' : ''}>
             </td>
             ${currentLesson.trackables.map(trackable => `
                 <td>
