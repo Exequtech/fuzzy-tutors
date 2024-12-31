@@ -50,6 +50,10 @@ RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
 RewriteCond $1 ^student/[\d]+/?$
 RewriteRule ^(.*)$ - [END,R=405]
 
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^student/[\d]+/trackables/[^/]+/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Student allowlist
 RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
 RewriteCond $1 ^student/?$
@@ -57,6 +61,14 @@ RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^student/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+## Space replace
+# RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+# RewriteRule ^student/([\d]+)/trackables/([^/]*)\s([^/]*)/?$ student/$1/trackables/$2+$3 [L]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^student/[\d]+/trackables/[^/]+/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 # Class denylist
@@ -130,9 +142,17 @@ RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
 RewriteCond $1 ^trackable/([^/]+)/?$
 RewriteRule ^(.*)$ - [END,R=405] 
 
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^stats/trackables/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Trackable allowlist
 RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
 RewriteCond $1 ^trackable/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^stats/trackables/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 ## Replace spaces with + signs to allow %20 uri
