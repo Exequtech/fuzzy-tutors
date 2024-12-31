@@ -660,8 +660,9 @@ function createDayElement(dayNumber, extraClass, dayLessons) {
 }
 
 async function fetchAndRenderLessons() {
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    // TODO: fix Desember bug and also all days viewed on the calendar
+    const firstDay = new Date(currentYear, currentMonth - 1, 1);
+    const lastDay = new Date(currentYear, currentMonth + 2, 0);
     
     try {
         lessons = await services.lesson.getLessonsBetweenDates(

@@ -2,7 +2,7 @@ import { services  } from '../dataHandler.js';
 
 let students = null;
 
-// window.confirmDelete = confirmDelete;
+window.confirmDelete = confirmDelete;
 window.editStudent = editStudent;
 
 // DOM Elements
