@@ -9,7 +9,6 @@ let trackablesList = document.getElementById('trackablesList');
 let alertMessage = document.getElementById('alertMessage');
 let startDate = document.getElementById('startDate');
 let endDate = document.getElementById('endDate');
-let trackableSelect = document.getElementById('trackableSelect');
 let addTrackableBtn = document.getElementById('addTrackableBtn');
 
 let currentTrackableId = null;
@@ -25,11 +24,9 @@ async function initTrackables() {
         alertMessage = document.getElementById('alertMessage');
         startDate = document.getElementById('startDate');
         endDate = document.getElementById('endDate');
-        trackableSelect = document.getElementById('trackableSelect');
         addTrackableBtn = document.getElementById('addTrackableBtn');
         await loadTrackables();
         setupEventListeners();
-        setupChart();
         await updateReport();
     } catch (error) {
         showAlert('Failed to initialize: ' + error.message, false);
@@ -61,20 +58,12 @@ function setupEventListeners() {
     // Report filters
     startDate.addEventListener('change', updateReport);
     endDate.addEventListener('change', updateReport);
-    trackableSelect.addEventListener('change', updateReport);
 }
 
 async function loadTrackables() {
     try {
-        // TODO: Replace with actual API call
-        // const trackables = [
-        //     {name: 'Homework', description: 'Homework completion tracking' },
-        //     {name: 'Participation', description: 'Class participation tracking' }
-        // ];
-
         const trackables = await services.trackable.getAll();
         renderTrackablesList(trackables);
-        populateTrackableSelect(trackables);
     } catch (error) {
         showAlert('Failed to load trackables: ' + error.message, false);
     }
@@ -97,12 +86,6 @@ function renderTrackablesList(trackables) {
             </div>
         </div>
     `).join('');
-}
-
-function populateTrackableSelect(trackables) {
-    trackableSelect.innerHTML = trackables.map(trackable => 
-        `<option value=${trackable.name}>${trackable.name}</option>`
-    ).join('');
 }
 
 function openFormModal(trackableData = null) {
@@ -165,66 +148,11 @@ async function handleFormSubmit(e) {
 
 async function updateReport() {
     try {
-        // TODO: Replace with actual API call to get report data
-        const data = {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            values: [75, 82, 90, 85]
-        };
+        // TODO: Replace with actual report data
 
-        updateChart(data);
-        updateStats(data);
     } catch (error) {
         showAlert('Failed to update report: ' + error.message, false);
     }
-}
-
-let chart = null;
-
-function setupChart() {
-    const ctx = document.getElementById('trackableChart').getContext('2d');
-    chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Completion Rate (%)',
-                data: [],
-                borderColor: '#57cc02',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-}
-
-function updateChart(data) {
-    chart.data.labels = data.labels;
-    chart.data.datasets[0].data = data.values;
-    chart.update();
-}
-
-function updateStats(data) {
-    const average = data.values.reduce((a, b) => a + b, 0) / data.values.length;
-    const max = Math.max(...data.values);
-    const min = Math.min(...data.values);
-
-    document.querySelector('.stats-container').innerHTML = `
-        <div class="stat-card">
-            <h3>Average</h3>
-            <p>${average.toFixed(1)}%</p>
-        </div>
-        <div class="stat-card">
-            <h3>Highest</h3>
-            <p>${max}%</p>
-        </div>
-        <div class="stat-card">
-            <h3>Lowest</h3>
-            <p>${min}%</p>
-        </div>
-    `;
 }
 
 function showAlert(message, isSuccess) {
@@ -255,8 +183,5 @@ window.deleteTrackable = async function(name) {
         }
     }
 };
-
-// Initialize the page
-// initTrackables();
 
 export {initTrackables}
