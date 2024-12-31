@@ -50,9 +50,9 @@ class TrackableService extends ResourceService {
     async getReport(startDate, endDate, subjects, students, classId, trackables) {
         const params = { 
             startDate,
-            endDate
-            // subjects,
-            // trackables 
+            endDate,
+            subjects,
+            trackables 
         };
 
         if (classId != null && students != null) {

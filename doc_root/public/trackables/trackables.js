@@ -1,4 +1,5 @@
 import { services } from '/dataHandler.js';
+import { formatDateForApi } from '/utils/utilityFunctions.js';
 
 // DOM Elements
 let configBtn = null;
@@ -289,6 +290,8 @@ async function generateReport() {
         const endDate = document.getElementById('endDate').value;
         const subjects = Array.from(subjectSelect.selectedOptions).map(option => option.value);
         const trackables = Array.from(trackableSelect.selectedOptions).map(option => option.value);
+        console.log(trackables)
+        let classId;
         
         if (!startDate || !endDate) {
             showAlert('Please select both start and end dates', false);
@@ -302,7 +305,7 @@ async function generateReport() {
 
         let students;
         if (document.querySelector('input[name="studentType"]:checked').value === 'class') {
-            const classId = classSelect.value;
+            classId = classSelect.value;
             if (!classId) {
                 showAlert('Please select a class', false);
                 students = null;
@@ -317,6 +320,7 @@ async function generateReport() {
             students = Array.from(selectedStudents).map(s => s.id);
         }
 
+        console.log(trackables)
         const reportData = await fetchReportData(startDate, endDate, subjects, students, classId, trackables);
         renderReport(reportData, trackables);
         
@@ -325,15 +329,10 @@ async function generateReport() {
     }
 }
 
-async function fetchReportData(startDate, endDate, subjects, students, trackables) {
+async function fetchReportData(startDateN, endDateN, subjects, students, trackables) {
     // TODO: Connect to your API endpoint
-    const params = {
-        startDate,
-        endDate,
-        subjects,
-        students,
-        trackables
-    };
+    startDate = formatDateForApi(new Date(startDateN));
+    endDate = formatDateForApi(new Date(endDateN));
     
     try {
         const response = await services.trackable.getReport(startDate, endDate, subjects, students, trackables);
