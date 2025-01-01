@@ -323,6 +323,7 @@ async function generateReport() {
         console.log('ha');
         console.log(trackables)
         const reportData = await fetchReportData(startDate, endDate, subjects, students, classId, trackables);
+        console.log(reportData);
         renderReport(reportData, trackables);
         
     } catch (error) {
