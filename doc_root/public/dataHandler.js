@@ -65,6 +65,7 @@ class TrackableService extends ResourceService {
             // TODO: Create (both can't be null) and return error response
         }
 
+        console.log(params);
         const response = await ApiService.withRetry(() => 
             ApiService.makeApiCall(API_CONFIG.endpoints.resources.trackableReport, 'GET', params)
         );

@@ -320,6 +320,7 @@ async function generateReport() {
             students = Array.from(selectedStudents).map(s => s.id);
         }
 
+        console.log('ha');
         console.log(trackables)
         const reportData = await fetchReportData(startDate, endDate, subjects, students, classId, trackables);
         renderReport(reportData, trackables);
@@ -329,14 +330,15 @@ async function generateReport() {
     }
 }
 
-async function fetchReportData(startDateN, endDateN, subjects, students, trackables) {
+async function fetchReportData(startDateN, endDateN, subjects, students, classId, trackables) {
     // TODO: Connect to your API endpoint
     startDate = formatDateForApi(new Date(startDateN));
     endDate = formatDateForApi(new Date(endDateN));
-    
+    console.log('ho');
+    console.log(trackables);
     try {
-        const response = await services.trackable.getReport(startDate, endDate, subjects, students, trackables);
-        return response.data;
+        const response = await services.trackable.getReport(startDate, endDate, subjects, students, classId, trackables);
+        return response;
     } catch (error) {
         throw new Error('Failed to fetch report data: ' + error.message);
     }

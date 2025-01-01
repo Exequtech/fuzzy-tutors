@@ -2,6 +2,21 @@ import { SessionManager } from '/services/SessionManager.js';
 import { API_CONFIG } from '/config/apiConfig.js';
 import { ApiResponse } from '/utils/ApiResponse.js';
 
+// Basic extended GET params (normal URLSearchParams + 1-depth arrays)
+function EncodeGETParams(params) {
+    const entries = [];
+    for(let key in params) {
+        if(Array.isArray(params[key])) {
+            for(let val of params[key]) {
+                entries.push(`${encodeURIComponent(key)}[]=${encodeURIComponent(val)}`);
+            }
+        } else {
+            entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+        }
+    }
+    return entries.join('&');
+}
+
 class ApiService {
     static async makeApiCall(endpoint, method, body = null) {
         try {
@@ -22,7 +37,7 @@ class ApiService {
             let url = `${API_CONFIG.baseUrl}${endpoint}`;
 
             if (method === 'GET' && body) {
-                const queryString = new URLSearchParams(body).toString();
+                const queryString = EncodeGETParams(body);
                 url = `${url}?${queryString}`;
             } else if (['POST', 'PATCH'].includes(method)) {
                 config.body = JSON.stringify(body);
