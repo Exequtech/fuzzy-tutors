@@ -418,14 +418,16 @@ async function handleUpdateLessonSubmit(e) {
         const date = document.getElementById('updateDate').value;
         const startTime = document.getElementById('updateStartTime').value;
         const endTime = document.getElementById('updateEndTime').value;
+        const location = +document.getElementById('updateLocation').value;
 
         const startDate = new Date(`${date}T${startTime}`);
         const endDate = new Date(`${date}T${endTime}`);
 
         const formData = {
             subjectId: parseInt(document.getElementById('updateSubject').value),
-            startDate: startDate,
-            endDate: endDate
+            startDate: formatDateForApi(startDate),
+            endDate: formatDateForApi(endDate),
+            locationId: location,
         };
         
         if (endDate <= startDate) {
