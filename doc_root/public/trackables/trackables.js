@@ -322,6 +322,7 @@ async function generateReport() {
 
         console.log(trackables)
         const reportData = await fetchReportData(startDate, endDate, subjects, students, classId, trackables);
+        console.log(reportData);
         renderReport(reportData, trackables);
         
     } catch (error) {
@@ -329,13 +330,13 @@ async function generateReport() {
     }
 }
 
-async function fetchReportData(startDateN, endDateN, subjects, students, trackables) {
+async function fetchReportData(startDateN, endDateN, subjects, students, classId, trackables) {
     // TODO: Connect to your API endpoint
     startDate = formatDateForApi(new Date(startDateN));
     endDate = formatDateForApi(new Date(endDateN));
     
     try {
-        const response = await services.trackable.getReport(startDate, endDate, subjects, students, trackables);
+        const response = await services.trackable.getReport(startDate, endDate, subjects, students, classId, trackables);
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch report data: ' + error.message);
