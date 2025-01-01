@@ -787,6 +787,9 @@ function setupTrackableDragAndDrop() {
     });
 
     lists.forEach(list => {
+        list.addEventListener('dragleave', (e) => {
+            e.currentTarget.classList.remove('drag-over')
+        });
         list.addEventListener('dragover', handleDragOver);
         list.addEventListener('drop', handleDrop);
     });
@@ -794,8 +797,8 @@ function setupTrackableDragAndDrop() {
 
 // Drag and Drop Event Handlers
 function handleDragStart(e) {
-    e.target.classList.add('dragging');
     e.dataTransfer.setData('text/plain', e.target.outerHTML);
+    e.target.classList.add('dragging');
 }
 
 function handleDragEnd(e) {
