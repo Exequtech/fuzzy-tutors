@@ -129,7 +129,7 @@ function setupFormEventListeners() {
     document.getElementById('saveTrackingBtn').addEventListener('click', handleSaveTracking);
 
     // Student Search
-    setupStudentManagement();
+    setupNewLessonStudentManagement();
 }
 
 function openLessonModal() {
@@ -323,6 +323,19 @@ async function showTrackablesModal() {
 
 function showStudentsModal() {
     const modal = modals.students;
+    selectedStudents = new Set();
+    
+    // Initialize with current lesson's students
+    if (currentLesson && currentLesson.students) {
+        currentLesson.students.forEach(student => {
+            selectedStudents.add({
+                id: student.id,
+                username: student.name
+            });
+        });
+    }
+    
+    renderLessonMembers();
     setupStudentManagement();
     modal.classList.add('show');
 }
@@ -499,28 +512,16 @@ async function handleSaveTrackables() {
 
 async function handleSaveStudents() {
     try {
-        const studentType = document.querySelector('input[name="studentType"]:checked').value;
-        let classId = null;
-        let students = null;
+        const students = Array.from(selectedStudents).map(student => student.id);
         
-        if (studentType === 'class') {
-            classId = parseInt(document.getElementById('classSelect').value);
-        } else {
-            students = Array.from(selectedStudents).map(student => student.id);
-        }
-        
-        if (!classId && (!students || students.length === 0)) {
-            showAlert('Please select either a class or at least one student', false);
+        if (students.length === 0) {
+            showAlert('Please select at least one student', false);
             return;
         }
 
-        const data = {};
-
-        if (classId === null) {
-            data.students = students;
-        } else {
-            data.classId = classId;
-        }
+        const data = {
+            students: students
+        };
 
         const response = await services.lesson.update(currentLesson.id, data);
         
@@ -549,16 +550,6 @@ async function handleSaveTracking() {
             })
             studentOverrides[parseInt(row.dataset.studentId)] = student
         })
-        // const trackingData = Array.from(
-        //     document.querySelectorAll('#trackingTable tbody tr')
-        // ).map(row => ({
-        //     studentId: parseInt(row.dataset.studentId),
-        //     attendance: row.querySelector('.attendance-checkbox').checked,
-        //     trackables: Array.from(row.querySelectorAll('.trackable-checkbox')).map(checkbox => ({
-        //         name: checkbox.dataset.trackable,
-        //         value: checkbox.checked
-        //     }))
-        // }));
 
         const data = {
             studentOverrides
@@ -828,7 +819,8 @@ function handleDrop(e) {
 }
 
 
-function renderSearchResults(students, searchResults) {
+function renderSearchResults(students) {
+    const searchResults = document.getElementById('manageSearchResults');
     const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
     const results = students.filter(student => !existingIds.has(student.id));
     
@@ -842,7 +834,32 @@ function renderSearchResults(students, searchResults) {
                     <div class="student-email">${student.email}</div>
                 </div>
                 <button onclick="addLessonMember(${student.id}, '${student.username}', '${student.email}')" 
-                        class="action-button add" title="Add to lesson" type="button">
+                        class="action-button add" title="Add to lesson">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    searchResults.classList.remove('hidden');
+}
+
+function renderNewLessonSearchResults(students) {
+    const searchResults = document.getElementById('manageSearchResults');
+    const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
+    const results = students.filter(student => !existingIds.has(student.id));
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item">No students found</div>';
+    } else {
+        searchResults.innerHTML = results.map(student => `
+            <div class="search-result-item">
+                <div class="student-info">
+                    <div class="student-name">${student.username}</div>
+                    <div class="student-email">${student.email}</div>
+                </div>
+                <button onclick="addLessonMember(${student.id}, '${student.username}', '${student.email}')" 
+                        class="action-button add" title="Add to lesson">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
@@ -853,6 +870,23 @@ function renderSearchResults(students, searchResults) {
 }
 
 function renderLessonMembers() {
+    const membersList = document.getElementById('manageLessonMembersList');
+    const members = Array.from(selectedStudents.values());
+    
+    membersList.innerHTML = members.map(member => `
+        <div class="member-item">
+            <div class="student-info">
+                <div class="student-name">${member.username}</div>
+            </div>
+            <button onclick="removeLessonMember(${member.id})" 
+                    class="action-button" title="Remove from lesson">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function renderNewLessonMembers() {
     const membersList = document.getElementById('lessonMembersList');
     const members = Array.from(selectedStudents.values());
     
@@ -894,18 +928,26 @@ function closeAllModals() {
     currentLesson = null;
     selectedStudents = new Set();
     const searchResults = document.getElementById('searchResults');
+    const manageSearchResults = document.getElementById('manageSearchResults');
     if (searchResults) {
         searchResults.classList.add('hidden');
     }
+
+    if (manageSearchResults) {
+        manageSearchResults.classList.add('hidden');
+    }
 }
+// test
 
 
 // Student Management
 function setupStudentManagement() {
-    const searchInput = document.getElementById('studentSearchInput');
-    const searchResults = document.getElementById('searchResults');
+    console.log('start setupStudentManagement')
+    const searchInput = document.getElementById('manageStudentSearchInput');
+    const searchResults = document.getElementById('manageSearchResults');
 
     searchInput.addEventListener('input', (e) => {
+        console.log('search input event')
         clearTimeout(searchTimeout);
         const searchTerm = e.target.value.trim();
         
@@ -919,7 +961,41 @@ function setupStudentManagement() {
                 const students = await services.student.getPage(1, 5, "asc", "username", {
                     username: searchTerm
                 });
-                renderSearchResults(students, searchResults);
+                renderSearchResults(students);
+            } catch (error) {
+                showAlert('Search failed: ' + error.message, false);
+            }
+        }, 300);
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+        }
+    });
+}
+
+function setupNewLessonStudentManagement() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', (e) => {
+        console.log('search input event')
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+        
+        if (searchTerm.length === 0) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const students = await services.student.getPage(1, 5, "asc", "username", {
+                    username: searchTerm
+                });
+                renderNewLessonSearchResults(students);
             } catch (error) {
                 showAlert('Search failed: ' + error.message, false);
             }
@@ -958,19 +1034,6 @@ function showAlert(message, isSuccess) {
     }, 3000);
 }
 
-// Make functions available globally
-window.addLessonMember = function(id, username, email) {
-    selectedStudents.add({ id, username, email });
-    renderLessonMembers();
-    document.getElementById('searchResults').classList.add('hidden');
-    document.getElementById('studentSearchInput').value = '';
-};
-
-window.removeLessonMember = function(id) {
-    selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
-    renderLessonMembers();
-};
-
 window.showLessonDetails = async function(lessonId) {
     currentLesson = await services.lesson.getDetails(lessonId);
     console.log(currentLesson)
@@ -997,8 +1060,31 @@ window.showLessonDetails = async function(lessonId) {
     modal.classList.add('show');
 };
 
-// Initialize the calendar
-// initCalendar();
+// Make functions available globally
+window.addNewLessonMember = function(id, username, email) {
+    selectedStudents.add({ id, username, email });
+    renderNewLessonMembers();
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('studentSearchInput').value = '';
+};
+
+window.removeNewLessonMember = function(id) {
+    selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
+    renderNewLessonMembers();
+};
+
+// Global functions for the window object
+window.addLessonMember = function(id, username, email) {
+    selectedStudents.add({ id, username, email });
+    renderLessonMembers();
+    document.getElementById('manageSearchResults').classList.add('hidden');
+    document.getElementById('manageStudentSearchInput').value = '';
+};
+
+window.removeLessonMember = function(id) {
+    selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
+    renderLessonMembers();
+};
 
 export {
     initCalendar

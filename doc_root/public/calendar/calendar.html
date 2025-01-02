@@ -274,28 +274,20 @@
             <span class="close-button">&times;</span>
         </div>
         <div class="student-management">
-            <div class="selection-type">
-                <label>
-                    <input type="radio" name="studentType" value="class" checked> By Class
-                </label>
-                <label>
-                    <input type="radio" name="studentType" value="individual">Individually
-                </label>
-            </div>
-            
-            <div id="classSelection" class="form-group">
-                <select id="classSelect"></select>
-            </div>
-
-            <div id="studentSelection" class="form-group hidden">
-                <div class="member-management">
-                    <div class="search-container">
-                        <input type="text" id="studentSearchInput" placeholder="Search students to add..." class="search-input">
-                        <div id="searchResults" class="search-results hidden"></div>
+            <div class="form-group">
+                    <label>Lesson Members:</label>
+                    <div class="member-management">
+                        <div class="search-container">
+                            <input type="text" id="manageStudentSearchInput" placeholder="Search students to add..." class="search-input">
+                            <div id="manageSearchResults" class="search-results hidden">
+                                <!-- Search results will be populated here -->
+                            </div>
+                        </div>
+                        <div id="manageLessonMembersList" class="members-list">
+                            <!-- Current class members will be shown here -->
+                        </div>
                     </div>
-                    <div id="lessonMembersList" class="members-list"></div>
                 </div>
-            </div>
         </div>
         <div class="form-buttons">
             <button type="button" class="cancel-button">Cancel</button>

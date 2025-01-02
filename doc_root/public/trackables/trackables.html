@@ -9,57 +9,23 @@
 
     <div id="alertMessage" class="alert hidden"></div>
 
-    <!-- Filter Section  -->
-    <div class="filter-section">
-        <div class="date-filters">
-            <div class="form-group">
-                <label for="startDate">From:</label>
-                <input type="date" id="startDate">
-            </div>
-            <div class="form-group">
-                <label for="endDate">To:</label>
-                <input type="date" id="endDate">
-            </div>
+    <!-- Main Filter Section -->
+<div class="filter-section">
+    <div class="date-filters">
+        <div class="form-group">
+            <label for="startDate">From:</label>
+            <input type="date" id="startDate">
         </div>
         <div class="form-group">
-            <label>Subjects:</label>
-            <select id="subjectSelect" multiple class="multi-select">
-                <!-- Will be populated dynamically -->
-            </select>
+            <label for="endDate">To:</label>
+            <input type="date" id="endDate">
         </div>
-        <div class="form-group">
-            <label>Student Selection:</label>
-            <div class="selection-type">
-                <label>
-                    <input type="radio" name="studentType" value="class" checked> By Class
-                </label>
-                <label>
-                    <input type="radio" name="studentType" value="individual"> Individual Students
-                </label>
-            </div>
-            <div id="classSelection">
-                <select id="classSelect">
-                    <!-- Will be populated dynamically -->
-                </select>
-            </div>
-            <div id="studentSelection" class="hidden">
-                <div class="member-management">
-                    <div class="search-container">
-                        <input type="text" id="studentSearchInput" placeholder="Search students to add..." class="search-input">
-                        <div id="searchResults" class="search-results hidden"></div>
-                    </div>
-                    <div id="selectedStudentsList" class="members-list"></div>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Trackables:</label>
-            <select id="trackableSelect" multiple class="multi-select">
-                <!-- Will be populated dynamically -->
-            </select>
-        </div>
-        <button id="generateReport" class="submit-button">Generate Report</button>
     </div>
+    <button id="openFiltersBtn" class="filter-button">
+        <i class="fas fa-filter"></i>
+        Filters
+    </button>
+</div>
 
     <!-- Report Container -->
     <div class="report-container">
@@ -148,3 +114,109 @@
         </form>
     </div>
 </div>
+
+<!-- Filters Modal -->
+<div id="filtersModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Report Filters</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="filters-content">
+            <div class="form-group">
+                <label>Subjects:</label>
+                <select id="subjectSelect" multiple class="multi-select">
+                    <!-- Will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Student Selection:</label>
+                <div class="selection-type">
+                    <label>
+                        <input type="radio" name="studentType" value="class" checked> By Class
+                    </label>
+                    <label>
+                        <input type="radio" name="studentType" value="individual"> Individual Students
+                    </label>
+                </div>
+                <div id="classSelection">
+                    <select id="classSelect">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+                <div id="studentSelection" class="hidden">
+                    <div class="member-management">
+                        <div class="search-container">
+                            <input type="text" id="studentSearchInput" placeholder="Search students to add..." class="search-input">
+                            <div id="searchResults" class="search-results hidden"></div>
+                        </div>
+                        <div id="selectedStudentsList" class="members-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Trackables:</label>
+                <select id="trackableSelect" multiple class="multi-select">
+                    <!-- Will be populated dynamically -->
+                </select>
+            </div>
+
+            <div class="form-buttons">
+                <button type="button" class="cancel-button">Cancel</button>
+                <button type="button" id="generateReport" class="submit-button">Generate Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.filter-section {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.date-filters {
+    display: flex;
+    gap: 20px;
+    flex-grow: 1;
+}
+
+.filter-button {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+}
+
+.filter-button:hover {
+    background-color: #45a802;
+}
+
+.filters-content {
+    padding: 20px;
+}
+
+.filters-content .form-group {
+    margin-bottom: 20px;
+}
+
+.multi-select {
+    width: 100%;
+    min-height: 100px;
+    padding: 8px;
+}
+</style>

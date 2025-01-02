@@ -47,7 +47,7 @@ async function initTrackables() {
         await loadTrackables();
         await loadFormData();
         setupEventListeners();
-        setupReportEventListeners();
+        setupFilterEventListeners();
     } catch (error) {
         showAlert('Failed to initialize: ' + error.message, false);
     }
@@ -76,26 +76,60 @@ function setupEventListeners() {
     });
 }
 
-function setupReportEventListeners() {
+function setupFilterEventListeners() {
+    // Date change events
+    startDate.addEventListener('change', handleDateChange);
+    endDate.addEventListener('change', handleDateChange);
+
+    // Filter modal open button
+    const openFiltersBtn = document.getElementById('openFiltersBtn');
+    const filtersModal = document.getElementById('filtersModal');
+    
+    openFiltersBtn.addEventListener('click', () => {
+        filtersModal.classList.add('show');
+    });
+
+    // Close modal buttons
+    filtersModal.querySelectorAll('.close-button, .cancel-button').forEach(button => {
+        button.addEventListener('click', () => {
+            filtersModal.classList.remove('show');
+        });
+    });
+
     // Student type selection
     document.querySelectorAll('input[name="studentType"]').forEach(radio => {
         radio.addEventListener('change', toggleStudentSelectionType);
     });
 
     // Generate report button
-    generateReportBtn.addEventListener('click', generateReport);
+    generateReportBtn.addEventListener('click', () => {
+        generateReport();
+        filtersModal.classList.remove('show');
+    });
 
     // Student search
     const searchInput = document.getElementById('studentSearchInput');
     searchInput.addEventListener('input', handleStudentSearch);
+}
 
-    // Report table cell click
-    reportTable.addEventListener('click', handleCellClick);
+async function handleDateChange() {
+    const startDateValue = startDate.value;
+    const endDateValue = endDate.value;
 
-    // Detail modal close
-    document.querySelector('#detailModal .close-button').addEventListener('click', () => {
-        detailModal.classList.remove('show');
-    });
+    if (startDateValue && endDateValue) {
+        // Clear the table
+        const tbody = reportTable.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        // Show message that filters need to be applied
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="100%" style="text-align: center; padding: 20px;">
+                    Click the Filters button to set additional filters and generate the report
+                </td>
+            </tr>
+        `;
+    }
 }
 
 async function loadTrackables() {
