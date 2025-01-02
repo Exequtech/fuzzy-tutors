@@ -86,7 +86,7 @@ class LocationService extends ResourceService {
     async getAll(order = "asc", filter = {}) {
         const params = { order, ...filter };
         const response = await ApiService.withRetry(() => 
-            ApiService.makeApiCall(API_CONFIG.endpoints.resources.calendar, 'GET', params)
+            ApiService.makeApiCall(this.endpoint, 'GET', params)
         );
 
         if (response.isSuccessful) {

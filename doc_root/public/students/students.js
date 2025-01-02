@@ -2,7 +2,6 @@ import { services  } from '../dataHandler.js';
 
 let students = null;
 
-window.confirmDelete = confirmDelete;
 window.editStudent = editStudent;
 
 // DOM Elements
@@ -17,6 +16,8 @@ let addStudentBtn = document.getElementById('addStudentBtn');
 let currentStudentId = null;
 
 async function initStudents() {
+    window.confirmDelete = confirmDeleteStudent;
+
     students = await services.student.getPage();
 
     studentsTable = document.getElementById('studentsList');
@@ -171,7 +172,7 @@ function editStudent(id) {
     }
 }
 
-function confirmDelete(id) {
+function confirmDeleteStudent(id) {
     currentStudentId = id;
     openDeleteModal();
 }

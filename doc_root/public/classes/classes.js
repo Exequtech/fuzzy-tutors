@@ -18,6 +18,8 @@ let searchTimeout = null;
 // Initialize
 async function initClasses() {
     try {
+        window.confirmDelete = confirmDeleteClass
+
         classesGrid = document.getElementById('classesGrid');
         classModal  = document.getElementById('classModal');
         deleteModal = document.getElementById('deleteModal');
@@ -280,7 +282,7 @@ async function editClass(id) {
     }
 }
 
-function confirmDelete(id) {
+function confirmDeleteClass(id) {
     currentClassId = id;
     deleteModal.classList.add('show');
 }
@@ -313,7 +315,6 @@ function showAlert(message, isSuccess) {
 
 // Make functions available globally
 window.editClass = editClass;
-window.confirmDelete = confirmDelete;
 window.addClassMember = addClassMember;
 window.removeClassMember = removeClassMember;
 

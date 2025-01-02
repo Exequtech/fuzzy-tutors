@@ -18,6 +18,8 @@ let subjects = [];
 // Initialize
 async function initSubjects() {
     try {
+        window.confirmDelete = confirmDeleteSubject;
+
         subjectsGrid = document.getElementById('subjectsGrid');
         subjectModal = document.getElementById('subjectModal');
         topicModal = document.getElementById('topicModal');
@@ -127,7 +129,7 @@ async function handleSubjectFormSubmit(e) {
     try {
         const formData = {
             name: document.getElementById('subjectName').value,
-            description: document.getElementById('subjectDescription').value
+            description: document.getElementById('subjectDescription').value || null
         }
         
         // description = description == '' ? null : description;
@@ -261,7 +263,7 @@ async function deleteTopic(topicId) {
     }
 }
 
-function confirmDelete(id, isSubject) {
+function confirmDeleteSubject(id, isSubject) {
     currentTopicId = id;
     const modalMessage = deleteModal.querySelector('p');
     modalMessage.textContent = isSubject 
