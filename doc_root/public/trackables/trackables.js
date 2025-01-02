@@ -335,8 +335,6 @@ async function fetchReportData(startDateN, endDateN, subjects, students, classId
     // TODO: Connect to your API endpoint
     startDate = formatDateForApi(new Date(startDateN));
     endDate = formatDateForApi(new Date(endDateN));
-    console.log('ho');
-    console.log(trackables);
     try {
         const response = await services.trackable.getReport(startDate, endDate, subjects, students, classId, trackables);
         return response;
@@ -357,17 +355,17 @@ function renderReport(data, selectedTrackables) {
 
     // Populate table body
     const tbody = reportTable.querySelector('tbody');
-    tbody.innerHTML = data.students.map(student => `
+    tbody.innerHTML = Object.entries(data).map(([studentName, studentData]) => `
         <tr>
-            <td>${student.username}</td>
+            <td>${studentName}</td>
             ${selectedTrackables.map(trackableName => {
-                const trackableData = student.trackables.find(t => t.name === trackableName);
+                const trackableData = studentData[trackableName];
                 if (!trackableData) return '<td>Not Tracked</td>';
                 return `
                     <td class="trackable-cell" 
-                        data-student="${student.username}"
+                        data-student="${studentName}"
                         data-trackable="${trackableName}">
-                        ${trackableData.isTrue}/${trackableData.total}
+                        ${trackableData.truths}/${trackableData.total}
                     </td>`;
             }).join('')}
         </tr>
