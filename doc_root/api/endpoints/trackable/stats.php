@@ -158,21 +158,24 @@ $endpoints['/^stats\/trackables\/?$/'] = [
                 $matches = BindedQuery($conn, $query, $types, $values, true,
                        "Failed to fetch trackable records (stats trackable GET)");
                 
-                $trackables = [];
+                $results = [];
                 // Set students
                 foreach($students as $id) {
                     $studentName = $names[$id];
-                    $trackables[$studentName] = [];
+                    $results[$studentName] = [
+                        'id' => $id,
+                        'trackables' => [],
+                    ];
                 }
                 foreach($matches as $record) {
                     $studentName = $names[$record['StudentID']];
-                    if(!isset($trackables[$studentName]))
+                    if(!isset($results[$studentName]))
                         $trackables[$studentName] = [];
                     if(!isset($record['TrackableName']))
                         continue;
                     if(isset($request->trackables) && !in_array($record['TrackableName'], $request->trackables))
                         continue;
-                    $trackables[$studentName][$record['TrackableName']] = [
+                    $results[$studentName]['trackables'][$record['TrackableName']] = [
                         'truths' => $record['Truths'],
                         'total' => $record['Total']
                     ];
@@ -180,10 +183,10 @@ $endpoints['/^stats\/trackables\/?$/'] = [
 
                 // Set unassigned trackables to zeros
                 if(isset($request->trackables)) {
-                    foreach($trackables as $key => $value) {
+                    foreach($results as $key => $value) {
                         foreach($request->trackables as $name) {
-                            if(!isset($value[$name])) {
-                                $trackables[$key][$name] = [
+                            if(!isset($value['trackables'][$name])) {
+                                $trackables[$key]['trackables'][$name] = [
                                     'truths' => 0,
                                     'total' => 0,
                                 ];
@@ -193,7 +196,7 @@ $endpoints['/^stats\/trackables\/?$/'] = [
                 }
                 
                 $conn->commit();
-                MessageResponse(HTTP_OK, null, ['results' => $trackables]);
+                MessageResponse(HTTP_OK, null, ['results' => $results]);
             },
             'schema-path' => 'trackable/stats/GET.json'
         ]
