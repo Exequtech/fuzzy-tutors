@@ -586,8 +586,12 @@ async function handleDeleteLesson() {
     }
 }
 
+function NormMonth(int) {
+    return (int + 12) % 12
+}
 // Render Functions
 function renderCalendar() {
+    console.log("Rendering: ", lessons);
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const prevLastDay = new Date(currentYear, currentMonth, 0);
@@ -607,7 +611,11 @@ function renderCalendar() {
     // Previous month's days
     for (let x = firstDayIndex; x > 0; x--) {
         const day = prevLastDay.getDate() - x + 1;
-        days += createDayElement(day, 'other-month', []);
+        const dayLessons = lessons.filter(lesson => {
+            const lessonDate = new Date(lesson.startDate);
+            return lessonDate.getDate() === day && lessonDate.getMonth() === NormMonth(currentMonth - 1)
+        });
+        days += createDayElement(day, 'other-month', dayLessons);
     }
 
     // Current month's days
@@ -619,7 +627,7 @@ function renderCalendar() {
         
         const dayLessons = lessons.filter(lesson => {
             const lessonDate = new Date(lesson.startDate);
-            return lessonDate.getDate() === i;
+            return lessonDate.getDate() === i && lessonDate.getMonth() === currentMonth;
         });
         
         days += createDayElement(i, isToday ? 'today' : '', dayLessons);
@@ -627,7 +635,11 @@ function renderCalendar() {
 
     // Next month's days
     for (let j = 1; j <= nextDays; j++) {
-        days += createDayElement(j, 'other-month', []);
+        const dayLessons = lessons.filter(lesson => {
+            const lessonDate = new Date(lesson.startDate)
+            return lessonDate.getDate() === j && lessonDate.getMonth() === NormMonth(currentMonth + 1);
+        })
+        days += createDayElement(j, 'other-month', dayLessons);
     }
 
     calendar.innerHTML = days;
