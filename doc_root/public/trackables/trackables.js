@@ -324,7 +324,6 @@ async function generateReport() {
         const endDate = document.getElementById('endDate').value;
         const subjects = Array.from(subjectSelect.selectedOptions).map(option => option.value);
         const trackables = Array.from(trackableSelect.selectedOptions).map(option => option.value);
-        console.log(trackables)
         let classId;
         
         if (!startDate || !endDate) {
@@ -354,10 +353,7 @@ async function generateReport() {
             students = Array.from(selectedStudents).map(s => s.id);
         }
 
-        console.log('ha');
-        console.log(trackables)
         const reportData = await fetchReportData(startDate, endDate, subjects, students, classId, trackables);
-        console.log(reportData);
         renderReport(reportData, trackables);
         
     } catch (error) {
@@ -389,6 +385,7 @@ function renderReport(data, selectedTrackables) {
 
     // Populate table body
     const tbody = reportTable.querySelector('tbody');
+    console.log(data)
     tbody.innerHTML = Object.entries(data).map(([studentName, studentData]) => `
         <tr>
             <td>${studentName}</td>
@@ -404,46 +401,90 @@ function renderReport(data, selectedTrackables) {
             }).join('')}
         </tr>
     `).join('');
+
+    // Start New: Populate table body
+    // const tbody = reportTable.querySelector('tbody');
+    // tbody.innerHTML = Object.entries(data).map(([studentId, studentData]) => `
+    //     <tr>
+    //         <td>${studentData.name}</td>
+    //         ${selectedTrackables.map(trackableName => {
+    //             const trackableData = studentData.trackables[trackableName];
+    //             if (!trackableData) return '<td>Not Tracked</td>';
+    //             return `
+    //                 <td class="trackable-cell" 
+    //                     data-student-id="${studentId}"
+    //                     data-student-name="${studentData.name}"
+    //                     data-trackable="${trackableName}">
+    //                     ${trackableData.truths}/${trackableData.total}
+    //                 </td>`;
+    //         }).join('')}
+    //     </tr>
+    // `).join('');
+
+    // Add click event listener to trackable cells
+    // const trackableCells = tbody.querySelectorAll('.trackable-cell');
+    // trackableCells.forEach(cell => {
+    //     cell.addEventListener('click', handleCellClick);
+    // });
+
+    // end new
 }
 
 async function handleCellClick(e) {
+    // const cell = e.target.closest('.trackable-cell');
+    // if (!cell) return;
+
+    // const studentName = cell.dataset.student;
+    // const trackableName = cell.dataset.trackable;
+    // const startDate = document.getElementById('startDate').value;
+    // const endDate = document.getElementById('endDate').value;
+    
+    // try {
+    //     console.log(studentName)
+    //     const detailData = await fetchDetailData(studentName, trackableName, startDate, endDate);
+    //     console.log(detailData);
+    //     renderDetailModal(detailData, trackableName);
+    //     detailModal.classList.add('show');
+    // } catch (error) {
+    //     showAlert('Failed to load details: ' + error.message, false);
+    // }
+
     const cell = e.target.closest('.trackable-cell');
     if (!cell) return;
 
-    const studentName = cell.dataset.student;
+    const studentId = cell.dataset.studentId;
+    const studentName = cell.dataset.studentName;
     const trackableName = cell.dataset.trackable;
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
     try {
-        const detailData = await fetchDetailData(studentName, trackableName, startDate, endDate);
-        renderDetailModal(detailData, trackableName);
+        const detailData = await fetchDetailData(studentId, trackableName, startDate, endDate);
+        renderDetailModal(detailData, trackableName, studentName);
         detailModal.classList.add('show');
     } catch (error) {
         showAlert('Failed to load details: ' + error.message, false);
     }
 }
 
-async function fetchDetailData(studentName, trackableName, startDate, endDate) {
+async function fetchDetailData(studentId, trackableName, startDate, endDate) {
     // TODO: Connect to your API endpoint
     const params = {
-        studentName,
-        trackableName,
         startDate,
         endDate
     };
     
     try {
-        const response = await services.trackable.getDetails(params);
+        const response = await services.student.getTrackableDetails(studentId, trackableName, params);
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch detail data: ' + error.message);
     }
 }
 
-function renderDetailModal(data, trackableName) {
+function renderDetailModal(data, trackableName, studentName) {
     const modalTitle = document.querySelector('#detailModal .modal-header h2');
-    modalTitle.textContent = `${trackableName} Details`;
+    modalTitle.textContent = `${trackableName} Details for ${studentName}`;
 
     const tbody = document.querySelector('#detailTable tbody');
     tbody.innerHTML = data.map(entry => {

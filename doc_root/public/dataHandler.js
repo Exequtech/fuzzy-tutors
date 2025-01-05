@@ -9,6 +9,19 @@ class StudentService extends ResourceService {
     constructor() {
         super('student');
     }
+
+    async getTrackableDetails(studentId, trackableName, params) {
+
+        const response = await ApiService.withRetry(() => 
+            ApiService.makeApiCall(`${this.endpoint}/${studentId}/trackables/${trackableName}`, 'GET', params)
+        );
+
+        if (response.isSuccessful) {
+            await SessionManager.getNewToken();
+        }
+
+        return response.data.results;
+    }
 }
 
 class ClassService extends ResourceService {
@@ -64,8 +77,7 @@ class TrackableService extends ResourceService {
         } else {
             // TODO: Create (both can't be null) and return error response
         }
-
-        console.log(params);
+        
         const response = await ApiService.withRetry(() => 
             ApiService.makeApiCall(API_CONFIG.endpoints.resources.trackableReport, 'GET', params)
         );
