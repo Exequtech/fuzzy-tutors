@@ -40,16 +40,28 @@ $endpoints['/^calendar\/lesson\/?$/'] = [
                     'asc' => ' ASC;',
                     'desc' => ' DESC;'
                 };
+                $condition = '';
+                $types = '';
+                $values = [];
+                if(isset($request->locationId)) {
+                    if($request->locationId == 'null') {
+                        $condition = ' AND `Lesson`.`LocationID` IS NULL';
+                    } else {
+                        $condition = ' AND `Lesson`.`LocationID` = ?';
+                        $types .= 'i';
+                        $values[] = intval($request->locationId);
+                    }
+                }
 
                 $query = "SELECT `Lesson`.`LessonID`, `Username`, `TopicName`, `LocationName`, `LessonStart`, `LessonEnd`, `Lesson`.`Notes`, `StudentID` "
                         ."FROM `Lesson` LEFT JOIN `Location` ON `Lesson`.`LocationID` = `Location`.`LocationID` "
                         ."LEFT JOIN `User` ON `UserID` = `TutorID` "
                         ."LEFT JOIN `Topic` ON `Lesson`.`SubjectID` = `TopicID` "
                         ."LEFT JOIN `Attendance` ON `Lesson`.`LessonID` = `Attendance`.`LessonID` "
-                        ."WHERE `LessonStart` BETWEEN ? AND ?" . $order;
+                        ."WHERE `LessonStart` BETWEEN ? AND ?" . $condition . $order;
 
                 //MessageResponse(HTTP_OK, "Test", ['results' => $query]);
-                $results = BindedQuery($conn, $query, 'ss', [$request->after, $request->before], true,
+                $results = BindedQuery($conn, $query, 'ss' . $types, [$request->after, $request->before, ...$values], true,
                     "Failed to fetch lesson data (lesson calendar GET)");
 
                 $lessons = [];

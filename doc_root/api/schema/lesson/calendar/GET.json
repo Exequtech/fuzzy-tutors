@@ -16,7 +16,19 @@
         "order": {
             "type": "string",
             "enum": ["asc", "desc"]
+        },
+        "locationId": {
+            "type": "string",
+            "oneOf": [
+                {
+                    "pattern": "^[\\d]+$"
+                },
+                {
+                    "enum": ["null"]
+                }
+            ]
         }
     },
+    "additionalProperties": false,
     "required": ["before", "after"]
 }
