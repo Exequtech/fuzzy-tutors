@@ -176,7 +176,7 @@ $endpoints['/^stats\/trackables\/?$/'] = [
                     if(isset($request->trackables) && !in_array($record['TrackableName'], $request->trackables))
                         continue;
                     $results[$studentName]['trackables'][$record['TrackableName']] = [
-                        'truths' => $record['Truths'],
+                        'truths' => intval($record['Truths']),
                         'total' => $record['Total']
                     ];
                 }
