@@ -820,6 +820,7 @@ function handleDrop(e) {
 
 
 function renderSearchResults(students) {
+    console.log("start renderSearchResults")
     const searchResults = document.getElementById('manageSearchResults');
     const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
     const results = students.filter(student => !existingIds.has(student.id));
@@ -845,7 +846,7 @@ function renderSearchResults(students) {
 }
 
 function renderNewLessonSearchResults(students) {
-    const searchResults = document.getElementById('manageSearchResults');
+    const searchResults = document.getElementById('searchResults');
     const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
     const results = students.filter(student => !existingIds.has(student.id));
     
@@ -858,7 +859,7 @@ function renderNewLessonSearchResults(students) {
                     <div class="student-name">${student.username}</div>
                     <div class="student-email">${student.email}</div>
                 </div>
-                <button onclick="addLessonMember(${student.id}, '${student.username}', '${student.email}')" 
+                <button onclick="addNewLessonMember(${student.id}, '${student.username}', '${student.email}')" 
                         class="action-button add" title="Add to lesson">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -895,7 +896,7 @@ function renderNewLessonMembers() {
             <div class="student-info">
                 <div class="student-name">${member.username}</div>
             </div>
-            <button onclick="removeLessonMember(${member.id})" 
+            <button onclick="removeNewLessonMember(${member.id})" 
                     class="action-button" title="Remove from lesson">
                 <i class="fas fa-times"></i>
             </button>
@@ -977,6 +978,7 @@ function setupStudentManagement() {
 }
 
 function setupNewLessonStudentManagement() {
+    console.log('setupNewLessonStudentManagement')
     const searchInput = document.getElementById('studentSearchInput');
     const searchResults = document.getElementById('searchResults');
 
@@ -1020,7 +1022,7 @@ function toggleStudentSelectionType(e) {
     } else {
         classSelection.classList.add('hidden');
         studentSelection.classList.remove('hidden');
-        setupStudentManagement();
+        setupNewLessonStudentManagement();
     }
 }
 
