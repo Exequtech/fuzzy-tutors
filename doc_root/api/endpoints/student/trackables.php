@@ -11,6 +11,12 @@ $endpoints['/^student\/([\d]+)\/trackables\/([^\/]+)\/?$/'] = [
 		'GET' => [
 			'callback' => function(object $request, mysqli $conn, array $regex): never
 			{
+                if(!ValidateDate($request->startDate)) {
+                    MessageResponse(HTTP_BAD_REQUEST, "Invalid startDate");
+                }
+                if(!ValidateDate($request->endDate)) {
+                    MessageResponse(HTTP_BAD_REQUEST, "Invalid endDate");
+                }
 				EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
 				$id = intval($regex[1]);
@@ -20,8 +26,8 @@ $endpoints['/^student\/([\d]+)\/trackables\/([^\/]+)\/?$/'] = [
 					."LEFT JOIN `Lesson` ON `Lesson`.`LessonID` = `Attendance`.`LessonID` "
 					."LEFT JOIN `Location` ON `Lesson`.`LocationID` = `Location`.`LocationID` "
 					."LEFT JOIN `Topic` ON `Lesson`.`SubjectID` = `Topic`.`TopicID` "
-					."WHERE `StudentID` = ? AND `TrackableName` = ?";
-				$matches = BindedQuery($conn, $query, 'is', [$id, $trackable], true,
+					."WHERE `StudentID` = ? AND `TrackableName` = ? AND (`LessonStart` BETWEEN ? AND ? OR `LessonEnd` BETWEEN ? AND ?);";
+				$matches = BindedQuery($conn, $query, 'isssss', [$id, $trackable, $request->startDate, $request->endDate, $request->startDate, $request->endDate], true,
 					"Failed to fetch student trackables (trackables student GET)");
 
 				if(empty($matches))
