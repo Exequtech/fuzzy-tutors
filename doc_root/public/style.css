@@ -442,9 +442,9 @@ margin-top: auto;
 }
 
 .lesson-item {
-    background: #f5f5f5;
+    background: #efeeee;
     border-left: 4px solid #57cc02;
-    padding: 8px;
+    padding: 6px;
     margin-bottom: 8px;
     border-radius: 0 4px 4px 0;
     cursor: pointer;
@@ -472,9 +472,13 @@ margin-top: auto;
 
 .lesson-location {
     text-align: center;
-    font-size: 0.75em;
+    font-size: 0.85em;
     color: #666;
     margin-top: 2px;
+}
+
+.lesson-main-info .lesson-location {
+    font-size: 1.3em;
 }
 
 .form-row {
@@ -529,10 +533,6 @@ margin-top: auto;
     display: flex;
     justify-content: space-between;
     margin-bottom: 10px;
-}
-
-.lesson-location {
-    font-size: 1.2em;
 }
 
 .location-details {
@@ -620,13 +620,6 @@ margin-top: auto;
 }
 
 /* ================= Classes Option =================== */
-
-/* classes.css */
-.classes-container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
 
 .classes-grid {
     display: grid;
@@ -731,6 +724,15 @@ margin-top: auto;
         justify-content: center;
         padding: 10px 0;
     }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        margin: 0 auto;
+    }
 }
 
 .member-management {
@@ -825,14 +827,16 @@ margin-top: auto;
 /* Search Section */
 .search-section {
     margin-bottom: 20px;
+    display: flex;
 }
 
 .search-input {
-    width: 100%;
-    padding: 10px;
+    width: 768px;
+    padding: 15px 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 16px;
+    margin: 0 auto;
 }
 
 /* Table Styles */
@@ -1014,7 +1018,7 @@ tr:hover {
 }
 
 /* Topic Modal specific styles */
-#topicDescription {
+.description-input {
     width: 100%;
     min-height: 100px;
     padding: 8px;
@@ -1039,14 +1043,6 @@ tr:hover {
 /* ================= Settings Option =================== */
 
 /* ================= Trackables and Location Option =================== */
-/* Common styles for both reports */
-/* .trackables-container,
-.locations-container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-} */
-
 .header-section {
     display: flex;
     justify-content: space-between;
