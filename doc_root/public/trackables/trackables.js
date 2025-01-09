@@ -385,16 +385,16 @@ function renderReport(data, selectedTrackables) {
 
     // Populate table body
     const tbody = reportTable.querySelector('tbody');
-    console.log(data)
     tbody.innerHTML = Object.entries(data).map(([studentName, studentData]) => `
         <tr>
             <td>${studentName}</td>
             ${selectedTrackables.map(trackableName => {
-                const trackableData = studentData[trackableName];
+                const trackableData = studentData.trackables[trackableName];
                 if (!trackableData) return '<td>Not Tracked</td>';
                 return `
                     <td class="trackable-cell" 
-                        data-student="${studentName}"
+                        data-student-id="${studentData.id}"
+                        data-student-name="${studentName}"
                         data-trackable="${trackableName}">
                         ${trackableData.truths}/${trackableData.total}
                     </td>`;
@@ -402,61 +402,22 @@ function renderReport(data, selectedTrackables) {
         </tr>
     `).join('');
 
-    // Start New: Populate table body
-    // const tbody = reportTable.querySelector('tbody');
-    // tbody.innerHTML = Object.entries(data).map(([studentId, studentData]) => `
-    //     <tr>
-    //         <td>${studentData.name}</td>
-    //         ${selectedTrackables.map(trackableName => {
-    //             const trackableData = studentData.trackables[trackableName];
-    //             if (!trackableData) return '<td>Not Tracked</td>';
-    //             return `
-    //                 <td class="trackable-cell" 
-    //                     data-student-id="${studentId}"
-    //                     data-student-name="${studentData.name}"
-    //                     data-trackable="${trackableName}">
-    //                     ${trackableData.truths}/${trackableData.total}
-    //                 </td>`;
-    //         }).join('')}
-    //     </tr>
-    // `).join('');
-
     // Add click event listener to trackable cells
-    // const trackableCells = tbody.querySelectorAll('.trackable-cell');
-    // trackableCells.forEach(cell => {
-    //     cell.addEventListener('click', handleCellClick);
-    // });
-
-    // end new
+    const trackableCells = tbody.querySelectorAll('.trackable-cell');
+    trackableCells.forEach(cell => {
+        cell.addEventListener('click', handleCellClick);
+    });
 }
 
 async function handleCellClick(e) {
-    // const cell = e.target.closest('.trackable-cell');
-    // if (!cell) return;
-
-    // const studentName = cell.dataset.student;
-    // const trackableName = cell.dataset.trackable;
-    // const startDate = document.getElementById('startDate').value;
-    // const endDate = document.getElementById('endDate').value;
-    
-    // try {
-    //     console.log(studentName)
-    //     const detailData = await fetchDetailData(studentName, trackableName, startDate, endDate);
-    //     console.log(detailData);
-    //     renderDetailModal(detailData, trackableName);
-    //     detailModal.classList.add('show');
-    // } catch (error) {
-    //     showAlert('Failed to load details: ' + error.message, false);
-    // }
-
     const cell = e.target.closest('.trackable-cell');
     if (!cell) return;
 
     const studentId = cell.dataset.studentId;
     const studentName = cell.dataset.studentName;
     const trackableName = cell.dataset.trackable;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+    const startDate = formatDateForApi( new Date(document.getElementById('startDate').value));
+    const endDate = formatDateForApi( new Date(document.getElementById('endDate').value));
     
     try {
         const detailData = await fetchDetailData(studentId, trackableName, startDate, endDate);
@@ -470,29 +431,31 @@ async function handleCellClick(e) {
 async function fetchDetailData(studentId, trackableName, startDate, endDate) {
     // TODO: Connect to your API endpoint
     const params = {
-        startDate,
-        endDate
+        // startDate,
+        // endDate
     };
     
     try {
         const response = await services.student.getTrackableDetails(studentId, trackableName, params);
-        return response.data;
+        return response;
     } catch (error) {
         throw new Error('Failed to fetch detail data: ' + error.message);
     }
 }
 
 function renderDetailModal(data, trackableName, studentName) {
+    console.log(data)
     const modalTitle = document.querySelector('#detailModal .modal-header h2');
     modalTitle.textContent = `${trackableName} Details for ${studentName}`;
 
     const tbody = document.querySelector('#detailTable tbody');
     tbody.innerHTML = data.map(entry => {
-        const date = new Date(entry.DateTime);
+        const startDate = new Date(entry.startDate);
+        const endDate = new Date (entry.endDate);
         return `
             <tr>
-                <td>${date.toLocaleDateString()}</td>
-                <td>${date.toLocaleTimeString()}</td>
+                <td>${startDate.toLocaleDateString()}</td>
+                <td>${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}</td>
                 <td>${entry.subjectName}</td>
                 <td>${entry.isTrue === null ? 'Not Tracked' : entry.isTrue ? 'Yes' : 'No'}</td>
             </tr>
