@@ -107,6 +107,29 @@ class LocationService extends ResourceService {
 
         return response.data.results;
     }
+
+    async getReport(after, before, locations, subjects ) {
+        const params = { 
+            before, 
+            after, 
+            // locations, 
+            // subjects 
+        };
+        const response = await ApiService.withRetry(() => 
+            ApiService.makeApiCall(API_CONFIG.endpoints.resources.calendar, 'GET', params)
+        );
+
+        if (response.isSuccessful) {
+            await SessionManager.getNewToken();
+        }
+
+        return response.data.results;
+    }
+
+    async createLesson(lessonData) {
+
+        return await this.create(lessonData);
+    }
 }
 
 class LessonService extends ResourceService {
