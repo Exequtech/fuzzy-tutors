@@ -76,18 +76,7 @@ async function loadPageScript(page) {
 
     try {
         await loadPromise;
-        // After script is loaded, ensure any cleanup of previous state is done
-        if (typeof window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
-            window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`]();
-            console.log(`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`)
-        }
-        // Initialize the page
-        if (typeof window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
-            await window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`]();
-            console.log(`init${page.charAt(0).toUpperCase() + page.slice(1)}`)
-        }
 
-        console.log(page)
         switch (page) {
             case 'calendar':
                 initCalendar();
