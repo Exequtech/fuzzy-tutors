@@ -6,6 +6,8 @@ import {initSubjects} from './subjects/subjects.js';
 import { initLocations } from './locations/locations.js';
 import { initTrackables } from './trackables/trackables.js';
 
+import { SessionManager } from './dataHandler.js';
+
 const toggleBtn = document.querySelector('.toggle-btn');
 const sidebar = document.querySelector('.sidebar');
 const mainContent = document.getElementById('mainContent');
@@ -23,6 +25,13 @@ toggleBtn.addEventListener('click', () => {
 // Navigation handling
 async function loadContent(page) {
     try {
+        if (page == 'logOut') {
+            SessionManager.logOut();
+            // TODO
+            alert("todo: log out");
+            return
+        }
+
         const response = await fetch(`${page}/${page}.html`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const content = await response.text();

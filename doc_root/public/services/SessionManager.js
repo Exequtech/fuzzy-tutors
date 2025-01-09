@@ -35,6 +35,11 @@ class SessionManager {
         return !!this.getToken();
     }
 
+    static logOut() {
+        localStorage.removeItem(this.TOKEN_KEY);
+        window.location.href = '/authentication.html';
+    }
+
     static redirectToHome() {
         window.location.href = '/index.html';
     }
