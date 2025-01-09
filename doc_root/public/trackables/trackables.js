@@ -431,8 +431,8 @@ async function handleCellClick(e) {
 async function fetchDetailData(studentId, trackableName, startDate, endDate) {
     // TODO: Connect to your API endpoint
     const params = {
-        // startDate,
-        // endDate
+        startDate,
+        endDate
     };
     
     try {

@@ -112,8 +112,8 @@ class LocationService extends ResourceService {
         const params = { 
             before, 
             after, 
-            // locations, 
-            // subjects 
+            locations, 
+            subjects 
         };
         const response = await ApiService.withRetry(() => 
             ApiService.makeApiCall(API_CONFIG.endpoints.resources.calendar, 'GET', params)
