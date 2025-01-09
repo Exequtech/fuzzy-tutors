@@ -4,7 +4,8 @@ const API_CONFIG = {
         auth: {
             signup: '/auth/signup',
             login: '/auth/login',
-            token: '/auth/ot-token'
+            logout: '/auth/logout',
+            token: '/auth/ot-token',
         },
         resources: {
             student: '/student',

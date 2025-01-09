@@ -32,6 +32,10 @@ RewriteCond %{REQUEST_METHOD} !^GET$
 RewriteCond $1 ^auth/ot-token$
 RewriteRule ^(.*)$ - [END,R=405]
 
+RewriteCond %{REQUEST_METHOD} !^DELETE$
+RewriteCond $1 ^auth/logout$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Auth allowlist
 RewriteCond %{REQUEST_METHOD} ^POST$
 RewriteCond $1 ^auth/(login|signup)$
@@ -39,6 +43,10 @@ RewriteRule ^(.*) index.php?path=$1 [END,QSA]
 
 RewriteCond %{REQUEST_METHOD} ^GET$
 RewriteCond $1 ^auth/ot-token$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^DELETE$
+RewriteCond $1 ^auth/logout$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 # Student denylist

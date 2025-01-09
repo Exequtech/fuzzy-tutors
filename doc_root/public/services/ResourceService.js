@@ -17,10 +17,7 @@ class ResourceService {
      * @param {Object} [filter] - misc query params, overrides function parameters
      * @returns {Promise<(Array|null)>}
      */
-    async getPage(page = 1, pageSize = null, order = "asc", orderBy = "id", filter = {}, internal = false) {
-        if(!internal)
-            console.error("GETPAGE: ", this.endpoint)
-            
+    async getPage(page = 1, pageSize = null, order = "asc", orderBy = "id", filter = {}) {
         const params = {
             page,
             order,
@@ -53,7 +50,7 @@ class ResourceService {
         let page = 1;
         const results = [];
         while(true) {
-            const get = await this.getPage(page, null, order, orderBy, filter, true);
+            const get = await this.getPage(page, null, order, orderBy, filter);
             if(get == null)
                 return null;
             

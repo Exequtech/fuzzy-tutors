@@ -35,7 +35,10 @@ class SessionManager {
         return !!this.getToken();
     }
 
-    static logOut() {
+    static async logOut() {
+        await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.logout}`, {
+            method: "DELETE"
+        });
         localStorage.removeItem(this.TOKEN_KEY);
         window.location.href = '/authentication.html';
     }
