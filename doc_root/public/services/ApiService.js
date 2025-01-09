@@ -50,8 +50,8 @@ class ApiService {
             const data = await response.json();
 
             return response.ok
-                ? ApiResponse.success(data.detail, data)
-                : ApiResponse.error(data.detail);
+                ? ApiResponse.success(data.detail, data, response.status)
+                : ApiResponse.error(data.detail, null, response.status);
         } catch (error) {
             console.error('API call failed:', error);
 
@@ -68,9 +68,14 @@ class ApiService {
             try {
                 const result = await fn();
                 if (result.isSuccessful) return result;
+                if (result.code == 401) {
+                    if(await SessionManager.getNewToken() === null)
+                    {
+                        window.location.replace("/authentication.html");
+                    }
+                }
                 
                 if (attempt === maxRetries) return result;
-                
                 await new Promise(resolve => setTimeout(resolve, delay * attempt));
             } catch (error) {
                 if (attempt === maxRetries) throw error;

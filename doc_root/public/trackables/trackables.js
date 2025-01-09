@@ -70,6 +70,7 @@ function setupEventListeners() {
     // Close buttons
     document.querySelectorAll('.close-button, .cancel-button').forEach(button => {
         button.addEventListener('click', () => {
+            detailModal.classList.remove('show');
             configModal.classList.remove('show');
             formModal.classList.remove('show');
         });
@@ -143,8 +144,8 @@ async function loadTrackables() {
 
 async function loadFormData() {
     try {
-        const subjects = await services.subject.getPage();
-        const classes = await services.class.getPage();
+        const subjects = await services.subject.getAllPages();
+        const classes = await services.class.getAllPages();
         const trackables = await services.trackable.getAll();
 
         // Populate subject select
@@ -259,7 +260,7 @@ async function handleStudentSearch(e) {
 
     searchTimeout = setTimeout(async () => {
         try {
-            const students = await services.student.getPage(1, 5, "asc", "username", {
+            const students = await services.student.getAllPages("asc", "username", {
                 username: searchTerm
             });
             renderSearchResults(students);

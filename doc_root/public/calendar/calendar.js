@@ -62,9 +62,9 @@ async function initCalendar() {
 
 async function loadFormData() {
     try {
-        subjects = await services.subject.getPage();
-        classes = await services.class.getPage();
-        locations = await services.location.getAll();
+        subjects = await services.subject.getAllPages();
+        classes = await services.class.getAllPages();
+        locations = await services.location.getAllPages();
         trackables = await services.trackable.getAll();
 
         populateSubjectSelect();
@@ -971,7 +971,7 @@ function setupStudentManagement() {
 
         searchTimeout = setTimeout(async () => {
             try {
-                const students = await services.student.getPage(1, 5, "asc", "username", {
+                const students = await services.student.getAllPages("asc", "username", {
                     username: searchTerm
                 });
                 renderSearchResults(students);
@@ -1006,7 +1006,7 @@ function setupNewLessonStudentManagement() {
 
         searchTimeout = setTimeout(async () => {
             try {
-                const students = await services.student.getPage(1, 5, "asc", "username", {
+                const students = await services.student.getAllPages("asc", "username", {
                     username: searchTerm
                 });
                 renderNewLessonSearchResults(students);

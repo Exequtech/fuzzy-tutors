@@ -31,7 +31,7 @@ async function initSubjects() {
         addSubjectBtn = document.getElementById('addSubjectBtn');
         initializeEventListeners()
         console.log('start')
-        subjects = await services.subject.getPage();
+        subjects = await services.subject.getAllPages();
         renderSubjects();
     } catch (error) {
         showAlert('Failed to load data: ' + error.message, false);
@@ -45,7 +45,7 @@ function initializeEventListeners() {
     searchInput.addEventListener('input', async (e) => {
         const searchTerm = e.target.value.toLowerCase();
         try {
-            const filteredSubjects = await services.subject.getPage(1, 10, "asc", "id", {
+            const filteredSubjects = await services.subject.getAllPages("asc", "id", {
                 name: searchTerm
             });
             renderSubjects(filteredSubjects);
@@ -145,7 +145,7 @@ async function handleSubjectFormSubmit(e) {
 
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
-            subjects = await services.subject.getPage();
+            subjects = await services.subject.getAllPages();
             renderSubjects();
             closeAllModals();
         } else {
@@ -174,7 +174,7 @@ async function handleTopicFormSubmit(e) {
 
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
-            subjects = await services.subject.getPage();
+            subjects = await services.subject.getAllPages();
             renderSubjects();
             closeAllModals();
         } else {
@@ -253,7 +253,7 @@ async function deleteTopic(topicId) {
         const response = await services.topic.delete(topicId);
         if (response.isSuccessful) {
             showAlert('Topic deleted successfully', true);
-            subjects = await services.subject.getPage();
+            subjects = await services.subject.getAllPages();
             renderSubjects();
         } else {
             showAlert(response.message, false);

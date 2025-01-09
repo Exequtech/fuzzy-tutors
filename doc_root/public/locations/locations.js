@@ -114,7 +114,7 @@ async function handleDateChange() {
 
 async function loadLocations() {
     try {
-        const locations = await services.location.getAll();
+        const locations = await services.location.getAllPages();
         renderLocationsList(locations);
     } catch (error) {
         showAlert('Failed to load locations: ' + error.message, false);
@@ -123,8 +123,8 @@ async function loadLocations() {
 
 async function loadFormData() {
     try {
-        const subjects = await services.subject.getPage();
-        const locations = await services.location.getAll();
+        const subjects = await services.subject.getAllPages();
+        const locations = await services.location.getAllPages();
 
         // Populate subject select
         subjectSelect.innerHTML = subjects.map(subject =>

@@ -18,7 +18,7 @@ let currentStudentId = null;
 async function initStudents() {
     window.confirmDelete = confirmDeleteStudent;
 
-    students = await services.student.getPage();
+    students = await services.student.getAllPages();
 
     studentsTable = document.getElementById('studentsList');
     studentModal = document.getElementById('studentModal');
@@ -161,7 +161,7 @@ async function handleFormSubmit() {
         showAlert(apiResponse.message, apiResponse.isSuccessful);
     }
 
-    renderStudents(await services.student.getPage());
+    renderStudents(await services.student.getAllPages());
     closeModal();
 }
 
@@ -180,7 +180,7 @@ function confirmDeleteStudent(id) {
 async function deleteStudent(id) {
     let apiResponse = await services.student.delete(id);
     showAlert(apiResponse.message, apiResponse.isSuccessful);
-    renderStudents(await services.student.getPage());
+    renderStudents(await services.student.getAllPages());
 }
 
 // Utility Functions

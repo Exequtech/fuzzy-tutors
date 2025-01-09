@@ -8,7 +8,7 @@ class SessionManager {
             const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.token}`);
             const data = await response.json();
             
-            if (response.ok && data.token) {
+            if (response.ok) {
                 this.setToken(data.token);
                 return data.token;
             }

@@ -28,7 +28,7 @@ async function initClasses() {
         alertMessage= document.getElementById('alertMessage');
         addClassBtn = document.getElementById('addClassBtn');
         // Load initial data
-        classes = await services.class.getPage();
+        classes = await services.class.getAllPages();
         initEventListeners();
         renderClasses();
     } catch (error) {
@@ -45,7 +45,7 @@ function initEventListeners() {
         const searchTerm = e.target.value.toLowerCase();
         try {
             // Use the API's filter capability
-            const filteredClasses = await services.class.getPage(1, 10, "asc", "id", {
+            const filteredClasses = await services.class.getAllPages("asc", "id", {
                 name: searchTerm
             });
             renderClasses(filteredClasses);
@@ -101,7 +101,7 @@ function setupMemberManagement() {
 
         searchTimeout = setTimeout(async () => {
             try {
-                const students = await services.student.getPage(1, 5, "asc", "username", {
+                const students = await services.student.getAllPages("asc", "username", {
                     username: searchTerm
                 });
                 renderSearchResults(students, searchResults);
@@ -255,7 +255,7 @@ async function handleFormSubmit() {
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
             // Refresh the class list
-            classes = await services.class.getPage();
+            classes = await services.class.getAllPages();
             renderClasses();
             closeModal();
         } else {
@@ -294,7 +294,7 @@ async function deleteClass(id) {
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
             // Refresh the class list
-            classes = await services.class.getPage();
+            classes = await services.class.getAllPages();
             renderClasses();
         } else {
             showAlert(apiResponse.message, false);
