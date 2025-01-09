@@ -27,9 +27,6 @@ async function loadContent(page) {
     try {
         if (page == 'logOut') {
             SessionManager.logOut();
-            // TODO
-            alert("todo: log out");
-            return
         }
 
         const response = await fetch(`${page}/${page}.html`);
