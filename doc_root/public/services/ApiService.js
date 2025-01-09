@@ -19,6 +19,7 @@ function EncodeGETParams(params) {
 
 class ApiService {
     static async makeApiCall(endpoint, method, body = null) {
+        let requestSuccessful = false;
         try {
             const headers = {
                 'Content-Type': 'application/json'
@@ -44,6 +45,8 @@ class ApiService {
             }
 
             const response = await fetch(url, config);
+            requestSuccessful = true;
+
             const data = await response.json();
 
             return response.ok
@@ -51,7 +54,12 @@ class ApiService {
                 : ApiResponse.error(data.detail);
         } catch (error) {
             console.error('API call failed:', error);
-            return ApiResponse.error('Network error or server is unavailable');
+
+            if (requestSuccessful) {
+                return ApiResponse.error('Failed to interpret response (likely invalid JSON)');
+            } else {
+                return ApiResponse.error('Network error or server is unavailable');
+            }
         }
     }
 

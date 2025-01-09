@@ -40,17 +40,42 @@ $endpoints['/^calendar\/lesson\/?$/'] = [
                     'asc' => ' ASC;',
                     'desc' => ' DESC;'
                 };
-                $condition = '';
-                $types = '';
-                $values = [];
-                if(isset($request->locationId)) {
-                    if($request->locationId == 'null') {
-                        $condition = ' AND `Lesson`.`LocationID` IS NULL';
-                    } else {
-                        $condition = ' AND `Lesson`.`LocationID` = ?';
-                        $types .= 'i';
-                        $values[] = intval($request->locationId);
+                $conditions = ['(`LessonStart` BETWEEN ? AND ? OR `LessonEnd` BETWEEN ? AND ?)'];
+                $types = 'ssss';
+                $values = [$request->after, $request->before, $request->after, $request->before];
+
+                if(isset($request->locations)) {
+                    $ids = array_map('intval', $request->locations);
+                    if(empty($ids))
+                        MessageResponse(HTTP_OK, null, ['results' => []]);
+
+                    $matches = BindedQuery($conn, "SELECT `LocationID` FROM `Location` WHERE `LocationID` IN (" . implode(',',$ids) . ");", '', [], true,
+                        "Failed to fetch locations (lesson calendar GET)");
+                    
+                    if(count($ids) !== count($matches)) {
+                        $existing_ids = array_column($matches, 'LocationID');
+                        $invalids = array_diff($ids, $existing_ids);
+                        MessageResponse(HTTP_CONFLICT, 'Some provided location Ids do not exist', ['invalid_ids' => $invalids]);
                     }
+
+                    $conditions[] = "`Lesson`.`LocationID` IN (" . implode(',',$ids) . ")";
+                }
+                if(isset($request->subjects)) {
+                    $ids = array_map('intval', $request->subjects);
+
+                    if(empty($ids))
+                        MessageResponse(HTTP_OK, null, ['results' => []]);
+
+                    $matches = BindedQuery($conn, "SELECT `TopicID` FROM `Topic` WHERE `TopicID` IN (" . implode(',',$ids) . ");", '', [], true,
+                        "Failed to fetch topics (lesson calendar GET)");
+
+                    if(count($ids) !== count($matches)) {
+                        $existing_ids = array_column($matches, 'TopicID');
+                        $invalids = array_diff($ids, $existing_ids);
+                        MessageResponse(HTTP_CONFLICT, 'Some provided topic Ids do not exist', ['invalid_ids' => $invalids]);
+                    }
+
+                    $conditions[] = "`Lesson`.`SubjectID` IN (" . implode(',',$ids) . ")";
                 }
 
                 $query = "SELECT `Lesson`.`LessonID`, `Username`, `TopicName`, `LocationName`, `LessonStart`, `LessonEnd`, `Lesson`.`Notes`, `StudentID` "
@@ -58,10 +83,10 @@ $endpoints['/^calendar\/lesson\/?$/'] = [
                         ."LEFT JOIN `User` ON `UserID` = `TutorID` "
                         ."LEFT JOIN `Topic` ON `Lesson`.`SubjectID` = `TopicID` "
                         ."LEFT JOIN `Attendance` ON `Lesson`.`LessonID` = `Attendance`.`LessonID` "
-                        ."WHERE `LessonStart` BETWEEN ? AND ?" . $condition . $order;
+                        ."WHERE " . implode(' AND ', $conditions) . " $order";
 
                 //MessageResponse(HTTP_OK, "Test", ['results' => $query]);
-                $results = BindedQuery($conn, $query, 'ss' . $types, [$request->after, $request->before, ...$values], true,
+                $results = BindedQuery($conn, $query, $types, $values, true,
                     "Failed to fetch lesson data (lesson calendar GET)");
 
                 $lessons = [];

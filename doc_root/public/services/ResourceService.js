@@ -7,24 +7,58 @@ class ResourceService {
         this.endpoint = API_CONFIG.endpoints.resources[resourceType];
     }
 
-    async getPage(page = 1, pageSize = 10, order = "asc", orderBy = "id", filter = {}) {
+    /**
+     * Sends a GET request for a page at this object's endpoint URL and returns the result.
+     * 
+     * @param {number} [page] - The target page. Defaults to 1
+     * @param {number} [pageSize] - The amount of elements per page. Defaults to unset (resulting in server-side default)
+     * @param {string} [order] - asc/desc
+     * @param {string} [orderBy] - field name the server should order the responses by
+     * @param {Object} [filter] - misc query params, overrides function parameters
+     * @returns {Promise<(Array|null)>}
+     */
+    async getPage(page = 1, pageSize = null, order = "asc", orderBy = "id", filter = {}) {
         const params = {
             page,
-            pageSize,
             order,
             orderBy,
             ...filter
         };
 
-        const response = await ApiService.withRetry(() => 
+        if(!!pageSize)
+            params.pageSize = pageSize;
+
+        const response = await ApiService.withRetry(() =>
             ApiService.makeApiCall(this.endpoint, 'GET', params)
         );
 
-        if (response.isSuccessful) {
-            await SessionManager.getNewToken();
+        if(!response.isSuccessful) {
+            console.log(`Failed to GET ${this.endpoint} data: `, response.message);
+            return null;
+        }
+        if(!response.data?.results) {
+            console.log(`Failed to GET ${this.endpoint} data: unexpected structure. Body:`, response.data);
+            return null;
         }
 
+        await SessionManager.getNewToken();
+
         return response.data.results;
+    }
+
+    async getAllPages(order = "asc", orderBy = "id", filter = {}) {
+        let page = 1;
+        const results = [];
+        while(true) {
+            const get = await this.getPage(page, null, order, orderBy, filter);
+            if(get == null)
+                return null;
+            
+            if(get.length === 0)
+                return results;
+
+            results.push(...get);
+        }
     }
 
     async create(data) {
