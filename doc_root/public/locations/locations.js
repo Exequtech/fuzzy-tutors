@@ -43,6 +43,7 @@ async function initLocations() {
         await loadFormData();
         setupEventListeners();
         setupFilterEventListeners();
+        renderReport(await services.location.getReport());
     } catch (error) {
         showAlert('Failed to initialize: ' + error.message, false);
     }

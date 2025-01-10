@@ -159,10 +159,6 @@ function setupSettingsModal() {
             if (response.isSuccessful) {
                 alert('Profile updated successfully!', true);
                 settingsModal.classList.remove('show');
-                // Reset password fields
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
             } else {
                 alert(response.message || 'Failed to update profile', false);
             }
@@ -176,7 +172,13 @@ function setupSettingsModal() {
                     alert(response.message);
                 } else {
                     alert(response.message || 'Failed to update password');
+                    return;
                 }
+
+                // Reset password fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
             }
 
         } catch (error) {
@@ -194,9 +196,17 @@ function setupSettingsModal() {
     });
 }
 
-function populateCurrentUserData() {
-    document.getElementById('username').value = "jeremia";
-    document.getElementById('email').value = "jermia@gmail.com";
+async function populateCurrentUserData() {
+    let response = await services.auth.getProfile();
+    
+    if (response.isSuccessful) {
+        document.getElementById('username').value = response.data.result.name;
+        document.getElementById('email').value = response.data.result.email;
+    } else {
+        document.getElementById('username').value = 'Error loading name';
+        document.getElementById('email').value = 'Error loading email';
+    }
+
 
     document.getElementById('currentPassword').value = '';
     document.getElementById('newPassword').value = '';

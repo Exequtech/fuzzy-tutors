@@ -4,6 +4,7 @@ import { ResourceService } from './services/ResourceService.js';
 import { AuthService } from '/services/AuthService.js';
 import {ApiService} from '/services/ApiService.js';
 import {API_CONFIG} from '/config/apiConfig.js';
+import { formatDateForApi, dateDiffed } from './utils/utilityFunctions.js';
 
 class StudentService extends ResourceService {
     constructor() {
@@ -60,22 +61,15 @@ class TrackableService extends ResourceService {
         return response.data.results;
     }
 
-    async getReport(startDate, endDate, subjects, students, classId, trackables) {
+    async getReport(startDate = dateDiffed(-7), endDate = dateDiffed(0), subjects = null, students = null, classId = null, trackables = null) {
         const params = { 
             startDate,
             endDate,
-            subjects,
-            trackables 
         };
-
-        if (classId != null && students != null) {
-            // TODO: Create (One must be null) and return error response
-        } else if (classId != null) {
-            params.classId = classId;
-        } else if (students !=  null) {
-            params.students = students;
-        } else {
-            // TODO: Create (both can't be null) and return error response
+        const others = {subjects, students, classId, trackables};
+        for(let key in others) {
+            if(others[key] !== null)
+                params[key] = others[key];
         }
         
         const response = await ApiService.withRetry(() => 
@@ -108,13 +102,18 @@ class LocationService extends ResourceService {
         return response.data.results;
     }
 
-    async getReport(after, before, locations, subjects ) {
+    async getReport(after = dateDiffed(-7), before = dateDiffed(0), locations = null, subjects = null) {
         const params = { 
             before, 
-            after, 
-            locations, 
-            subjects 
+            after
         };
+
+        const others = { locations, subjects };
+        for(let key in others) {
+            if(others[key] !== null)
+                params[key] = others[key];
+        }
+
         const response = await ApiService.withRetry(() => 
             ApiService.makeApiCall(API_CONFIG.endpoints.resources.calendar, 'GET', params)
         );

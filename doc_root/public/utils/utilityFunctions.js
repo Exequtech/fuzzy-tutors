@@ -8,11 +8,17 @@ function formatDateForApi(date) {
     
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+function dateDiffed(dayDiff) {
+    const today = new Date();
+    today.setDate(today.getDate() + dayDiff);
+    return formatDateForApi(today);
+}
 
 function formatTimeFromDate(date) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 export {
-    formatDateForApi
+    formatDateForApi,
+    dateDiffed,
 }

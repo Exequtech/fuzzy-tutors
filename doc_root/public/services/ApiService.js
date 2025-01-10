@@ -40,7 +40,7 @@ class ApiService {
             if (method === 'GET' && body) {
                 const queryString = EncodeGETParams(body);
                 url = `${url}?${queryString}`;
-            } else if (['POST', 'PATCH'].includes(method)) {
+            } else if (['POST', 'PATCH', 'PUT'].includes(method)) {
                 config.body = JSON.stringify(body);
             }
 
