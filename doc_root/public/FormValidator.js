@@ -2,7 +2,7 @@
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 50;
 const USERNAME_MIN_LENGTH = 2;
-const USERNAME_MAX_LENGTH = 30;
+const USERNAME_MAX_LENGTH = 60;
 const USER_TYPES = ['tutor', 'student', 'owner'];
 
 class ValidationResult {
@@ -23,8 +23,8 @@ class FormValidator {
         if (username.length > USERNAME_MAX_LENGTH) {
             return new ValidationResult(false, `Username must be less than ${USERNAME_MAX_LENGTH} characters`);
         }
-        if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-            return new ValidationResult(false, 'Username can only contain letters, numbers, underscore and hyphen');
+        if (!/^[\w\-\s]+$/.test(username)) {
+            return new ValidationResult(false, 'Username can only contain alphanumeric chars, dash (-) and spaces');
         }
         return new ValidationResult(true);
     }
@@ -43,7 +43,7 @@ class FormValidator {
         if (!email) {
             return new ValidationResult(false, 'Email is required');
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^(?=[^\.]+(\.[^\.]+)?@[^\.]+(\.[^\.]+)+)[\w\.]+@[\w\.]+$/;
         if (!emailRegex.test(email)) {
             return new ValidationResult(false, 'Invalid email format');
         }
@@ -61,13 +61,17 @@ class FormValidator {
             return new ValidationResult(false, `Password must be less than ${PASSWORD_MAX_LENGTH} characters`);
         }
         
-        const hasUpperCase = /[A-Z]/.test(password);
-        const hasLowerCase = /[a-z]/.test(password);
-        const hasNumbers = /\d/.test(password);
-        const hasSpecialChar = /[!@#$%^&\.*]/.test(password);
-        
-        if (!(hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar)) {
-            return new ValidationResult(false, 'Password must contain uppercase, lowercase, numbers and special characters');
+        if (!/[a-z]+/.test(password)) {
+            return new ValidationResult(false, 'Password must contain a lower-case letter');
+        }
+        if (!/[A-Z]+/.test(password)) {
+            return new ValidationResult(false, 'Password must contain an upper-case letter');
+        }
+        if (!/[\d]+/.test(password)) {
+            return new ValidationResult(false, 'Password must contain at least 1 digit');
+        }
+        if (!/[^\w\s]+/.test(password)) {
+            return new ValidationResult(false, 'Password must contain a special character');
         }
         
         return new ValidationResult(true);

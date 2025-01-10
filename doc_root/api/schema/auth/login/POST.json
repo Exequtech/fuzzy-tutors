@@ -3,15 +3,15 @@
     "properties": {
         "username": {
             "type": "string",
-            "maxLength": 60,
+            "maxLength": 60
         },
         "email": {
             "type": "string",
-            "maxLength": 40,
+            "maxLength": 40
         },
         "password": {
             "type": "string",
-            "maxLength": 50,
+            "maxLength": 50
         }
     },
     "oneOf": [
