@@ -13,7 +13,7 @@ class ValidationResult {
 }
 
 class FormValidator {
-    static validateUsername(username) {
+    static validateUsername(username, strict = true) {
         if (!username) {
             return new ValidationResult(false, 'Username is required');
         }
@@ -23,7 +23,7 @@ class FormValidator {
         if (username.length > USERNAME_MAX_LENGTH) {
             return new ValidationResult(false, `Username must be less than ${USERNAME_MAX_LENGTH} characters`);
         }
-        if (!/^[\w\-\s]+$/.test(username)) {
+        if (strict && !/^[\w\-\s]+$/.test(username)) {
             return new ValidationResult(false, 'Username can only contain alphanumeric chars, dash (-) and spaces');
         }
         return new ValidationResult(true);
@@ -39,18 +39,18 @@ class FormValidator {
         return new ValidationResult(true);
     }
 
-    static validateEmail(email) {
+    static validateEmail(email, strict = true) {
         if (!email) {
             return new ValidationResult(false, 'Email is required');
         }
         const emailRegex = /^(?=[^\.]+(\.[^\.]+)?@[^\.]+(\.[^\.]+)+)[\w\.]+@[\w\.]+$/;
-        if (!emailRegex.test(email)) {
+        if (strict && !emailRegex.test(email)) {
             return new ValidationResult(false, 'Invalid email format');
         }
         return new ValidationResult(true);
     }
 
-    static validatePassword(password) {
+    static validatePassword(password, strict = true) {
         if (!password) {
             return new ValidationResult(false, 'Password is required');
         }
@@ -61,17 +61,19 @@ class FormValidator {
             return new ValidationResult(false, `Password must be less than ${PASSWORD_MAX_LENGTH} characters`);
         }
         
-        if (!/[a-z]+/.test(password)) {
-            return new ValidationResult(false, 'Password must contain a lower-case letter');
-        }
-        if (!/[A-Z]+/.test(password)) {
-            return new ValidationResult(false, 'Password must contain an upper-case letter');
-        }
-        if (!/[\d]+/.test(password)) {
-            return new ValidationResult(false, 'Password must contain at least 1 digit');
-        }
-        if (!/[^\w\s]+/.test(password)) {
-            return new ValidationResult(false, 'Password must contain a special character');
+        if (strict) {
+            if (!/[a-z]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain a lower-case letter');
+            }
+            if (!/[A-Z]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain an upper-case letter');
+            }
+            if (!/[\d]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain at least 1 digit');
+            }
+            if (!/[^\w\s]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain a special character');
+            }
         }
         
         return new ValidationResult(true);
@@ -80,9 +82,9 @@ class FormValidator {
     static validateLoginCredentials(username, password) {
         let isEmail = false;
 
-        const usernameValidation = this.validateUsername(username);
-        const emailValidation = this.validateEmail(username);
-        const passwordValidation = this.validatePassword(password);
+        const usernameValidation = this.validateUsername(username, false);
+        const emailValidation = this.validateEmail(username, false);
+        const passwordValidation = this.validatePassword(password, false);
         
         if (emailValidation.isValid) {
             isEmail = true; 
