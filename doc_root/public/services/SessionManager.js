@@ -44,7 +44,7 @@ class SessionManager {
     }
 
     static redirectToHome() {
-        window.location.href = '/index.html';
+        window.location.href = '/index.html?page=calendar';
     }
 }
 

@@ -127,7 +127,7 @@ window.addEventListener('popstate', (event) => {
 document.addEventListener('DOMContentLoaded', () => {
     // Get page from URL or default to dashboard
     const urlParams = new URLSearchParams(window.location.search);
-    const initialPage = urlParams.get('page') || 'dashboard';
+    const initialPage = urlParams.get('page') || 'calendar';
     loadContent(initialPage);
 });
 
