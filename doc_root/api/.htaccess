@@ -197,5 +197,23 @@ RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^lesson/[\d]+/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
+# Settings denylist
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH)$
+RewriteCond $1 ^settings/fields$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(PUT)$
+RewriteCond $1 ^settings/password$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Settings allowlist
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH)$
+RewriteCond $1 ^settings/fields$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(PUT)$
+RewriteCond $1 ^settings/password$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
 # If no prior rules matched, the endpoint doesn't exist (404)
 RewriteRule ^ - [END,R=404]
