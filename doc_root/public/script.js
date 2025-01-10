@@ -6,12 +6,18 @@ import {initSubjects} from './subjects/subjects.js';
 import { initLocations } from './locations/locations.js';
 import { initTrackables } from './trackables/trackables.js';
 
-import { SessionManager } from './dataHandler.js';
+import { services, SessionManager } from './dataHandler.js';
 
 const toggleBtn = document.querySelector('.toggle-btn');
 const sidebar = document.querySelector('.sidebar');
 const mainContent = document.getElementById('mainContent');
 const navItems = document.querySelectorAll('.nav-item');
+
+let settingsModal = document.getElementById('settingsModal');
+let settingsForm = document.getElementById('settingsForm');
+let logoutBtn = document.getElementById('logoutBtn');
+let closeButton = settingsModal.querySelector('.close-button');
+
 let oldScript;
 
 // Toggle sidebar
@@ -25,8 +31,9 @@ toggleBtn.addEventListener('click', () => {
 // Navigation handling
 async function loadContent(page) {
     try {
-        if (page == 'logOut') {
-            SessionManager.logOut();
+        if (page == 'settings') {
+            openSettingsModal();
+            return;
         }
 
         const response = await fetch(`${page}/${page}.html`);
@@ -108,6 +115,95 @@ async function loadPageScript(page) {
     oldScript = document.querySelector(`script[data-page="${page}"]`);
 }
 
+function openSettingsModal() {
+    const settingsModal = document.getElementById('settingsModal');
+    settingsModal.classList.add('show');
+    populateCurrentUserData()
+}
+
+function setupSettingsModal() {
+    settingsModal = document.getElementById('settingsModal');
+    settingsForm = document.getElementById('settingsForm');
+    logoutBtn = document.getElementById('logoutBtn');
+    closeButton = settingsModal.querySelector('.close-button');
+
+    // Close modal handlers
+    closeButton.addEventListener('click', () => {
+        settingsModal.classList.remove('show');
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.classList.remove('show');
+        }
+    });
+
+    // Form submission
+    settingsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+
+        let username = document.getElementById('username').value;
+        let email = document.getElementById('email').value;
+
+        try {
+            const response = await services.auth.updateProfile(username, email);
+            
+            if (response.isSuccessful) {
+                alert('Profile updated successfully!', true);
+                settingsModal.classList.remove('show');
+                // Reset password fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                alert(response.message || 'Failed to update profile', false);
+            }
+
+            // Only update password data if a new password was entered
+            if (newPassword) {
+                let currentPassword = document.getElementById('currentPassword').value;
+                const response = await services.auth.updatePassword(currentPassword, newPassword);
+
+                if (response.isSuccessful) {
+                    alert(response.message);
+                } else {
+                    alert(response.message || 'Failed to update password');
+                }
+            }
+
+        } catch (error) {
+            alert('An error occurred while updating profile', false);
+        }
+    });
+
+    // Logout handler
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await SessionManager.logOut();
+        } catch (error) {
+            alert('Failed to logout', false);
+        }
+    });
+}
+
+function populateCurrentUserData() {
+    document.getElementById('username').value = "jeremia";
+    document.getElementById('email').value = "jermia@gmail.com";
+
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+}
+
+
 // Add click handlers to navigation items
 navItems.forEach(item => {
     item.addEventListener('click', () => {
@@ -129,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const initialPage = urlParams.get('page') || 'calendar';
     loadContent(initialPage);
+    setupSettingsModal();
 });
 
 

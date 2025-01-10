@@ -6,6 +6,8 @@ const API_CONFIG = {
             login: '/auth/login',
             logout: '/auth/logout',
             token: '/auth/ot-token',
+            settings: '/settings/fields',
+            changePassword: '/settings/password'
         },
         resources: {
             student: '/student',

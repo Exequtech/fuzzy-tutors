@@ -37,6 +37,36 @@ class AuthService {
 
         return response;
     }
+
+    static async updateProfile(name, email) {
+        const response = await ApiService.withRetry(() => 
+            ApiService.makeApiCall(API_CONFIG.endpoints.auth.settings, 'PATCH', {
+                name,
+                email
+            })
+        );
+
+        if (response.isSuccessful) {
+            await SessionManager.getNewToken();
+        }
+
+        return response;
+    }
+
+    static async updatePassword(oldPassword, newPassword) {
+        const response = await ApiService.withRetry(() => 
+            ApiService.makeApiCall(API_CONFIG.endpoints.auth.changePassword, 'PUT', {
+                oldPassword,
+                newPassword
+            })
+        );
+
+        if (response.isSuccessful) {
+            await SessionManager.getNewToken();
+        }
+
+        return response;
+    }
 }
 
 export {AuthService};
