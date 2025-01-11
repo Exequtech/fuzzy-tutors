@@ -19,6 +19,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const userTypeSlt = document.getElementById('userTypeSlt');
     const emailTxt = document.getElementById("emailTxt");
 
+    // Forgot Password Modal Elements
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+    const closeModalBtn = document.querySelector('.close');
+    const sendResetLinkBtn = document.getElementById('sendResetLinkBtn');
+    const resetEmailTxt = document.getElementById('resetEmailTxt');
+
     // Initially hide the registration form
     if (registrationForm) {
         registrationForm.style.display = 'none';
@@ -52,6 +59,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+
+        // Forgot Password Modal Functionality
+    forgotPasswordLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        forgotPasswordModal.style.display = 'block';
+    });
+
+    closeModalBtn?.addEventListener('click', () => {
+        forgotPasswordModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === forgotPasswordModal) {
+            forgotPasswordModal.style.display = 'none';
+        }
+    });
+
+    sendResetLinkBtn?.addEventListener('click', async () => {
+        const email = resetEmailTxt.value;
+        const emailValidation = FormValidator.validateEmail(email);
+        
+        if (emailValidation.isValid) {
+            try {
+                const result = await services.auth.requestPasswordReset(email);
+                alert(result.message);
+                forgotPasswordModal.style.display = 'none';
+            } catch (error) {
+                alert('Error sending reset link. Please try again.');
+            }
+        } else {
+            alert(emailValidation.message);
+        }
+    });
 });
 
 

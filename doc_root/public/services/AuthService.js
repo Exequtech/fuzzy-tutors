@@ -79,6 +79,16 @@ class AuthService {
 
         return response;
     }
+
+    static async requestPasswordReset(email) {
+        alert('TODO: requestPasswordReset')
+        return response.isSuccessful = true;
+    }
+
+    static async resetPassword(token, newPassword) {
+        alert('TODO: resetPassword(token, newPassword)');
+        return response.isSuccessful = true;
+    }
 }
 
 export {AuthService};
