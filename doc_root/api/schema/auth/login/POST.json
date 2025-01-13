@@ -3,9 +3,7 @@
     "properties": {
         "username": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 15,
-            "pattern": "[\\w-]+"
+            "maxLength": 60
         },
         "email": {
             "type": "string",
@@ -14,9 +12,7 @@
         },
         "password": {
             "type": "string",
-            "minLength": 8,
-            "maxLength": 50,
-            "pattern": "^(?=.*[A-Z]+)(?=.*[a-z])(?=.*[\\d])(?=.*[^\\w\\s])[\\x00-\\x7F]+$"
+            "maxLength": 50
         }
     },
     "oneOf": [

@@ -5,7 +5,7 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 30,
-            "pattern": "[\\w\\s]+"
+            "pattern": "^[\\w\\s]+$"
         },
         "address": {
             "oneOf": [
@@ -13,7 +13,7 @@
                     "type": "string",
                     "minLength": 10,
                     "maxLength": 255,
-                    "pattern": "[\\w\\s]+"
+                    "pattern": "^[\\x00-\\x7F]+$"
                 },
                 {
                     "type": "null"
@@ -26,7 +26,7 @@
                     "type": "string",
                     "minLength": 3,
                     "maxLength": 255,
-                    "pattern": "[\\w\\s]+"
+                    "pattern": "^[\\x00-\\x7F]+$"
                 },
                 {
                     "type": "null"

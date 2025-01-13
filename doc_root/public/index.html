@@ -6,23 +6,19 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Dashboard</title>
+    <link rel="icon" href="/images/fuzzy_logo.ico" type="image/x-icon">
 </head>
 <body>
     <div class="app-container">
         <div class="sidebar">
             <div class="profile-section">
                 <div class="profile-photo">
-                    <img src="/public/images/269714960_591019902189283_7179468050134654946_n.jpg" alt="">
+                    <img src="/images/fuzzy_logo.ico" alt="">
                 </div>
-                <span class="username">Jeremia Fourie</span>
+                <span class="username">Fuzzy Tutors</span>
             </div>
 
             <div class="nav-items">
-                <div class="nav-item" data-page="dashboard">
-                    <i class="fas fa-home"></i>
-                    <span class="nav-label">Dashboard</span>
-                </div>
-
                 <div class="nav-item" data-page="calendar">
                     <i class="fa-regular fa-calendar-days"></i>
                     <span class="nav-label">Calendar</span>
@@ -67,8 +63,89 @@
         <button class="toggle-btn">
             <i class="fas fa-chevron-right"></i>
         </button>
+
+        <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                
+                <div class="password-section">
+                    <h3>Change Password</h3>
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password:</label>
+                        <input type="password" id="confirmPassword">
+                    </div>
+                </div>
+
+                <div class="settings-footer">
+                    <button type="button" class="logout-button" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                    <button type="submit" class="submit-button">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        /* Settings Modal Specific Styles */
+        .password-section {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .password-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .settings-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .logout-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
     </div>
     
-    <script src="script.js"></script>
+    <script src="script.js" type="module"></script>
 </body>
 </html>

@@ -40,7 +40,7 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                     'trackables' => []
                 ];
 
-                $studentQuery = "SELECT `StudentID`, `Attended`, `TrackableName`, `Value` FROM `Attendance` LEFT JOIN `TrackableValue` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID`"
+                $studentQuery = "SELECT `Username`, `StudentID`, `Attended`, `TrackableName`, `Value` FROM `Attendance` LEFT JOIN `TrackableValue` ON `Attendance`.`AttendanceID` = `TrackableValue`.`AttendanceID` INNER JOIN `User` ON `UserID` = `StudentID`"
                             ." WHERE `LessonID` = ?;";
                 $students = BindedQuery($conn, $studentQuery, 'i', [$id], true,
                     "Failed to fetch students (specific lesson GET)");
@@ -50,6 +50,7 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                     {
                         $obj = [];
                         $obj['id'] = $record['StudentID'];
+                        $obj['name'] = $record['Username'];
                         $obj['attended'] = $record['Attended'] == 1;
                         $obj['trackables'] = [];
                         $lesson['students'][$record['StudentID']] = $obj;
@@ -64,9 +65,9 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                     "Failed to fetch lesson trackables (specific lesson GET)");
                 $lesson['trackables'] = array_map(function($record){return $record['TrackableName'];}, $trackables);
 
-                $topics = BindedQuery($conn, "SELECT `TopicID` FROM `LessonTopic` WHERE `LessonID` = ?;", 'i', [$id], true,
+                $topics = BindedQuery($conn, "SELECT `TopicName`, `Topic`.`TopicID` FROM `LessonTopic` INNER JOIN `Topic` ON `Topic`.`TopicID` = `LessonTopic`.`TopicID` WHERE `LessonID` = ?;", 'i', [$id], true,
                     "Failed to fetch lesson topics (specific lesson GET)");
-                $lesson['topics'] = array_map(function($record){return $record['TopicID'];}, $topics);
+                $lesson['topics'] = array_map(function($record){return ['id' => $record['TopicID'], 'name' => $record['TopicName']];}, $topics);
 
                 $conn->commit();
                 MessageResponse(HTTP_OK, null, ['result' => $lesson]);
@@ -372,13 +373,16 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                     $deleteDiffs = array_diff($linked, $request->trackables);
                     if(!empty($createDiffs))
                     {
-                        $query = "REPLACE INTO `TrackableValue`(`AttendanceID`, `TrackableName`, `Value`)"
-                                ." SELECT `Attendance`.`AttendanceID`, `Trackable`.`TrackableName`, 0 FROM"
-                                ." `Attendance` JOIN `Trackable` WHERE `Attendance`.`LessonID` = ?"
-                                ." AND `Attendance`.`StudentID` IN (" . implode(',', $priorStudents) . ")"
-                                ." AND `Trackable`.`TrackableName` IN (" . implode(',', array_fill(0, count($createDiffs), '?')) . ");";
-                        BindedQuery($conn, $query, 'i' . str_repeat('s', count($createDiffs)), [$id, ...$createDiffs], true,
-                            "Failed to insert trackablevalues (specific lesson PATCH)");
+                        if(!empty($priorStudents))
+                        {
+                            $query = "REPLACE INTO `TrackableValue`(`AttendanceID`, `TrackableName`, `Value`)"
+                            ." SELECT `Attendance`.`AttendanceID`, `Trackable`.`TrackableName`, 0 FROM"
+                            ." `Attendance` JOIN `Trackable` WHERE `Attendance`.`LessonID` = ?"
+                            ." AND `Attendance`.`StudentID` IN (" . implode(',', $priorStudents) . ")"
+                            ." AND `Trackable`.`TrackableName` IN (" . implode(',', array_fill(0, count($createDiffs), '?')) . ");";
+                    BindedQuery($conn, $query, 'i' . str_repeat('s', count($createDiffs)), [$id, ...$createDiffs], true,
+                        "Failed to insert trackablevalues (specific lesson PATCH)");
+                        }
                         $query = "INSERT INTO `LessonTrackable`(`LessonID`, `TrackableName`)"
                                 ." SELECT ?, `TrackableName` FROM `Trackable` WHERE `TrackableName` IN (" . implode(',',array_fill(0, count($createDiffs), '?')) . ");";
                         BindedQuery($conn, $query, 'i' . str_repeat('s', count($createDiffs)), [$id,...$createDiffs], true,
@@ -395,7 +399,7 @@ $endpoints['/^lesson\/([\d]+)\/?$/'] = [
                             "Failed to delete lessontopics (specific lesson PATCH)");
                     }
                 }
-                if(isset($request->studentOverrides))
+                if(isset($request->studentOverrides) && !empty(get_object_vars($request->studentOverrides)))
                 {
                     $references = array_keys(get_object_vars($request->studentOverrides));
                     $query = "SELECT `StudentID`, `TrackableName`, `Attended`, `Value`" 

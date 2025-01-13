@@ -101,7 +101,7 @@ $table_commands = [
         "CREATE TABLE `User`
         (
             `UserID` INT NOT NULL UNIQUE AUTO_INCREMENT,
-            `Username` VARCHAR(15) NOT NULL UNIQUE,
+            `Username` VARCHAR(60) NOT NULL UNIQUE,
             `Email` VARCHAR(40) NOT NULL UNIQUE,
             `Password` CHAR(60),
             `UserType` TINYINT NOT NULL,

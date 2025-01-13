@@ -1,26 +1,49 @@
-import { deleteLocationRecord, getLocationDetails, getLocationPage, SessionManager, updateLocationRecord, addNewLocationRecord } from '../dataHandler.js';
+// locations.js
+import { services } from '/dataHandler.js';
+import { formatDateForApi } from '/utils/utilityFunctions.js';
 
 // DOM Elements
-const configBtn = document.getElementById('configLocationsBtn');
-const configModal = document.getElementById('locationConfigModal');
-const formModal = document.getElementById('locationFormModal');
-const locationForm = document.getElementById('locationForm');
-const locationsList = document.getElementById('locationsList');
-const alertMessage = document.getElementById('alertMessage');
-const startDate = document.getElementById('startDate');
-const endDate = document.getElementById('endDate');
-const locationSelect = document.getElementById('locationSelect');
-const addLocationBtn = document.getElementById('addLocationBtn');
+let configBtn = null;
+let configModal = null;
+let formModal = null;
+let locationForm = null;
+let locationsList = null;
+let alertMessage = null;
+let startDate = null;
+let endDate = null;
+let addLocationBtn = null;
+let subjectSelect = null;
+let locationSelect = null;
+let generateReportBtn = null;
+let reportTable = null;
 
 let currentLocationId = null;
 
 // Initialize
 async function initLocations() {
     try {
+        // Initialize basic DOM elements
+        configBtn = document.getElementById('configLocationsBtn');
+        configModal = document.getElementById('locationConfigModal');
+        formModal = document.getElementById('locationFormModal');
+        locationForm = document.getElementById('locationForm');
+        locationsList = document.getElementById('locationsList');
+        alertMessage = document.getElementById('alertMessage');
+        startDate = document.getElementById('startDate');
+        endDate = document.getElementById('endDate');
+        addLocationBtn = document.getElementById('addLocationBtn');
+
+        // Initialize report-related DOM elements
+        subjectSelect = document.getElementById('subjectSelect');
+        locationSelect = document.getElementById('locationSelect');
+        generateReportBtn = document.getElementById('generateReport');
+        reportTable = document.getElementById('reportTable');
+
         await loadLocations();
+        await loadFormData();
         setupEventListeners();
-        setupChart();
-        await updateReport();
+        setupFilterEventListeners();
+        renderReport(await services.location.getReport());
     } catch (error) {
         showAlert('Failed to initialize: ' + error.message, false);
     }
@@ -45,29 +68,77 @@ function setupEventListeners() {
         button.addEventListener('click', () => {
             configModal.classList.remove('show');
             formModal.classList.remove('show');
+            document.getElementById('filtersModal').classList.remove('show');
         });
     });
+}
 
-    // Report filters
-    startDate.addEventListener('change', updateReport);
-    endDate.addEventListener('change', updateReport);
-    locationSelect.addEventListener('change', updateReport);
+function setupFilterEventListeners() {
+    // Date change events
+    startDate.addEventListener('change', handleDateChange);
+    endDate.addEventListener('change', handleDateChange);
+
+    // Filter modal open button
+    const openFiltersBtn = document.getElementById('openFiltersBtn');
+    const filtersModal = document.getElementById('filtersModal');
+    
+    openFiltersBtn.addEventListener('click', () => {
+        filtersModal.classList.add('show');
+    });
+
+    // Generate report button
+    generateReportBtn.addEventListener('click', () => {
+        generateReport();
+        filtersModal.classList.remove('show');
+    });
+}
+
+async function handleDateChange() {
+    const startDateValue = startDate.value;
+    const endDateValue = endDate.value;
+
+    if (startDateValue && endDateValue) {
+        // Clear the table
+        const tbody = reportTable.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        // Show message that filters need to be applied
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="100%" style="text-align: center; padding: 20px;">
+                    Click the Filters button to set additional filters and generate the report
+                </td>
+            </tr>
+        `;
+    }
 }
 
 async function loadLocations() {
     try {
-        // TODO: Replace with actual API call
-        // const locations = [
-        //     { id: 1, name: 'Main Campus', address: '123 Main St', description: 'Main teaching location' },
-        //     { id: 2, name: 'Library Study Room', address: '456 Library Ave', description: 'Quiet study space' }
-        // ];
-
-        const locations = await getLocationPage();
-
+        const locations = await services.location.getAllPages();
         renderLocationsList(locations);
-        populateLocationSelect(locations);
     } catch (error) {
         showAlert('Failed to load locations: ' + error.message, false);
+    }
+}
+
+async function loadFormData() {
+    try {
+        const subjects = await services.subject.getAllPages();
+        const locations = await services.location.getAllPages();
+
+        // Populate subject select
+        subjectSelect.innerHTML = subjects.map(subject =>
+            `<option value="${subject.id}">${subject.name}</option>`
+        ).join('');
+
+        // Populate location select
+        locationSelect.innerHTML = locations.map(location =>
+            `<option value="${location.id}">${location.name}</option>`
+        ).join('');
+
+    } catch (error) {
+        showAlert('Failed to load form data: ' + error.message, false);
     }
 }
 
@@ -89,12 +160,6 @@ function renderLocationsList(locations) {
             </div>
         </div>
     `).join('');
-}
-
-function populateLocationSelect(locations) {
-    locationSelect.innerHTML = locations.map(location => 
-        `<option value="${location.id}">${location.name}</option>`
-    ).join('');
 }
 
 function openFormModal(locationData = null) {
@@ -126,96 +191,105 @@ async function handleFormSubmit(e) {
         address: document.getElementById('locationAddress').value,
         description: document.getElementById('locationDescription').value
     };
-    let apiResponse;
 
     try {
+        let apiResponse;
+
         if (currentLocationId) {
-            // Update existing location
-            apiResponse = await updateLocationRecord(currentLocationId, formData.name, formData.address, formData.description);
-            showAlert(apiResponse.message, apiResponse.isSuccessful);
+            apiResponse = await services.location.update(currentLocationId, formData);
         } else {
-            // Add new location
-            apiResponse = await addNewLocationRecord(formData.name, formData.address, formData.description);
-            showAlert(apiResponse.message, apiResponse.isSuccessful);
+            apiResponse = await services.location.create(formData);
         }
 
-        await loadLocations();
-        formModal.classList.remove('show');
+        showAlert(apiResponse.message, apiResponse.isSuccessful);
+
+        if (apiResponse.isSuccessful) {
+            await loadLocations();
+            formModal.classList.remove('show');
+        }
     } catch (error) {
         showAlert('Failed to save location: ' + error.message, false);
     }
 }
 
-async function updateReport() {
+async function generateReport() {
     try {
-        // TODO: Replace with actual API call to get report data
-        const data = {
-            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-            values: [8, 12, 10, 15, 9]
-        };
+        const startDateValue = document.getElementById('startDate').value;
+        const endDateValue = document.getElementById('endDate').value;
+        const locations = Array.from(locationSelect.selectedOptions).map(option => option.value);
+        const subjects = Array.from(subjectSelect.selectedOptions).map(option => option.value);
 
-        updateChart(data);
-        updateStats(data);
+        if (!startDateValue || !endDateValue) {
+            showAlert('Please select both start and end dates', false);
+            return;
+        }
+
+        if (locations.length === 0) {
+            showAlert('Please select at least one location', false);
+            return;
+        }
+
+        const reportData = await fetchReportData(startDateValue, endDateValue, locations, subjects);
+        renderReport(reportData);
+        
     } catch (error) {
-        showAlert('Failed to update report: ' + error.message, false);
+        showAlert('Failed to generate report: ' + error.message, false);
     }
 }
 
-let chart = null;
+async function fetchReportData(startDateStr, endDateStr, locations, subjects) {
+    const startDate = formatDateForApi(new Date(startDateStr));
+    const endDate = formatDateForApi(new Date(endDateStr));
+    
+    try {
+        const response = await services.location.getReport(startDate, endDate, locations, subjects);
 
-function setupChart() {
-    const ctx = document.getElementById('locationChart').getContext('2d');
-    chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Hours Used',
-                data: [],
-                backgroundColor: '#57cc02',
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Hours'
-                    }
-                }
-            }
-        }
-    });
+        return response;
+    } catch (error) {
+        throw new Error('Failed to fetch report data: ' + error.message);
+    }
 }
 
-function updateChart(data) {
-    chart.data.labels = data.labels;
-    chart.data.datasets[0].data = data.values;
-    chart.update();
-}
-
-function updateStats(data) {
-    const totalHours = data.values.reduce((a, b) => a + b, 0);
-    const average = totalHours / data.values.length;
-    const max = Math.max(...data.values);
-
-    document.querySelector('.stats-container').innerHTML = `
-        <div class="stat-card">
-            <h3>Total Hours</h3>
-            <p>${totalHours}</p>
-        </div>
-        <div class="stat-card">
-            <h3>Average Daily</h3>
-            <p>${average.toFixed(1)} hrs</p>
-        </div>
-        <div class="stat-card">
-            <h3>Peak Usage</h3>
-            <p>${max} hrs</p>
-        </div>
+function renderReport(data) {
+    // Set up table header
+    const headerRow = reportTable.querySelector('thead tr');
+    headerRow.innerHTML = `
+        <th>Date</th>
+        <th>Time</th>
+        <th>Duration</th>
+        <th>Location</th>
+        <th>Subject</th>
+        <th>Total Students</th>
     `;
+
+    // Calculate and format data for display
+    const formattedData = data.map(lesson => {
+        const startDate = new Date(lesson.startDate);
+        const endDate = new Date(lesson.endDate);
+        const duration = (endDate - startDate) / (1000 * 60); // Duration in minutes
+        
+        return {
+            date: startDate.toLocaleDateString(),
+            time: `${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}`,
+            duration: `${duration} minutes`,
+            location: lesson.locationName,
+            subject: lesson.subjectName,
+            totalStudents: lesson.students ? lesson.students.length : 0
+        };
+    });
+
+    // Populate table body
+    const tbody = reportTable.querySelector('tbody');
+    tbody.innerHTML = formattedData.map(row => `
+        <tr>
+            <td>${row.date}</td>
+            <td>${row.time}</td>
+            <td>${row.duration}</td>
+            <td>${row.location}</td>
+            <td>${row.subject}</td>
+            <td>${row.totalStudents}</td>
+        </tr>
+    `).join('');
 }
 
 function showAlert(message, isSuccess) {
@@ -229,15 +303,18 @@ function showAlert(message, isSuccess) {
 
 // Make functions available globally
 window.editLocation = async function(id) {
-    // Fetch location data and open form modal
-    const locationData = await getLocationDetails(id);
-    openFormModal(locationData);
+    try {
+        const locationData = await services.location.getDetails(id);
+        openFormModal(locationData);
+    } catch (error) {
+        showAlert('Failed to load location details: ' + error.message, false);
+    }
 };
 
 window.deleteLocation = async function(id) {
     if (confirm('Are you sure you want to delete this location?')) {
         try {
-            let apiResponse = await deleteLocationRecord(id)
+            let apiResponse = await services.location.delete(id);
             showAlert(apiResponse.message, apiResponse.isSuccessful);
             await loadLocations();
         } catch (error) {
@@ -246,5 +323,4 @@ window.deleteLocation = async function(id) {
     }
 };
 
-// Initialize the page
-initLocations();
+export { initLocations };

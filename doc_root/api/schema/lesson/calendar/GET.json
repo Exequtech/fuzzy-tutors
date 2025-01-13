@@ -16,7 +16,24 @@
         "order": {
             "type": "string",
             "enum": ["asc", "desc"]
+        },
+        "locations": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^[\\d]+$"
+            },
+            "uniqueItems": true
+        },
+        "subjects": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^[\\d]+$"
+            },
+            "uniqueItems": true
         }
     },
+    "additionalProperties": false,
     "required": ["before", "after"]
 }

@@ -35,6 +35,7 @@
             "oneOf": [
                 {
                     "type": "string",
+                    "pattern": "^[\\x00-\\x7F]+$",
                     "maxLength": 1024
                 },
                 {

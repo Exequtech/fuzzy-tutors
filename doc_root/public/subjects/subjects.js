@@ -1,15 +1,15 @@
-import { getSubjectsPage, addNewTopicRecord, updateTopicRecord, deleteTopicRecord } from '../DataHandler.js';
+import { services} from '/dataHandler.js';
 
 // DOM Elements
-const subjectsGrid = document.getElementById('subjectsGrid');
-const subjectModal = document.getElementById('subjectModal');
-const topicModal = document.getElementById('topicModal');
-const deleteModal = document.getElementById('deleteModal');
-const subjectForm = document.getElementById('subjectForm');
-const topicForm = document.getElementById('topicForm');
-const searchInput = document.getElementById('searchInput');
-const alertMessage = document.getElementById('alertMessage');
-const addSubjectBtn = document.getElementById('addSubjectBtn');
+let subjectsGrid = document.getElementById('subjectsGrid');
+let subjectModal = document.getElementById('subjectModal');
+let topicModal = document.getElementById('topicModal');
+let deleteModal = document.getElementById('deleteModal');
+let subjectForm = document.getElementById('subjectForm');
+let topicForm = document.getElementById('topicForm');
+let searchInput = document.getElementById('searchInput');
+let alertMessage = document.getElementById('alertMessage');
+let addSubjectBtn = document.getElementById('addSubjectBtn');
 
 let currentSubjectId = null;
 let currentTopicId = null;
@@ -18,54 +18,68 @@ let subjects = [];
 // Initialize
 async function initSubjects() {
     try {
+        window.confirmDelete = confirmDeleteSubject;
+
+        subjectsGrid = document.getElementById('subjectsGrid');
+        subjectModal = document.getElementById('subjectModal');
+        topicModal = document.getElementById('topicModal');
+        deleteModal = document.getElementById('deleteModal');
+        subjectForm = document.getElementById('subjectForm');
+        topicForm = document.getElementById('topicForm');
+        searchInput = document.getElementById('searchInput');
+        alertMessage = document.getElementById('alertMessage');
+        addSubjectBtn = document.getElementById('addSubjectBtn');
+        initializeEventListeners()
         console.log('start')
-        subjects = await getSubjectsPage();
+        subjects = await services.subject.getAllPages();
         renderSubjects();
     } catch (error) {
         showAlert('Failed to load data: ' + error.message, false);
     }
 }
 
-addSubjectBtn.addEventListener('click', () => openSubjectModal());
+function initializeEventListeners() {
+    addSubjectBtn.addEventListener('click', () => openSubjectModal());
 
-// Search Input
-searchInput.addEventListener('input', async (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    try {
-        const filteredSubjects = await getSubjectsPage(1, 10, "asc", "id", {
-            name: searchTerm
+    // Search Input
+    searchInput.addEventListener('input', async (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        try {
+            const filteredSubjects = await services.subject.getAllPages("asc", "id", {
+                name: searchTerm
+            });
+            renderSubjects(filteredSubjects);
+        } catch (error) {
+            showAlert('Search failed: ' + error.message, false);
+        }
+    });
+
+    // Form Submissions
+    subjectForm.addEventListener('submit', handleSubjectFormSubmit);
+    topicForm.addEventListener('submit', handleTopicFormSubmit);
+
+    // Close Modal Buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeAllModals();
         });
-        renderSubjects(filteredSubjects);
-    } catch (error) {
-        showAlert('Search failed: ' + error.message, false);
-    }
-});
+    });
 
-// Form Submissions
-subjectForm.addEventListener('submit', handleSubjectFormSubmit);
-topicForm.addEventListener('submit', handleTopicFormSubmit);
+    // Cancel Buttons
+    document.querySelectorAll('.cancel-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeAllModals();
+        });
+    });
 
-// Close Modal Buttons
-document.querySelectorAll('.close-button').forEach(button => {
-    button.addEventListener('click', () => {
+    // Delete Confirmation
+    deleteModal.querySelector('.delete-button').addEventListener('click', async () => {
+        if (currentTopicId) {
+            await deleteTopic(currentTopicId);
+        }
         closeAllModals();
     });
-});
-
-// Cancel Buttons
-document.querySelectorAll('.cancel-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeAllModals();
-    });
-});
-
-// Delete Confirmation
-deleteModal.querySelector('.delete-button').addEventListener('click', async () => {
-    if (currentTopicId) {
-        await deleteTopic(currentTopicId);
-    }
-    closeAllModals();
-});
+}
 
 function renderSubjects(subjectsToRender = subjects) {
     subjectsGrid.innerHTML = subjectsToRender.map(subject => `
@@ -113,20 +127,25 @@ function renderSubjects(subjectsToRender = subjects) {
 async function handleSubjectFormSubmit(e) {
     e.preventDefault();
     try {
-        const subjectName = document.getElementById('subjectName').value;
-        let description = document.getElementById('subjectDescription').value;
-        description = description == '' ? null : description;
+        const formData = {
+            name: document.getElementById('subjectName').value,
+            description: document.getElementById('subjectDescription').value || null
+        }
+        
+        // description = description == '' ? null : description;
         
         let apiResponse;
         if (currentSubjectId) {
-            apiResponse = await updateTopicRecord(currentSubjectId, subjectName, description);
+            apiResponse = await services.topic.update(currentSubjectId, formData);
         } else {
-            apiResponse = await addNewTopicRecord(null, subjectName, description); // null parent_id indicates this is a subject
+            formData.subjectId = null;
+            console.log(formData); // todo
+            apiResponse = await services.topic.create(formData); // null parent_id indicates this is a subject
         }
 
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
-            subjects = await getSubjectsPage();
+            subjects = await services.subject.getAllPages();
             renderSubjects();
             closeAllModals();
         } else {
@@ -140,19 +159,22 @@ async function handleSubjectFormSubmit(e) {
 async function handleTopicFormSubmit(e) {
     e.preventDefault();
     try {
-        const topicName = document.getElementById('topicName').value;
-        const topicDescription = document.getElementById('topicDescription').value;
+        const formData = {
+            name: document.getElementById('topicName').value,
+            description: document.getElementById('topicDescription').value
+        }
         
         let apiResponse;
         if (currentTopicId) {
-            apiResponse = await updateTopicRecord(currentTopicId, topicName, topicDescription);
+            apiResponse = await services.topic.update(currentTopicId, formData);
         } else {
-            apiResponse = await addNewTopicRecord(currentSubjectId, topicName, topicDescription);
+            formData.subjectId = currentSubjectId;
+            apiResponse = await services.topic.create(formData);
         }
 
         if (apiResponse.isSuccessful) {
             showAlert(apiResponse.message, true);
-            subjects = await getSubjectsPage();
+            subjects = await services.subject.getAllPages();
             renderSubjects();
             closeAllModals();
         } else {
@@ -228,10 +250,10 @@ function editTopic(topicId, subjectId) {
 
 async function deleteTopic(topicId) {
     try {
-        const response = await deleteTopicRecord(topicId);
+        const response = await services.topic.delete(topicId);
         if (response.isSuccessful) {
             showAlert('Topic deleted successfully', true);
-            subjects = await getSubjectsPage();
+            subjects = await services.subject.getAllPages();
             renderSubjects();
         } else {
             showAlert(response.message, false);
@@ -241,7 +263,7 @@ async function deleteTopic(topicId) {
     }
 }
 
-function confirmDelete(id, isSubject) {
+function confirmDeleteSubject(id, isSubject) {
     currentTopicId = id;
     const modalMessage = deleteModal.querySelector('p');
     modalMessage.textContent = isSubject 
@@ -272,9 +294,13 @@ function showAlert(message, isSuccess) {
 // Make functions available globally
 window.editSubject = editSubject;
 window.addTopicToSubject = addTopicToSubject;
-window.confirmDelete = confirmDelete;
+// window.confirmDelete = confirmDelete;
 window.editTopic = editTopic;
 window.deleteTopic = deleteTopic;
 
 // Initialize the page
-initSubjects();
+// initSubjects();
+
+export {
+    initSubjects
+}

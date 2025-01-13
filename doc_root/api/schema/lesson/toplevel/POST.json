@@ -19,6 +19,7 @@
         },
         "notes": {
             "type": "string",
+            "pattern": "^[\\x00-\\x7F]+$",
             "maxLength": 1024
         },
         "students": {

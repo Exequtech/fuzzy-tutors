@@ -2,7 +2,7 @@
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 50;
 const USERNAME_MIN_LENGTH = 2;
-const USERNAME_MAX_LENGTH = 30;
+const USERNAME_MAX_LENGTH = 60;
 const USER_TYPES = ['tutor', 'student', 'owner'];
 
 class ValidationResult {
@@ -13,7 +13,7 @@ class ValidationResult {
 }
 
 class FormValidator {
-    static validateUsername(username) {
+    static validateUsername(username, strict = true) {
         if (!username) {
             return new ValidationResult(false, 'Username is required');
         }
@@ -23,8 +23,8 @@ class FormValidator {
         if (username.length > USERNAME_MAX_LENGTH) {
             return new ValidationResult(false, `Username must be less than ${USERNAME_MAX_LENGTH} characters`);
         }
-        if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-            return new ValidationResult(false, 'Username can only contain letters, numbers, underscore and hyphen');
+        if (strict && !/^[\w\-\s]+$/.test(username)) {
+            return new ValidationResult(false, 'Username can only contain alphanumeric chars, dash (-) and spaces');
         }
         return new ValidationResult(true);
     }
@@ -39,18 +39,18 @@ class FormValidator {
         return new ValidationResult(true);
     }
 
-    static validateEmail(email) {
+    static validateEmail(email, strict = true) {
         if (!email) {
             return new ValidationResult(false, 'Email is required');
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        const emailRegex = /^(?=[^\.]+(\.[^\.]+)?@[^\.]+(\.[^\.]+)+)[\w\.]+@[\w\.]+$/;
+        if (strict && !emailRegex.test(email)) {
             return new ValidationResult(false, 'Invalid email format');
         }
         return new ValidationResult(true);
     }
 
-    static validatePassword(password) {
+    static validatePassword(password, strict = true) {
         if (!password) {
             return new ValidationResult(false, 'Password is required');
         }
@@ -61,13 +61,19 @@ class FormValidator {
             return new ValidationResult(false, `Password must be less than ${PASSWORD_MAX_LENGTH} characters`);
         }
         
-        const hasUpperCase = /[A-Z]/.test(password);
-        const hasLowerCase = /[a-z]/.test(password);
-        const hasNumbers = /\d/.test(password);
-        const hasSpecialChar = /[!@#$%^&\.*]/.test(password);
-        
-        if (!(hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar)) {
-            return new ValidationResult(false, 'Password must contain uppercase, lowercase, numbers and special characters');
+        if (strict) {
+            if (!/[a-z]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain a lower-case letter');
+            }
+            if (!/[A-Z]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain an upper-case letter');
+            }
+            if (!/[\d]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain at least 1 digit');
+            }
+            if (!/[^\w\s]+/.test(password)) {
+                return new ValidationResult(false, 'Password must contain a special character');
+            }
         }
         
         return new ValidationResult(true);
@@ -76,9 +82,9 @@ class FormValidator {
     static validateLoginCredentials(username, password) {
         let isEmail = false;
 
-        const usernameValidation = this.validateUsername(username);
-        const emailValidation = this.validateEmail(username);
-        const passwordValidation = this.validatePassword(password);
+        const usernameValidation = this.validateUsername(username, false);
+        const emailValidation = this.validateEmail(username, false);
+        const passwordValidation = this.validatePassword(password, false);
         
         if (emailValidation.isValid) {
             isEmail = true; 

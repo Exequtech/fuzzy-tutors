@@ -64,56 +64,33 @@
             </div>
 
             <div class="form-group">
-                <label>Topics:</label>
-                <div class="topic-selection-container">
-                    <div id="availableTopics" class="topic-list">
-                        <!-- Available topics will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Student Selection Type:</label>
+                <label>Add Student(s):</label>
                 <div class="selection-type">
                     <label>
-                        <input type="radio" name="studentType" value="class" checked> Select Class
+                        <input type="radio" name="studentType" value="class" checked> By Class
                     </label>
                     <label>
-                        <input type="radio" name="studentType" value="individual"> Select Individual Students
+                        <input type="radio" name="studentType" value="individual">Individually
                     </label>
                 </div>
             </div>
 
             <div id="classSelection" class="form-group">
-                <label for="classSelect">Class:</label>
                 <select id="classSelect">
                     <!-- Will be populated dynamically -->
                 </select>
             </div>
 
             <div id="studentSelection" class="form-group hidden">
-                <label>Students:</label>
-                <div class="student-selection">
-                    <div class="available-students">
-                        <h3>Available Students</h3>
-                        <div id="availableStudents" class="student-list"></div>
+                <div class="member-management">
+                    <div class="search-container">
+                        <input type="text" id="studentSearchInput" placeholder="Search students to add..." class="search-input">
+                        <div id="searchResults" class="search-results hidden">
+                            <!-- Search results will be populated here -->
+                        </div>
                     </div>
-                    <div class="student-controls">
-                        <button type="button" id="addStudentBtn" class="control-button">&gt;&gt;</button>
-                        <button type="button" id="removeStudentBtn" class="control-button">&lt;&lt;</button>
-                    </div>
-                    <div class="class-members">
-                        <h3>Selected Students</h3>
-                        <div id="lessonStudents" class="student-list"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Trackables:</label>
-                <div class="trackable-selection-container">
-                    <div id="availableTrackables" class="trackable-list">
-                        <!-- Trackables will be populated here -->
+                    <div id="lessonMembersList" class="members-list">
+                        <!-- Selected students will be shown here -->
                     </div>
                 </div>
             </div>
@@ -126,4 +103,358 @@
     </div>
 </div>
 
+<div id="lessonDetailsModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Lesson Overview</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="lesson-details">
+            <div class="lesson-main-info">
+                <div class="lesson-datetime">
+                    <div class="date"></div>
+                    <div class="time"></div>
+                </div>
+                <div class="lesson-location">
+                    <span class="subject"></span> - 
+                    <span class="location"></span>
+                    <div class="location-details"></div>
+                </div>
+            </div>
+            
+            <div class="lesson-topics">
+                <h3>Topics</h3>
+                <div class="topics-list"></div>
+            </div>
+            
+            <div class="lesson-notes">
+                <h3>Notes</h3>
+                <div class="notes-content"></div>
+            </div>
+            
+            <div class="lesson-actions">
+                <div class="main-options">
+                    <button class="action-button" data-action="topics">
+                        <i class="fas fa-list"></i>
+                        Manage Topics
+                    </button>
+                    <button class="action-button" data-action="trackables">
+                        <i class="fas fa-chart-line"></i>
+                        Manage Trackables
+                    </button>
+                    <button class="action-button" data-action="students">
+                        <i class="fas fa-users"></i>
+                        Manage Students
+                    </button>
+                </div>
+                
+                <div class="bottom-controls">
+                    <div class="lesson-controls">
+                        <button class="delete-button" data-action="delete">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                        <button class="edit-button" data-action="update">
+                            <i class="fas fa-edit"></i>
+                            Update
+                        </button>
+                        <!-- <button class="repeat-button" data-action="repeat">
+                            <i class="fas fa-redo"></i>
+                            Repeat
+                        </button> -->
+                    </div>
+                    <button class="tracking-button" data-action="tracking">
+                        <i class="fas fa-clipboard-check"></i>
+                        Tracking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Lesson Modal -->
+<div id="updateLessonModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Update Lesson</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <form id="updateLessonForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="updateDate">Date:</label>
+                    <input type="date" id="updateDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="updateStartTime">Start Time:</label>
+                    <input type="time" id="updateStartTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="updateEndTime">End Time:</label>
+                    <input type="time" id="updateEndTime" required>
+                </div>
+            </div>
+            <!-- Subject and Location Row -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="updateSubject">Subject:</label>
+                    <select id="updateSubject" required>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="updateLocation">Location:</label>
+                    <select id="updateLocation" required>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="cancel-button">Cancel</button>
+                <button type="submit" class="submit-button">Update Lesson</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Manage Topics Modal -->
+<div id="manageTopicsModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Manage Topics</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="topics-management">
+            <div class="available-topics">
+                <h3>Available Topics</h3>
+                <div id="availableTopicsList" class="topics-list-inline"></div>
+            </div>
+            <div class="selected-topics">
+                <h3>Selected Topics</h3>
+                <div id="selectedTopicsList" class="topics-list-inline"></div>
+            </div>
+        </div>
+        <div class="form-buttons">
+            <button type="button" class="cancel-button">Cancel</button>
+            <button type="button" class="submit-button" id="saveTopicsBtn">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Trackables Modal -->
+<div id="manageTrackablesModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Manage Trackables</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="trackables-management">
+            <div class="available-trackables">
+                <h3>Available Trackables</h3>
+                <div id="availableTrackablesList" class="trackable-list"></div>
+            </div>
+            <div class="selected-trackables">
+                <h3>Selected Trackables</h3>
+                <div id="selectedTrackablesList" class="trackable-list"></div>
+            </div>
+        </div>
+        <div class="form-buttons">
+            <button type="button" class="cancel-button">Cancel</button>
+            <button type="button" class="submit-button" id="saveTrackablesBtn">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Students Modal -->
+<div id="manageStudentsModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Manage Students</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="student-management">
+            <div class="form-group">
+                    <label>Lesson Members:</label>
+                    <div class="member-management">
+                        <div class="search-container">
+                            <input type="text" id="manageStudentSearchInput" placeholder="Search students to add..." class="search-input">
+                            <div id="manageSearchResults" class="search-results hidden">
+                                <!-- Search results will be populated here -->
+                            </div>
+                        </div>
+                        <div id="manageLessonMembersList" class="members-list">
+                            <!-- Current class members will be shown here -->
+                        </div>
+                    </div>
+                </div>
+        </div>
+        <div class="form-buttons">
+            <button type="button" class="cancel-button">Cancel</button>
+            <button type="button" class="submit-button" id="saveStudentsBtn">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Tracking Modal -->
+<div id="trackingModal" class="modal hidden">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2>Lesson Tracking</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="tracking-table-container">
+            <table id="trackingTable" class="tracking-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Attendance</th>
+                        <!-- Trackable columns will be added dynamically -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Student rows will be added dynamically -->
+                </tbody>
+            </table>
+        </div>
+        <div class="form-buttons">
+            <button type="button" class="cancel-button">Cancel</button>
+            <button type="button" class="submit-button" id="saveTrackingBtn">Save Tracking</button>
+        </div>
+    </div>
+</div>
+
 <div id="alertMessage" class="alert hidden"></div>
+
+<style>
+/* Topics Management */
+.topics-management,
+.trackables-management {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.available-topics,
+.selected-topics,
+.available-trackables,
+.selected-trackables {
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.topics-list-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    min-height: 100px;
+    padding: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.topic-item {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 8px 12px;
+    border-radius: 16px;
+    font-size: 0.9em;
+    cursor: move;
+    user-select: none;
+}
+
+.topic-item:hover {
+    background: #bbdefb;
+}
+
+.topic-item.dragging {
+    opacity: 0.5;
+}
+
+
+
+/* Update Lesson Form */
+.update-form-container {
+    padding: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .topics-management,
+    .trackables-management {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .tracking-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* Drag and Drop Styles */
+.drag-over {
+    background: #e3f2fd;
+    border: 2px dashed #1976d2;
+}
+
+/* Animation */
+.fade-enter {
+    opacity: 0;
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+}
+
+.fade-exit {
+    opacity: 1;
+}
+
+.fade-exit-active {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #57cc02;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>

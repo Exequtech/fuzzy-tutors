@@ -1,7 +1,23 @@
+
+import {initCalendar} from '/calendar/calendar.js'
+import {initClasses} from './classes/classes.js'
+import { initStudents } from './students/students.js';
+import {initSubjects} from './subjects/subjects.js';
+import { initLocations } from './locations/locations.js';
+import { initTrackables } from './trackables/trackables.js';
+
+import { services, SessionManager } from './dataHandler.js';
+
 const toggleBtn = document.querySelector('.toggle-btn');
 const sidebar = document.querySelector('.sidebar');
 const mainContent = document.getElementById('mainContent');
 const navItems = document.querySelectorAll('.nav-item');
+
+let settingsModal = document.getElementById('settingsModal');
+let settingsForm = document.getElementById('settingsForm');
+let logoutBtn = document.getElementById('logoutBtn');
+let closeButton = settingsModal.querySelector('.close-button');
+
 let oldScript;
 
 // Toggle sidebar
@@ -15,6 +31,11 @@ toggleBtn.addEventListener('click', () => {
 // Navigation handling
 async function loadContent(page) {
     try {
+        if (page == 'settings') {
+            openSettingsModal();
+            return;
+        }
+
         const response = await fetch(`${page}/${page}.html`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const content = await response.text();
@@ -62,20 +83,136 @@ async function loadPageScript(page) {
 
     try {
         await loadPromise;
-        // After script is loaded, ensure any cleanup of previous state is done
-        if (typeof window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
-            window[`cleanup${page.charAt(0).toUpperCase() + page.slice(1)}`]();
+
+        switch (page) {
+            case 'calendar':
+                initCalendar();
+                break;
+            case 'subjects':
+                initSubjects();
+                break;
+            case 'locations':
+                initLocations();
+                break;
+            case 'students':
+                initStudents();
+                break;
+            case 'trackables':
+                initTrackables()
+                break;
+            case 'classes':
+                initClasses();
+                break;
+            default:
+                console.error("Script initialization function not set up in app shell")
+                break;
         }
-        // Initialize the page
-        if (typeof window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`] === 'function') {
-            await window[`init${page.charAt(0).toUpperCase() + page.slice(1)}`]();
-        }
+
     } catch (error) {
         console.error('Error loading page script:', error);
     }
 
     oldScript = document.querySelector(`script[data-page="${page}"]`);
 }
+
+function openSettingsModal() {
+    const settingsModal = document.getElementById('settingsModal');
+    settingsModal.classList.add('show');
+    populateCurrentUserData()
+}
+
+function setupSettingsModal() {
+    settingsModal = document.getElementById('settingsModal');
+    settingsForm = document.getElementById('settingsForm');
+    logoutBtn = document.getElementById('logoutBtn');
+    closeButton = settingsModal.querySelector('.close-button');
+
+    // Close modal handlers
+    closeButton.addEventListener('click', () => {
+        settingsModal.classList.remove('show');
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.classList.remove('show');
+        }
+    });
+
+    // Form submission
+    settingsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+
+        let username = document.getElementById('username').value;
+        let email = document.getElementById('email').value;
+
+        try {
+            const response = await services.auth.updateProfile(username, email);
+            
+            if (response.isSuccessful) {
+                alert('Profile updated successfully!', true);
+                settingsModal.classList.remove('show');
+            } else {
+                alert(response.message || 'Failed to update profile', false);
+            }
+
+            // Only update password data if a new password was entered
+            if (newPassword) {
+                let currentPassword = document.getElementById('currentPassword').value;
+                const response = await services.auth.updatePassword(currentPassword, newPassword);
+
+                if (response.isSuccessful) {
+                    alert(response.message);
+                } else {
+                    alert(response.message || 'Failed to update password');
+                    return;
+                }
+
+                // Reset password fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }
+
+        } catch (error) {
+            alert('An error occurred while updating profile', false);
+        }
+    });
+
+    // Logout handler
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await SessionManager.logOut();
+        } catch (error) {
+            alert('Failed to logout', false);
+        }
+    });
+}
+
+async function populateCurrentUserData() {
+    let response = await services.auth.getProfile();
+    
+    if (response.isSuccessful) {
+        document.getElementById('username').value = response.data.result.name;
+        document.getElementById('email').value = response.data.result.email;
+    } else {
+        document.getElementById('username').value = 'Error loading name';
+        document.getElementById('email').value = 'Error loading email';
+    }
+
+
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+}
+
 
 // Add click handlers to navigation items
 navItems.forEach(item => {
@@ -96,8 +233,9 @@ window.addEventListener('popstate', (event) => {
 document.addEventListener('DOMContentLoaded', () => {
     // Get page from URL or default to dashboard
     const urlParams = new URLSearchParams(window.location.search);
-    const initialPage = urlParams.get('page') || 'dashboard';
+    const initialPage = urlParams.get('page') || 'calendar';
     loadContent(initialPage);
+    setupSettingsModal();
 });
 
 

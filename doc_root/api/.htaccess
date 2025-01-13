@@ -36,6 +36,10 @@ RewriteCond %{REQUEST_METHOD} !^(POST|PATCH)$
 RewriteCond $1 ^auth/forgotpassword$
 RewriteRule ^(.*)$ - [END,R=405]
 
+RewriteCond %{REQUEST_METHOD} !^DELETE$
+RewriteCond $1 ^auth/logout$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Auth allowlist
 RewriteCond %{REQUEST_METHOD} ^POST$
 RewriteCond $1 ^auth/(login|signup)$
@@ -49,6 +53,10 @@ RewriteCond %{REQUEST_METHOD} ^(POST|PATCH)$
 RewriteCond $1 ^auth/forgotpassword$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
+RewriteCond %{REQUEST_METHOD} ^DELETE$
+RewriteCond $1 ^auth/logout$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
 # Student denylist
 RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
 RewriteCond $1 ^student/?$
@@ -58,6 +66,10 @@ RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
 RewriteCond $1 ^student/[\d]+/?$
 RewriteRule ^(.*)$ - [END,R=405]
 
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^student/[\d]+/trackables/[^/]+/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Student allowlist
 RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
 RewriteCond $1 ^student/?$
@@ -65,6 +77,14 @@ RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^student/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+## Space replace
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteRule ^student/([\d]+)/trackables/([^/]*)\s([^/]*)/?$ student/$1/trackables/$2+$3 [L]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^student/[\d]+/trackables/[^/]+/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 # Class denylist
@@ -138,9 +158,17 @@ RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
 RewriteCond $1 ^trackable/([^/]+)/?$
 RewriteRule ^(.*)$ - [END,R=405] 
 
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^stats/trackables/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Trackable allowlist
 RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
 RewriteCond $1 ^trackable/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^stats/trackables/?$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 ## Replace spaces with + signs to allow %20 uri
@@ -175,6 +203,24 @@ RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^lesson/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# Settings denylist
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH)$
+RewriteCond $1 ^settings/fields$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(PUT)$
+RewriteCond $1 ^settings/password$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Settings allowlist
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH)$
+RewriteCond $1 ^settings/fields$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(PUT)$
+RewriteCond $1 ^settings/password$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 # If no prior rules matched, the endpoint doesn't exist (404)

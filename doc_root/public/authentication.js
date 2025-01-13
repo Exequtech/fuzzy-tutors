@@ -1,4 +1,4 @@
-import { registerUser, loginUser, SessionManager } from './DataHandler.js';
+import { services } from './dataHandler.js';
 import { FormValidator } from './FormValidator.js';
 import {DisplayLibrary} from './DisplayLibrary.js';
 
@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const usernameTxt = document.getElementById('usernameTxt');
     const userTypeSlt = document.getElementById('userTypeSlt');
     const emailTxt = document.getElementById("emailTxt");
+
+    // Forgot Password Modal Elements
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+    const closeModalBtn = document.querySelector('.close');
+    const sendResetLinkBtn = document.getElementById('sendResetLinkBtn');
+    const resetEmailTxt = document.getElementById('resetEmailTxt');
 
     // Initially hide the registration form
     if (registrationForm) {
@@ -52,6 +59,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+
+        // Forgot Password Modal Functionality
+    forgotPasswordLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        forgotPasswordModal.style.display = 'block';
+    });
+
+    closeModalBtn?.addEventListener('click', () => {
+        forgotPasswordModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === forgotPasswordModal) {
+            forgotPasswordModal.style.display = 'none';
+        }
+    });
+
+    sendResetLinkBtn?.addEventListener('click', async () => {
+        const email = resetEmailTxt.value;
+        const emailValidation = FormValidator.validateEmail(email);
+        
+        if (emailValidation.isValid) {
+            try {
+                const result = await services.auth.requestPasswordReset(email);
+                alert(result.message);
+                forgotPasswordModal.style.display = 'none';
+            } catch (error) {
+                alert('Error sending reset link. Please try again.');
+            }
+        } else {
+            alert(emailValidation.message);
+        }
+    });
 });
 
 
@@ -61,7 +101,7 @@ loginBtn.addEventListener('click', async (e)=>{
 
     let formValidation = FormValidator.validateLoginCredentials(loginUsernameTxt.value, loginPasswordTxt.value);
     if (formValidation.isValid) {
-        let loginResult = await loginUser(loginUsernameTxt.value, formValidation.isEmail, loginPasswordTxt.value);
+        let loginResult = await services.auth.login(loginUsernameTxt.value, formValidation.isEmail, loginPasswordTxt.value);
         alert(loginResult.message);
     } else {
         alert(formValidation.message);
@@ -75,7 +115,7 @@ registerBtn.addEventListener('click', async (e) => {
 
     let formValidation = FormValidator.validateRegistrationCredentials(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value, passwordConfirmationTxt.value);
     if (formValidation.isValid) {
-        let registrationResult = await registerUser(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value);
+        let registrationResult = await services.auth.register(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value);
         alert(registrationResult.message);
     } else {
         alert(formValidation.message);
