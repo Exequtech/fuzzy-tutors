@@ -304,11 +304,8 @@ function populateLocationSelect(selectId = 'locationSelect', currentLocationId =
 async function showTopicsModal() {
     const modal = modals.topics;
     const subject = subjects.find(s => s.id === currentLesson.subjectId);
-
-    console.log("Test to see if contains topic IDs and names:" + subject);
     
     if (subject && subject.topics) {
-        console.log("Test: Decision construct runs that calls renderTopicLists()");
         renderTopicLists(subject.topics, currentLesson.topics || []);
     }
     
@@ -591,7 +588,6 @@ function NormMonth(int) {
 }
 // Render Functions
 function renderCalendar() {
-    console.log("Rendering: ", lessons);
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const prevLastDay = new Date(currentYear, currentMonth, 0);
@@ -832,7 +828,6 @@ function handleDrop(e) {
 
 
 function renderSearchResults(students) {
-    console.log("start renderSearchResults")
     const searchResults = document.getElementById('manageSearchResults');
     const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
     const results = students.filter(student => !existingIds.has(student.id));
@@ -955,12 +950,10 @@ function closeAllModals() {
 
 // Student Management
 function setupStudentManagement() {
-    console.log('start setupStudentManagement')
     const searchInput = document.getElementById('manageStudentSearchInput');
     const searchResults = document.getElementById('manageSearchResults');
 
     searchInput.addEventListener('input', (e) => {
-        console.log('search input event')
         clearTimeout(searchTimeout);
         const searchTerm = e.target.value.trim();
         
@@ -990,12 +983,10 @@ function setupStudentManagement() {
 }
 
 function setupNewLessonStudentManagement() {
-    console.log('setupNewLessonStudentManagement')
     const searchInput = document.getElementById('studentSearchInput');
     const searchResults = document.getElementById('searchResults');
 
     searchInput.addEventListener('input', (e) => {
-        console.log('search input event')
         clearTimeout(searchTimeout);
         const searchTerm = e.target.value.trim();
         
@@ -1050,7 +1041,6 @@ function showAlert(message, isSuccess) {
 
 window.showLessonDetails = async function(lessonId) {
     currentLesson = await services.lesson.getDetails(lessonId);
-    console.log(currentLesson)
     const modal = modals.lessonDetails;
     
     const startDate = new Date(currentLesson.startDate);

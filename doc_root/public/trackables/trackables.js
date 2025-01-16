@@ -445,7 +445,6 @@ async function fetchDetailData(studentId, trackableName, startDate, endDate) {
 }
 
 function renderDetailModal(data, trackableName, studentName) {
-    console.log(data)
     const modalTitle = document.querySelector('#detailModal .modal-header h2');
     modalTitle.textContent = `${trackableName} Details for ${studentName}`;
 

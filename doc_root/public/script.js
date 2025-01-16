@@ -157,7 +157,6 @@ function setupSettingsModal() {
             const response = await services.auth.updateProfile(username, email);
             
             if (response.isSuccessful) {
-                alert('Profile updated successfully!', true);
                 settingsModal.classList.remove('show');
             } else {
                 alert(response.message || 'Failed to update profile', false);
@@ -168,9 +167,7 @@ function setupSettingsModal() {
                 let currentPassword = document.getElementById('currentPassword').value;
                 const response = await services.auth.updatePassword(currentPassword, newPassword);
 
-                if (response.isSuccessful) {
-                    alert(response.message);
-                } else {
+                if (!response.isSuccessful) {
                     alert(response.message || 'Failed to update password');
                     return;
                 }

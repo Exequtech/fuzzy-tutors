@@ -117,7 +117,6 @@ function openModal(student = null) {
         document.getElementById('username').value = student.username;
         document.getElementById('email').value = student.email;
         document.getElementById('status').value = student.authorized ? 'true' : 'false';
-        console.log(student);
     } else {
         modalTitle.textContent = 'Add New Student';
         submitButton.textContent = 'Add Student';

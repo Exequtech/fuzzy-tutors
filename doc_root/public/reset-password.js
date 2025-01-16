@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const result = await services.auth.resetPassword(token, password);
-            alert(result.message);
             if (result.isSuccessful) {
                 window.location.href = 'authentication.html';
             }

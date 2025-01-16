@@ -30,7 +30,6 @@ async function initSubjects() {
         alertMessage = document.getElementById('alertMessage');
         addSubjectBtn = document.getElementById('addSubjectBtn');
         initializeEventListeners()
-        console.log('start')
         subjects = await services.subject.getAllPages();
         renderSubjects();
     } catch (error) {
@@ -139,7 +138,6 @@ async function handleSubjectFormSubmit(e) {
             apiResponse = await services.topic.update(currentSubjectId, formData);
         } else {
             formData.subjectId = null;
-            console.log(formData); // todo
             apiResponse = await services.topic.create(formData); // null parent_id indicates this is a subject
         }
 

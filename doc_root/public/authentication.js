@@ -85,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (emailValidation.isValid) {
             try {
                 const result = await services.auth.requestPasswordReset(email);
-                alert(result.message);
                 forgotPasswordModal.style.display = 'none';
             } catch (error) {
                 alert('Error sending reset link. Please try again.');
@@ -102,7 +101,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let formValidation = FormValidator.validateLoginCredentials(loginUsernameTxt.value, loginPasswordTxt.value);
         if (formValidation.isValid) {
             let loginResult = await services.auth.login(loginUsernameTxt.value, formValidation.isEmail, loginPasswordTxt.value);
-            alert(loginResult.message);
+            if (!loginResult.isSuccessful)
+                alert(loginResult.message);
         } else {
             alert(formValidation.message);
         }
@@ -116,7 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let formValidation = FormValidator.validateRegistrationCredentials(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value, passwordConfirmationTxt.value);
         if (formValidation.isValid) {
             let registrationResult = await services.auth.register(usernameTxt.value, userTypeSlt.value, emailTxt.value, passwordTxt.value);
-            alert(registrationResult.message);
+            if (!registrationResult.isSuccessful)
+                alert(registrationResult.message);
         } else {
             alert(formValidation.message);
         }
