@@ -7,7 +7,8 @@ const API_CONFIG = {
             logout: '/auth/logout',
             token: '/auth/ot-token',
             settings: '/settings/fields',
-            changePassword: '/settings/password'
+            changePassword: '/settings/password',
+            forgotPassword: '/auth/forgotpassword',
         },
         resources: {
             student: '/student',
@@ -18,7 +19,7 @@ const API_CONFIG = {
             lesson: '/lesson',
             trackable: '/trackable',
             location: '/location',
-            trackableReport: '/stats/trackables'
+            trackableReport: '/stats/trackables',
         }
     }
 };

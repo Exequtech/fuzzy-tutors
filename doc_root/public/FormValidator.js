@@ -43,7 +43,11 @@ class FormValidator {
         if (!email) {
             return new ValidationResult(false, 'Email is required');
         }
-        const emailRegex = /^(?=[^\.]+(\.[^\.]+)?@[^\.]+(\.[^\.]+)+)[\w\.]+@[\w\.]+$/;
+        if (!email.includes('@')) {
+            return new ValidationResult(false, 'Not an email');
+        }
+
+        const emailRegex = /^(?=[^\.]+(\.[^\.]+)*@[^\.]+(\.[^\.]+)+)[\w\.]+@[\w\.]+$/;
         if (strict && !emailRegex.test(email)) {
             return new ValidationResult(false, 'Invalid email format');
         }

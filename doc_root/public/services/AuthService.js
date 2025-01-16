@@ -81,13 +81,20 @@ class AuthService {
     }
 
     static async requestPasswordReset(email) {
-        alert('TODO: requestPasswordReset')
-        return response.isSuccessful = true;
+        const response = await ApiService.makeApiCall(API_CONFIG.endpoints.auth.forgotPassword, 'POST', {
+            email
+        });
+
+        return response;
     }
 
     static async resetPassword(token, newPassword) {
-        alert('TODO: resetPassword(token, newPassword)');
-        return response.isSuccessful = true;
+        const response = await ApiService.makeApiCall(API_CONFIG.endpoints.auth.forgotPassword, 'PATCH', {
+            token,
+            password: newPassword,
+        })
+
+        return response;
     }
 }
 
