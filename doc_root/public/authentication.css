@@ -171,3 +171,7 @@ button:hover {
 .close:hover {
     color: var(--success-color);
 }
+
+#resetPasswordBtn {
+    margin-bottom: 20px;
+}
