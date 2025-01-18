@@ -2,10 +2,20 @@
 $configPath = "../doc_root/api/config.php";
 if(file_exists($configPath))
     include_once $configPath;
-echo "This script performs checks and setup for the web server. This includes adding database objects and storing configurations. Continue? (Y/N)";
+echo "This script performs checks and setup for the web server. This includes adding database objects and storing configurations. Continue? (Y/N)\n";
 
 if(rtrim(fgets(STDIN)) !== "Y")
     exit;
+
+// Escapes for injection into config.php
+// Doesn't handle bytes past ensuring syntax is fine
+function EscapePHPString($str) {
+    return str_replace(
+        ['\\', '\"'],
+        ['\\\\', '\\'],
+        $str,
+    );
+}
 
 // Get any unknown config information
 if(!isset($dbHostname))
@@ -256,21 +266,101 @@ foreach($table_commands as $key => $value)
     }
     if(gettype($result) !== gettype(true))
         $result->free();
+
+    // Create user if one does not exist
+    if($key === 'User') {
+        $result = $conn->query("SELECT 1 FROM `User` WHERE NOT (`UserType` = 13) AND `Authorized` = 1;");
+        if($result === false)
+            echo "Failed to check for user existence\n";
+        else
+        {
+            $row = $result->fetch_assoc();
+            if($row === null) {
+                echo "No authorized non-student users exist. Would you like to create an owner account? (Y/N)\n";
+                $answer = rtrim(fgets(STDIN));
+                if($answer === "Y" || $answer === "y")
+                {
+                    echo "Username: ";
+                    $username;
+                    while(true)
+                    {
+                        $username = rtrim(fgets(STDIN));
+                        if($username === "")
+                        {
+                            echo "Username is required.\nUsername: ";
+                            continue;
+                        }
+                        if(!preg_match('/^[\w\-\s]{2,60}$/', $username))
+                        {
+                            echo "Username was invalid. Validation requirements:\n -The username must be between 2 and 60 characters long\n -The username may only contain alphanumeric characters (a-zA-Z0-9), spaces and dashes(-)\nUsername:";
+                            continue;
+                        }
+                        break;
+                    }
+
+                    echo "Email: ";
+                    $email;
+                    while(true)
+                    {
+                        $email = rtrim(fgets(STDIN));
+                        if($email === "")
+                        {
+                            echo "Email is required.\n";
+                            continue;
+                        }
+                        if(!preg_match('/^(?=[^\.]+(\.[^\.]+)*@[^\.]+(\.[^\.]+)+)[\w\.]+@[\w\.]+$/', $email))
+                        {
+                            echo "Email was invalid.\n";
+                            continue;
+                        }
+                        break;
+                    }
+
+                    echo "Password: ";
+                    $password;
+                    while(true)
+                    {
+                        $password = rtrim(fgets(STDIN));
+                        if($password === "")
+                        {
+                            echo "Password is required.\nPassword: ";
+                            continue;
+                        }
+                        echo json_encode($password);
+                        if(!preg_match('/^(?=.*[A-Z])(?=.*[a-z])(?=.*[\d])(?=.*[^\w\s])[\x00-\x7F]{8,50}$/', $password))
+                        {
+                            echo "Password was invalid. Validation requirements:\n -The password must be between 8 and 50 characters long\n -The password must contain a capital and lower case char, a digit, and a special character\n -The password may only contain ASCII characters (no emoji's and stuff).\nPassword: ";
+                            continue;
+                        }
+                        break;
+                    }
+                    $hashed = password_hash($password, PASSWORD_BCRYPT);
+
+                    $stmt = $conn->prepare("INSERT INTO `User`(`Username`, `Email`, `UserType`, `Password`, `Authorized`) VALUES(?, ?, 42, ?, 1);");
+                    $stmt->bind_param('sss', $username, $email, $hashed);
+                    if(!$stmt->execute())
+                        echo "Failed to create user: \n$stmt->error";
+                    else
+                        echo "User added successfully\n";
+                }
+            }
+        }
+    }
 }
 echo "All tables checked\n";
 
 // Store fetched configs for later
 $configStr = "<?php\n\n";
-$configStr .= '$dbHostname = ' . json_encode($dbHostname) . ";\n";
-$configStr .= '$dbUsername = ' . json_encode($dbUsername) . ";\n";
-$configStr .= '$dbPassword = ' . json_encode($dbPassword) . ";\n";
-$configStr .= '$dbName = ' . json_encode($dbName) . ";\n";
-$configStr .= '$nrEmail = ' . json_encode($nrEmail) . ";\n";
-$configStr .= '$nrPassword = ' . json_encode($nrPassword) . ";\n";
-$configStr .= '$nrHost = ' . json_encode($nrHost) . ";\n";
-$configStr .= '$nrEncryption = ' . json_encode($nrEncryption) . ";\n";
+$configStr .= '$dbHostname = "' . EscapePHPString($dbHostname) . "\";\n";
+$configStr .= '$dbUsername = "' . EscapePHPString($dbUsername) . "\";\n";
+$configStr .= '$dbPassword = "' . EscapePHPString($dbPassword) . "\";\n";
+$configStr .= '$dbName = "' . EscapePHPString($dbName) . "\";\n";
+$configStr .= '$nrEmail = "' . EscapePHPString($nrEmail) . "\";\n";
+$configStr .= '$nrPassword = "' . EscapePHPString($nrPassword) . "\";\n";
+$configStr .= '$nrHost = "' . EscapePHPString($nrHost) . "\";\n";
+$configStr .= '$nrEncryption = "' . EscapePHPString($nrEncryption) . "\";\n";
 $configStr .= '$nrPort = ' . "$nrPort;\n";
-$configStr .= '$domain = ' . json_encode($domain) . ";\n";
+$configStr .= '$domain = "' . EscapePHPString($domain) . "\";\n";
 
 $configfile = fopen($configPath, "w");
 fwrite($configfile, $configStr);
