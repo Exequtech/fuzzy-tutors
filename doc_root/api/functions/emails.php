@@ -1,13 +1,14 @@
 <?php
 
 require_once __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . "/../config.php";
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-function SendForgotPassword($email, $token)
+function SendForgotPassword($username, $email, $token)
 {
-    global $nrHost, $nrEmail, $nrPassword, $nrEncryption, $nrPort;
+    global $nrHost, $nrEmail, $nrPassword, $nrEncryption, $nrPort, $domain;
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
@@ -23,13 +24,13 @@ function SendForgotPassword($email, $token)
         };
         $mail->Port = $nrPort;
 
-        $mail->setFrom($nrEmail, 'Noreply');
+        $mail->setFrom($nrEmail, 'Fuzzy Tutors');
         $mail->addAddress($email);
         
         $mail->isHTML(true);
         $mail->Subject = "Password reset";
-        $mail->Body = "<p>Token: $token</p>";
-        $mail->AltBody = "Plaintext TEST";
+        $mail->Body = "<p>Hello <b>$username</b>!<br> A forgot password was logged on your account. If this wasn't you, please ignore this email. <br><br> Click <a href=\"https://$domain/reset-password.html?token=$token\">here</a> to reset your password (the link expires in 30 minutes)<br><br>Best regards, <br><b>Fuzzy Tutors</b></p>";
+        $mail->AltBody = "Hello $username!\n Here's your password reset link (ignore it if this wasn't you): https://$domain/reset-password.html?token=$token\nThe link expires in 30 minutes. Best regards,\nFuzzy Tutors";
 
         $mail->send();
     } catch(Exception $e)

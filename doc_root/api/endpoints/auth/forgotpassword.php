@@ -13,14 +13,16 @@ $endpoints['/^auth\/forgotpassword$/'] = [
                 $conn->begin_transaction() || InternalError("Failed to begin forgotpassword POST transaction");
                 $userID = null;
                 $email = null;
+                $username = null;
                 if(isset($request->email))
                 {
-                    $matches = BindedQuery($conn, "SELECT `UserID` FROM `User` WHERE `Email` = ? AND `Authorized` = 1 FOR SHARE;", 's', [$request->email], true,
+                    $matches = BindedQuery($conn, "SELECT `UserID`, `Username` FROM `User` WHERE `Email` = ? AND `Authorized` = 1 FOR SHARE;", 's', [$request->email], true,
                         "Failed to fetch user (auth forgotpassword POST)");
                     if(empty($matches))
                         MessageResponse(HTTP_OK);
                     $userID = $matches[0]['UserID'];
                     $email = $request->email;
+                    $username = $matches[0]['Username'];
                 }
                 else if(isset($request->username))
                 {
@@ -30,6 +32,7 @@ $endpoints['/^auth\/forgotpassword$/'] = [
                         MessageResponse(HTTP_OK);
                     $userID = $matches[0]['UserID'];
                     $email = $matches[0]['Email'];
+                    $username = $request->username;
                 } else InternalError("Impossible (forgotpassword)");
 
                 // Generate a token
@@ -46,7 +49,7 @@ $endpoints['/^auth\/forgotpassword$/'] = [
                 BindedQuery($conn, "INSERT INTO `PassToken`(`Token`, `UserID`) VALUES (?,?);", 'ss', [$hash, $userID], true,
                     "Failed to create passtoken (auth forgotpassword POST)");
                 
-                SendForgotPassword($email, $token);
+                SendForgotPassword($username, $email, $token);
                 $conn->commit() || InternalError("Failed to commit forgotpassword POST transaction");
                 MessageResponse(HTTP_OK);
             },

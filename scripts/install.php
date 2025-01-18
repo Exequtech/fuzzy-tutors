@@ -2,7 +2,7 @@
 $configPath = "../doc_root/api/config.php";
 if(file_exists($configPath))
     include_once $configPath;
-echo "This script checks for any missing database objects and creates them. Enter Y if you wish to continue.\n";
+echo "This script performs checks and setup for the web server. This includes adding database objects and storing configurations. Continue? (Y/N)";
 
 if(rtrim(fgets(STDIN)) !== "Y")
     exit;
@@ -85,6 +85,12 @@ if(!isset($nrPort))
         }
         break;
     }
+}
+if(!isset($domain))
+{
+    echo "Please provide the domain name of the server. This is used for no-reply emails (e.g. www.example.com)\n";
+    while(($domain = rtrim(fgets(STDIN))) == "")
+        echo "Domain is required\n";
 }
 // Execute installation code
 $conn = new mysqli($dbHostname, $dbUsername, $dbPassword, $dbName);
@@ -264,6 +270,7 @@ $configStr .= '$nrPassword = ' . json_encode($nrPassword) . ";\n";
 $configStr .= '$nrHost = ' . json_encode($nrHost) . ";\n";
 $configStr .= '$nrEncryption = ' . json_encode($nrEncryption) . ";\n";
 $configStr .= '$nrPort = ' . "$nrPort;\n";
+$configStr .= '$domain = ' . json_encode($domain) . ";\n";
 
 $configfile = fopen($configPath, "w");
 fwrite($configfile, $configStr);
