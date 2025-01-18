@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "properties": {
+        "before": {
+            "type": "string",
+            "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]) ([01]\\d|2[0-3]):([0-5][0-9]):([0-5][0-9])$"
+        },
+        "after": {
+            "type": "string",
+            "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]) ([01]\\d|2[0-3]):([0-5][0-9]):([0-5][0-9])$"
+        },
+        "orderBy": {
+            "type": "string",
+            "enum": ["id", "tutorName", "subjectName", "locationName", "startDate", "endDate", "notes"]
+        },
+        "order": {
+            "type": "string",
+            "enum": ["asc", "desc"]
+        },
+        "locations": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^[\\d]+$"
+            },
+            "uniqueItems": true
+        },
+        "subjects": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^[\\d]+$"
+            },
+            "uniqueItems": true
+        }
+    },
+    "additionalProperties": false,
+    "required": ["before", "after"]
+}

@@ -1,0 +1,18 @@
+{
+    "type": "object",
+    "properties": {
+        "token": {
+            "type": "string",
+            "pattern": "^[\\da-f]+$",
+            "minLength": 64,
+            "maxLength": 64
+        },
+        "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 50,
+            "pattern": "^(?=.*[A-Z]+)(?=.*[a-z])(?=.*[\\d])(?=.*[^\\w\\s])[\\x00-\\x7F]+$"
+        }
+    },
+    "required": ["token", "password"]
+}

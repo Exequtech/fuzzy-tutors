@@ -14,6 +14,7 @@ const
     HTTP_NOT_ACCEPTABLE = 406,
     HTTP_CONFLICT = 409,
     HTTP_TEAPOT = 418,
+    HTTP_UNPROCESSABLE = 422,
     HTTP_TOO_MANY_REQUESTS = 429,
     HTTP_INTERNAL_ERROR = 500,
     HTTP_NOT_IMPLEMENTED = 501;
@@ -56,6 +57,9 @@ function GetStatusMessage(int $code): string
 
         // Potential easter egg somewhere: denied because the server is brewing coffee.
         HTTP_TEAPOT => "I'm a teapot",
+
+        // When basic syntax is correct, but further request validation fails
+        HTTP_UNPROCESSABLE => "Unprocessable entity",
 
         // Request denied due to rate limit
         HTTP_TOO_MANY_REQUESTS => "Too many requests",

@@ -12,11 +12,8 @@ $endpoints['/^student\/?$/'] = [
         'POST' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
             {
-                $user = GetUser();
-                if(!$user)
-                    MessageResponse(HTTP_UNAUTHORIZED);
-                if(!in_array($user['UserType'], [ROLE_OWNER, ROLE_TUTOR]))
-                    MessageResponse(HTTP_FORBIDDEN, "Insufficient role.");
+                EnforceRole([ROLE_TUTOR, ROLE_OWNER]);
+                DBValidateNewUser($request, $conn);
 
                 $user = CreateUser($conn, $request->username, $request->email, ROLE_STUDENT, $request->authorized, $request->password ?? null);
                 if($user)
@@ -25,16 +22,11 @@ $endpoints['/^student\/?$/'] = [
                     MessageResponse(HTTP_INTERNAL_ERROR);
             },
             'schema-path' => 'student/toplevel/POST.json',
-            'db-validate' => 'DBValidateNewUser',
         ],
         'GET' => [
             'callback' => function(object|null $request, mysqli $conn, array $regex): never
             {
-                $user = GetUser(false);
-                if(!$user)
-                    MessageResponse(HTTP_UNAUTHORIZED);
-                if(!in_array($user['UserType'], [ROLE_OWNER, ROLE_TUTOR]))
-                    MessageResponse(HTTP_FORBIDDEN, "Insufficient role.");
+                EnforceRole([ROLE_TUTOR, ROLE_OWNER], false);
 
                 // Resolve pagination variables
                 $pagesize = API_PAGE_SIZE;
@@ -98,8 +90,12 @@ $endpoints['/^student\/?$/'] = [
                     }
                 }
 
-                $query = 'SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` FROM `User` WHERE ' . implode(' AND ', $conditions) . $order . " LIMIT $offset, $pagesize;";
-                $matches = BindedQuery($conn, $query, implode('', $types), $values);
+
+                $fromclause = 'FROM `User` WHERE ' . implode(' AND ', $conditions) . $order . " LIMIT $offset, $pagesize;";
+                $query = 'SELECT `UserID`, `Username`, `Email`, `Authorized`, `RecordDate` ' .$fromclause;
+                $matches = BindedQuery($conn, $query, implode('', $types), $values, true,
+                    "Failed to fetch students (toplevel student GET)");
+
                 MessageResponse(HTTP_OK, null, [
                     'results' => array_map(function($user)
                     {
@@ -110,7 +106,7 @@ $endpoints['/^student\/?$/'] = [
                         $ret['authorized'] = $user['Authorized'] ? true : false;
                         $ret['recordDate'] = $user['RecordDate'];
                         return $ret;
-                    }, $matches)
+                    }, $matches),
                 ]);
             },
             'schema-path' => 'student/toplevel/GET.json'

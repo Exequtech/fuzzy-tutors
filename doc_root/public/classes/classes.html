@@ -32,19 +32,18 @@
                 <input type="text" id="className" required>
             </div>
             <div class="form-group">
-                <label>Students:</label>
-                <div class="student-selection">
-                    <div class="available-students">
-                        <h3>Available Students</h3>
-                        <div id="availableStudents" class="student-list"></div>
-                    </div>
-                    <div class="student-controls">
-                        <button type="button" id="addStudentBtn" class="control-button">&gt;&gt;</button>
-                        <button type="button" id="removeStudentBtn" class="control-button">&lt;&lt;</button>
-                    </div>
-                    <div class="selected-students">
-                        <h3>Selected Students</h3>
-                        <div id="selectedStudents" class="student-list"></div>
+                <div class="form-group">
+                    <label>Class Members:</label>
+                    <div class="member-management">
+                        <div class="search-container">
+                            <input type="text" id="studentSearchInput" placeholder="Search students to add..." class="search-input">
+                            <div id="searchResults" class="search-results hidden">
+                                <!-- Search results will be populated here -->
+                            </div>
+                        </div>
+                        <div id="classMembersList" class="members-list">
+                            <!-- Current class members will be shown here -->
+                        </div>
                     </div>
                 </div>
             </div>

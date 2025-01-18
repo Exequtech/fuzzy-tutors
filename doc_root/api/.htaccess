@@ -1,5 +1,9 @@
 RewriteEngine On
 
+# Redirect to https
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 # No accesses to composer-relevant things
 RedirectMatch 403 (composer.json|composer.lock|/vendor/)
 
@@ -28,6 +32,14 @@ RewriteCond %{REQUEST_METHOD} !^GET$
 RewriteCond $1 ^auth/ot-token$
 RewriteRule ^(.*)$ - [END,R=405]
 
+RewriteCond %{REQUEST_METHOD} !^(POST|PATCH)$
+RewriteCond $1 ^auth/forgotpassword$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^DELETE$
+RewriteCond $1 ^auth/logout$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Auth allowlist
 RewriteCond %{REQUEST_METHOD} ^POST$
 RewriteCond $1 ^auth/(login|signup)$
@@ -35,6 +47,14 @@ RewriteRule ^(.*) index.php?path=$1 [END,QSA]
 
 RewriteCond %{REQUEST_METHOD} ^GET$
 RewriteCond $1 ^auth/ot-token$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(POST|PATCH)$
+RewriteCond $1 ^auth/forgotpassword$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^DELETE$
+RewriteCond $1 ^auth/logout$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 # Student denylist
@@ -46,6 +66,10 @@ RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
 RewriteCond $1 ^student/[\d]+/?$
 RewriteRule ^(.*)$ - [END,R=405]
 
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^student/[\d]+/trackables/[^/]+/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
 # Student allowlist
 RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
 RewriteCond $1 ^student/?$
@@ -53,6 +77,150 @@ RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
 RewriteCond $1 ^student/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+## Space replace
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteRule ^student/([\d]+)/trackables/([^/]*)\s([^/]*)/?$ student/$1/trackables/$2+$3 [L]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^student/[\d]+/trackables/[^/]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# Class denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^class/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
+RewriteCond $1 ^class/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,R=405]
+
+# Class allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^class/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteCond $1 ^class/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# Location denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^location/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
+RewriteCond $1 ^location/[\d]+/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Location allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^location/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteCond $1 ^location/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# Topic denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^topic/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
+RewriteCond $1 ^topic/[\d]+/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET)$
+RewriteCond $1 ^subject/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Topic allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^topic/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteCond $1 ^topic/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET)$
+RewriteCond $1 ^subject/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# Trackable denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^trackable/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
+RewriteCond $1 ^trackable/([^/]+)/?$
+RewriteRule ^(.*)$ - [END,R=405] 
+
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^stats/trackables/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Trackable allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^trackable/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^stats/trackables/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+## Replace spaces with + signs to allow %20 uri
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteRule ^trackable/([^/]*)\s([^/]*)/?$ trackable/$1+$2 [L]
+
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteCond $1 ^trackable/([^/]+)/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# Lesson denylist
+RewriteCond %{REQUEST_METHOD} !^(POST|GET)$
+RewriteCond $1 ^lesson/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^GET$
+RewriteCond $1 ^calendar/lesson/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH|DELETE)$
+RewriteCond $1 ^lesson/[\d]+/?$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Lesson allowlist
+RewriteCond %{REQUEST_METHOD} ^(POST|GET)$
+RewriteCond $1 ^lesson/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^GET$
+RewriteCond $1 ^calendar/lesson/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH|DELETE)$
+RewriteCond $1 ^lesson/[\d]+/?$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+# Settings denylist
+RewriteCond %{REQUEST_METHOD} !^(GET|PATCH)$
+RewriteCond $1 ^settings/fields$
+RewriteRule ^(.*)$ - [END,R=405]
+
+RewriteCond %{REQUEST_METHOD} !^(PUT)$
+RewriteCond $1 ^settings/password$
+RewriteRule ^(.*)$ - [END,R=405]
+
+# Settings allowlist
+RewriteCond %{REQUEST_METHOD} ^(GET|PATCH)$
+RewriteCond $1 ^settings/fields$
+RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
+
+RewriteCond %{REQUEST_METHOD} ^(PUT)$
+RewriteCond $1 ^settings/password$
 RewriteRule ^(.*)$ index.php?path=$1 [END,QSA]
 
 # If no prior rules matched, the endpoint doesn't exist (404)

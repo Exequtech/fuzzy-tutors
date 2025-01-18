@@ -1,5 +1,5 @@
 // auth-protection.js
-import { SessionManager } from './DataHandler.js';
+import { SessionManager } from './dataHandler.js';
 
 // Add this to pages that require authentication
 document.addEventListener('DOMContentLoaded', function() {

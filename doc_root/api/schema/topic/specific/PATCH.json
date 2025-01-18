@@ -1,0 +1,32 @@
+{
+    "type": "object",
+    "properties": {
+        "subjectId": {
+            "oneOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "name": {
+            "type": "string",
+            "pattern": "^[\\w\\s]+$"
+        },
+        "description": {
+                "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^[\\x00-\\x7F]+$",
+                    "maxLength": 255
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "additionalProperties": false
+}

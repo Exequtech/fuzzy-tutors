@@ -1,79 +1,164 @@
 // classes.js
-import { getStudentPage, SessionManager } from '../DataHandler.js';
-
-// Simulated class data storage (replace with actual API calls)
-let classes = [];
-let students = [];
+import { services } from '../dataHandler.js';
 
 // DOM Elements
-const classesGrid = document.getElementById('classesGrid');
-const classModal = document.getElementById('classModal');
-const deleteModal = document.getElementById('deleteModal');
-const classForm = document.getElementById('classForm');
-const searchInput = document.getElementById('searchInput');
-const alertMessage = document.getElementById('alertMessage');
-const addClassBtn = document.getElementById('addClassBtn');
-const availableStudentsList = document.getElementById('availableStudents');
-const selectedStudentsList = document.getElementById('selectedStudents');
+let classesGrid = null;
+let classModal  = null;
+let deleteModal = null;
+let classForm   = null;
+let searchInput = null;
+let alertMessage= null;
+let addClassBtn = null;
 
 let currentClassId = null;
+let classes = [];
+let selectedStudents = new Set();
+let searchTimeout = null;
 
 // Initialize
-async function init() {
-    students = await getStudentPage(); // Get up to 100 students
-    renderClasses();
+async function initClasses() {
+    try {
+        window.confirmDelete = confirmDeleteClass
+
+        classesGrid = document.getElementById('classesGrid');
+        classModal  = document.getElementById('classModal');
+        deleteModal = document.getElementById('deleteModal');
+        classForm   = document.getElementById('classForm');
+        searchInput = document.getElementById('searchInput');
+        alertMessage= document.getElementById('alertMessage');
+        addClassBtn = document.getElementById('addClassBtn');
+        // Load initial data
+        classes = await services.class.getAllPages();
+        initEventListeners();
+        renderClasses();
+    } catch (error) {
+        showAlert('Failed to load data: ' + error.message, false);
+    }
 }
 
-// Add Class Button
-addClassBtn.addEventListener('click', () => openModal());
+function initEventListeners() {
+    // Add Class Button
+    addClassBtn.addEventListener('click', () => openModal());
 
-// Search Input
-searchInput.addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const filteredClasses = classes.filter(cls => 
-        cls.name.toLowerCase().includes(searchTerm)
-    );
-    renderClasses(filteredClasses);
-});
-
-// Form Submit
-classForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    handleFormSubmit();
-});
-
-// Close Modal Buttons
-document.querySelectorAll('.close-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeModal();
-        closeDeleteModal();
+    // Search Input
+    searchInput.addEventListener('input', async (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        try {
+            // Use the API's filter capability
+            const filteredClasses = await services.class.getAllPages("asc", "id", {
+                name: searchTerm
+            });
+            renderClasses(filteredClasses);
+        } catch (error) {
+            showAlert('Search failed: ' + error.message, false);
+        }
     });
-});
 
-// Cancel Buttons
-document.querySelectorAll('.cancel-button').forEach(button => {
-    button.addEventListener('click', () => {
-        closeModal();
-        closeDeleteModal();
+    // Form Submit
+    classForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleFormSubmit();
     });
-});
 
-// Delete Confirmation
-deleteModal.querySelector('.delete-button').addEventListener('click', () => {
-    if (currentClassId) {
-        deleteClass(currentClassId);
-        closeDeleteModal();
+    // Close Modal Buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeModal();
+            closeDeleteModal();
+        });
+    });
+
+    // Cancel Buttons
+    document.querySelectorAll('.cancel-button').forEach(button => {
+        button.addEventListener('click', () => {
+            closeModal();
+            closeDeleteModal();
+        });
+    });
+
+    // Delete Confirmation
+    deleteModal.querySelector('.delete-button').addEventListener('click', async () => {
+        if (currentClassId) {
+            await deleteClass(currentClassId);
+            closeDeleteModal();
+        }
+    });
+
+}
+
+function setupMemberManagement() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+        
+        if (searchTerm.length === 0) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const students = await services.student.getAllPages("asc", "username", {
+                    username: searchTerm
+                });
+                renderSearchResults(students, searchResults);
+            } catch (error) {
+                showAlert('Search failed: ' + error.message, false);
+            }
+        }, 300);
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+        }
+    });
+}
+
+function renderSearchResults(students, searchResults) {
+    const existingIds = new Set(Array.from(selectedStudents).map(student => student.id));
+    const results = students.filter(student => !existingIds.has(student.id));
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item">No students found</div>';
+    } else {
+        searchResults.innerHTML = results.map(student => `
+            <div class="search-result-item">
+                <div class="student-info">
+                    <div class="student-name">${student.username}</div>
+                    <div class="student-email">${student.email}</div>
+                </div>
+                <button onclick="addClassMember(${student.id}, '${student.username}', '${student.email}')" 
+                        class="action-button add" title="Add to class" type="button">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `).join('');
     }
-});
+    
+    searchResults.classList.remove('hidden');
+}
 
-// Student Transfer Buttons
-document.getElementById('addStudentBtn').addEventListener('click', () => {
-    transferSelectedStudents(availableStudentsList, selectedStudentsList);
-});
-
-document.getElementById('removeStudentBtn').addEventListener('click', () => {
-    transferSelectedStudents(selectedStudentsList, availableStudentsList);
-});
+function renderClassMembers() {
+    const membersList = document.getElementById('classMembersList');
+    const members = Array.from(selectedStudents.values());
+    
+    membersList.innerHTML = members.map(member => `
+        <div class="member-item">
+            <div class="student-info">
+                <div class="student-name">${member.username}</div>
+            </div>
+            <button onclick="removeClassMember(${member.id})" 
+                    class="action-button" title="Remove from class">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
 
 function renderClasses(classesToRender = classes) {
     classesGrid.innerHTML = classesToRender.map(cls => `
@@ -90,50 +175,17 @@ function renderClasses(classesToRender = classes) {
                 </div>
             </div>
             <div class="student-count">
-                ${cls.students.length} Students
+                ${cls.students ? cls.students.length : 0} Students
             </div>
             <div class="student-list">
-                ${cls.students.map(student => `
-                    <div class="student-item">${student.username}</div>
-                `).join('')}
+                ${cls.students ? cls.students.map(student => `
+                    <div class="student-item">
+                        <div class="student-name">${student.name}</div>
+                    </div>
+                `).join('') : ''}
             </div>
         </div>
     `).join('');
-}
-
-function renderStudentLists(selectedStudentIds = []) {
-    // Render available students
-    availableStudentsList.innerHTML = students
-        .filter(student => !selectedStudentIds.includes(student.id))
-        .map(student => `
-            <div class="student-item" data-id="${student.id}">
-                ${student.username}
-            </div>
-        `).join('');
-
-    // Render selected students
-    selectedStudentsList.innerHTML = students
-        .filter(student => selectedStudentIds.includes(student.id))
-        .map(student => `
-            <div class="student-item" data-id="${student.id}">
-                ${student.username}
-            </div>
-        `).join('');
-
-    // Add click handlers for selection
-    document.querySelectorAll('.student-item').forEach(item => {
-        item.addEventListener('click', () => {
-            item.classList.toggle('selected');
-        });
-    });
-}
-
-function transferSelectedStudents(fromList, toList) {
-    const selectedItems = fromList.querySelectorAll('.student-item.selected');
-    selectedItems.forEach(item => {
-        item.classList.remove('selected');
-        toList.appendChild(item);
-    });
 }
 
 function openModal(classData = null) {
@@ -144,24 +196,41 @@ function openModal(classData = null) {
         modalTitle.textContent = 'Edit Class';
         submitButton.textContent = 'Update Class';
         currentClassId = classData.id;
-        
         document.getElementById('className').value = classData.name;
-        renderStudentLists(classData.students.map(s => s.id));
+        selectedStudents = new Set(classData.students.map(student => ({
+            id: student.id,
+            username: student.name
+        })));
     } else {
         modalTitle.textContent = 'Add New Class';
         submitButton.textContent = 'Add Class';
         currentClassId = null;
         classForm.reset();
-        renderStudentLists([]);
+        selectedStudents = new Set();
     }
     
+    renderClassMembers();
+    setupMemberManagement();
     classModal.classList.add('show');
+}
+
+function addClassMember(id, username, email) {
+    selectedStudents.add({ id, username, email });
+    renderClassMembers();
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('studentSearchInput').value = '';
+}
+
+function removeClassMember(id) {
+    selectedStudents.delete(Array.from(selectedStudents).find(student => student.id === id));
+    renderClassMembers();
 }
 
 function closeModal() {
     classModal.classList.remove('show');
     currentClassId = null;
     classForm.reset();
+    selectedStudents = new Set();
 }
 
 function closeDeleteModal() {
@@ -170,46 +239,69 @@ function closeDeleteModal() {
 }
 
 async function handleFormSubmit() {
-    const selectedStudentIds = Array.from(selectedStudentsList.children)
-        .map(item => parseInt(item.dataset.id));
+    try {
+        const formData = {
+            students: Array.from(selectedStudents).map(student => student.id),
+            name: document.getElementById('className').value
+        }
 
-    const classData = {
-        id: currentClassId || Date.now(), // Replace with actual API-generated ID
-        name: document.getElementById('className').value,
-        students: students.filter(student => selectedStudentIds.includes(student.id))
-    };
+        let apiResponse;
+        if (currentClassId) {
+            apiResponse = await services.class.update(currentClassId, formData);
+        } else {
+            apiResponse = await services.class.create(formData);
+        }
 
-    if (currentClassId) {
-        // Update existing class
-        const index = classes.findIndex(c => c.id === currentClassId);
-        classes[index] = classData;
-        showAlert('Class updated successfully', true);
-    } else {
-        // Add new class
-        classes.push(classData);
-        showAlert('Class added successfully', true);
+        if (apiResponse.isSuccessful) {
+            showAlert(apiResponse.message, true);
+            // Refresh the class list
+            classes = await services.class.getAllPages();
+            renderClasses();
+            closeModal();
+        } else {
+            if (apiResponse.data && apiResponse.data.invalid_ids) {
+                showAlert(`Some student IDs are invalid: ${apiResponse.data.invalid_ids.join(', ')}`, false);
+            } else {
+                showAlert(apiResponse.message, false);
+            }
+        }
+    } catch (error) {
+        showAlert('Failed to save class: ' + error.message, false);
     }
-
-    renderClasses();
-    closeModal();
 }
 
-function editClass(id) {
-    const classData = classes.find(c => c.id === id);
-    if (classData) {
-        openModal(classData);
+async function editClass(id) {
+    try {
+        // Fetch the latest data for the class
+        const classData = await services.class.getDetails(id);
+        if (classData) {
+            openModal(classData);
+        }
+    } catch (error) {
+        showAlert('Failed to load class data: ' + error.message, false);
     }
 }
 
-function confirmDelete(id) {
+function confirmDeleteClass(id) {
     currentClassId = id;
     deleteModal.classList.add('show');
 }
 
-function deleteClass(id) {
-    classes = classes.filter(c => c.id !== id);
-    showAlert('Class deleted successfully', true);
-    renderClasses();
+async function deleteClass(id) {
+    try {
+        const apiResponse = await services.class.delete(id);
+        
+        if (apiResponse.isSuccessful) {
+            showAlert(apiResponse.message, true);
+            // Refresh the class list
+            classes = await services.class.getAllPages();
+            renderClasses();
+        } else {
+            showAlert(apiResponse.message, false);
+        }
+    } catch (error) {
+        showAlert('Failed to delete class: ' + error.message, false);
+    }
 }
 
 function showAlert(message, isSuccess) {
@@ -223,7 +315,10 @@ function showAlert(message, isSuccess) {
 
 // Make functions available globally
 window.editClass = editClass;
-window.confirmDelete = confirmDelete;
+window.addClassMember = addClassMember;
+window.removeClassMember = removeClassMember;
 
 // Initialize the page
-init();
+// initClasses();
+
+export {initClasses}

@@ -31,7 +31,7 @@ foreach($endpoints as $key => $value)
         $request_body = file_get_contents('php://input');
         if($request_body !== "")
         {
-            $data = json_decode(file_get_contents('php://input'), false);
+            $data = json_decode($request_body, false);
             if($data === null)
                 MessageResponse(HTTP_BAD_REQUEST, "Malformed JSON");
         }
@@ -58,10 +58,7 @@ foreach($endpoints as $key => $value)
         MessageResponse(HTTP_BAD_REQUEST, $errors);
     }
 
-    if(isset($endpoint['db-validate']))
-        $endpoint['db-validate']($data, $conn);
-
     $endpoint['callback']($data, $conn, $matches);
 }
 
-MessageResponse(HTTP_NOT_FOUND);
+MessageResponse(HTTP_NOT_FOUND, 'That endpoint does not exist.');

@@ -1,0 +1,32 @@
+{
+    "type": "object",
+    "properties": {
+        "orderBy": {
+            "type": "string",
+            "enum": ["name", "description"]
+        },
+        "order": {
+            "type": "string",
+            "enum": ["asc", "desc"]
+        },
+        "name": {
+            "type": "string",
+            "pattern": "[\\x00-\\x7F]+",
+            "maxLength": 30
+        },
+        "description": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^[^/]$",
+                    "maxLength": 255
+                },
+                {
+                    "type": "string",
+                    "enum": ["/null"]
+                }
+            ]
+        }
+    },
+    "additionalProperties": false
+}

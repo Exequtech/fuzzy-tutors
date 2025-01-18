@@ -36,9 +36,9 @@ function InitializeSession(): bool
 // This removes all session relevant data, and removes the session cookie
 function DestroySession()
 {
+    UnsetSessCookie();
     session_unset();
     session_destroy();
-    UnsetSessCookie();
 }
 function UnsetSessCookie()
 {

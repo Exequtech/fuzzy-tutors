@@ -1,0 +1,17 @@
+{
+    "type": "object",
+    "properties": {
+        "oldPassword": {
+            "type": "string",
+            "maxLength": 50
+        },
+        "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 50,
+            "pattern": "^(?=.*[A-Z]+)(?=.*[a-z])(?=.*[\\d])(?=.*[^\\w\\s])[\\x00-\\x7F]+$"
+        }
+    },
+    "required": ["oldPassword", "newPassword"],
+    "additionalProperties": false
+}
