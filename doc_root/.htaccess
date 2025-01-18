@@ -1,6 +1,6 @@
 RewriteEngine On
 
-# Stop processing API requests. If api/.htaccess isn't handling itself, something is wrong.
+# Never process API requests. If api/.htaccess isn't handling itself, something is wrong.
 RewriteCond $1 ^api
 RewriteRule ^(.*)$ - [L,F]
 
@@ -9,24 +9,19 @@ RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Unknown requests redirect to /public if they exist there
-RewriteCond %{REQUEST_URI} !^/(api|public|student|tutor|owner)(/.*)?$
+RewriteCond %{REQUEST_URI} !^/(api|public)(/.*)?$
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -d
 RewriteRule ^(.*)$ /public/%{REQUEST_URI}
 
-# Rewrite / to index.html in static directories, if exists
-RewriteCond %{REQUEST_URI} ^/(public|student|tutor|owner)/?$
-RewriteCond %{DOCUMENT_ROOT}/%1/index.html -f
-RewriteRule ^(public|student|tutor|owner)/?$ /$1/index.html
+# Rewrite / to index.html in public
+RewriteCond %{REQUEST_URI} ^/(public)/?$
+RewriteRule ^(public)/?$ /$1/index.html
 
 # No direct php requests
 RewriteCond %{REQUEST_FILENAME} \.php$
 RewriteRule ^ - [L,F]
-
-# path= is often used as an internal rewrite. This stops user-provided paths from being sent
-RewriteCond %{QUERY_STRING} path=
-RewriteRule ^ - [L,R=400]
 
 # ini security overrides
 # Hide cookie from JS, and ensure it's only sent with https
@@ -44,10 +39,9 @@ php_flag session.use_trans_sid Off
 php_value session.sid_length 64
 php_value session.sid_bits_per_character 6
 
-# If request is made to a static file, redirect to the corresponding index for serving.
+# If request is made to a static file, redirect to public/index.php for e-tagging
 RewriteCond %{REQUEST_FILENAME} -f
-RewriteCond $1 ^(public|student|tutor|owner)$
-RewriteRule ^(public|student|tutor|owner)/(.*)$ /$1/index.php?path=$2 [END,QSA]
+RewriteRule ^(public)/(.*)$ /public/index.php?path=$2 [END,QSA]
 
 # If somehow matched against an existing file that wasn't covered in a rule above, do not serve the request.
 RewriteCond %{REQUEST_FILENAME} -f
